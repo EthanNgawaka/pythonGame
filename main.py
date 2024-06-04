@@ -52,7 +52,7 @@ def main():
         if keys[pygame.K_ESCAPE]:
             running = False
 
-    print("beans")
+    print("beans 2")
 
 if __name__ == "__main__":
     main()
