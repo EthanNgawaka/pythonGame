@@ -39,7 +39,7 @@ def draw(window):
         drawRect(window, (x,y,50,50), (0,255,0))
 
 def main():
-    window = init(W,H,"poop")
+    window = init(W,H,"bingus 2.0")
 
     running = True
     while running:
@@ -53,7 +53,7 @@ def main():
         if keys[pygame.K_ESCAPE]:
             running = False
 
-    print("Done")
+    print("bingus")
 
 if __name__ == "__main__":
     main()
