@@ -30,7 +30,6 @@ def draw(window):
     drawRect(window, temprect, (0,0,0))
 
     check = AABBCollision((x,y,50,50), temprect)
-    print(check)
     if check:
         x += check[0]
         y += check[1]
