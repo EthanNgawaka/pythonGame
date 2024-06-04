@@ -53,7 +53,7 @@ def main():
         if keys[pygame.K_ESCAPE]:
             running = False
 
-    print("bingus")
+    print("beans")
 
 if __name__ == "__main__":
     main()
