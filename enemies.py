@@ -10,14 +10,19 @@ class BasicEnemy:
         self.health = 20
         self.forces = [0,0]
         self.invMass = 1
+        self.contactDmg = 5
+        self.contactKnockback = 10
 
     def draw(self, window):
         drawCircle(window,((self.rect[0]+self.r,self.rect[1]+self.r),self.r),self.col)
 
-    def update(self, window, playerRect, dt):
-        self.trackPlayer(playerRect)
+    def update(self, window, player, dt):
+        self.trackPlayer(player.rect)
         self.physics(dt)
-
+    def collisions(self, player):
+        collisionCheck = AABBCollision(self.rect, player.rect)
+        if collisionCheck:
+            player.takeDmg(self.contactDmg, collisionCheck*self.contactKnockback)
     def physics(self, dt):
         fric = 0.98
         accel = [self.forces[0]*self.invMass,self.forces[1]*self.invMass]

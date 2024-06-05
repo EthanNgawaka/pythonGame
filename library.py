@@ -2,6 +2,12 @@ import pygame
 import math
 import time
 
+def add(a, b):
+    return [a[0]+b[0], a[1]+b[1]]
+
+def subtract(a, b):
+    return [a[0]-b[0], a[1]-b[1]]
+
 def init(windowW, windowH, caption):
     pygame.init()
     window = pygame.display.set_mode((windowW,windowH))
