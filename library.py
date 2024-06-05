@@ -2,6 +2,9 @@ import pygame
 import math
 import time
 
+def scalMult(vec, scal):
+    return [vec[0]*scal, vec[1]*scal]
+
 def add(a, b):
     return [a[0]+b[0], a[1]+b[1]]
 

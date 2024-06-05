@@ -23,6 +23,7 @@ class Player:
         w, h = 40, 40
         self.r = w / 2
         self.rect = [x, y, w, h]  # position = self.rect[0], self.rect[1]
+        self.center = [x+w/2,y+h/2]
         self.col = (155, 155, 155)
         self.vel = [0, 0]
         self.speed = 5000
@@ -40,6 +41,7 @@ class Player:
     def physics(self, dt):
         self.rect[0] += self.vel[0]*dt
         self.rect[1] += self.vel[1]*dt
+        self.center = [self.rect[0]+self.rect[2]/2,self.rect[1]+self.rect[3]/2]
         self.vel[0] *= 0.9
         self.vel[1] *= 0.9
 
@@ -88,7 +90,7 @@ class Player:
             bullet.update(dt)
 
     def draw(self, window):
-        drawCircle(window, ((self.rect[0]+self.r, self.rect[1]+self.r), self.r), self.col)
+        drawCircle(window, (self.center, self.r), self.col)
         for bullet in self.bullets:
             bullet.draw(window)
 
