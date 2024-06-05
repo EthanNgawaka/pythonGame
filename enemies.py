@@ -6,7 +6,7 @@ class BasicEnemy:
 		self.r = self.rect[2]/2
 		self.col = (255,0,0)
 		self.vel = [0,0]
-		self.speed = 0.01
+		self.speed = 0.25
 		self.health = 20
 		self.forces = [0,0]
 		self.invMass = 0.01

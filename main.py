@@ -73,10 +73,11 @@ clock = pygame.time.Clock()
 
 def main():
     window = init(W, H, "bingus 2.0")
-    dt = clock.tick(maxFPS) / 1000.0
 
     running = True
     while running:  # main game loop
+        dt = clock.tick(maxFPS) / 1000.0
+        print(dt)
         update(window, dt)
         draw(window, dt)
         pygame.display.flip()
