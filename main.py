@@ -17,14 +17,13 @@ class Player:
         self.rect = [x, y, w, h]  # position = self.rect[0], self.rect[1]
         self.col = (155, 155, 155)
         self.vel = [0, 0]
-        self.speed = 0.025
+        self.speed = 5000
 
     def physics(self, dt):
         self.rect[0] += self.vel[0]*dt
         self.rect[1] += self.vel[1]*dt
-        self.vel[0] *= 0.98
-        self.vel[1] *= 0.98
-        pass
+        self.vel[0] *= 0.9
+        self.vel[1] *= 0.9
 
     def input(self, dt):
         dir = [0, 0]  # moveVector
