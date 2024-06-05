@@ -77,7 +77,7 @@ def main():
     running = True
     while running:  # main game loop
         dt = clock.tick(maxFPS) / 1000.0
-        print(dt)
+        print(1/dt)
         update(window, dt)
         draw(window, dt)
         pygame.display.flip()
