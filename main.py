@@ -10,13 +10,16 @@ keys = [0] * 512  #init keys to avoid index error (pygame has 512 keycodes)
 
 class Bullet:
     def __init__(self,bx,by,v):
-        self.rect = [bx,by,10,10]
+        w, h = 20, 20
+        self.r = w / 2
+        self.rect = [bx,by,h,w]
         self.vel = v
     def update(self,dt):
         self.rect[0] += self.vel[0] * dt
         self.rect[1] += self.vel[1] * dt
     def draw(self,window):
-        drawRect(window,self.rect,(255,255,255))
+        drawCircle(window, ((self.rect[0]+self.r, self.rect[1]+self.r), self.r), (255,255,255))
+        
 
 class Player:
     def __init__(self, x, y):
@@ -29,6 +32,8 @@ class Player:
         self.health = 100
         self.bullets = []
         self.dmgTimer = 0
+        self.ac = 0
+        self.attackRate = 0.5
 
     def takeDmg(self, dmgAmount, dmgKnockback = [0,0]):
         self.health -= dmgAmount
@@ -68,9 +73,10 @@ class Player:
         bulletSpeed = 500
         bv[0] = math.cos(theta)*bulletSpeed
         bv[1] = math.sin(theta)*bulletSpeed
-        
-        if pygame.mouse.get_pressed(num_buttons=3)[0]:
+        self.ac -= 1 * dt
+        if pygame.mouse.get_pressed(num_buttons=3)[0] and self.ac < 0:
             self.bullets.append(Bullet(self.rect[0],self.rect[1],bv))
+            self.ac = self.attackRate
         # [x, y]
         
         # theta = math.atan2(mousey-playery, mousex-playerx))
