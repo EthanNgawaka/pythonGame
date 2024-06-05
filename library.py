@@ -2,9 +2,6 @@ import pygame
 import math
 import time
 
-def test():
-    print("hello world")
-
 def init(windowW, windowH, caption):
     pygame.init()
     window = pygame.display.set_mode((windowW,windowH))
@@ -21,7 +18,6 @@ def drawCircle(window, circle, col): # circle = (center, radius)
 
 def AABBCollision(rect1, rect2): # rect = (x,y,w,h) returns min trans vec if true
     # actual aabb logic, never done it in a list b4 thought itd look neater
-    print("poop")
     checks = [
         (rect1[0]+rect1[2] >= rect2[0]), (rect1[0] <= rect2[0]+rect2[2]),
         (rect1[1]+rect1[3] >= rect2[1]), (rect1[1] <= rect2[1] + rect2[3])
