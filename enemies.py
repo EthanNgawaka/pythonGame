@@ -6,7 +6,7 @@ class BasicEnemy:
         self.r = self.rect[2]/2
         self.col = (255,0,0)
         self.vel = [0,0]
-        self.speed = 100
+        self.speed = 800
         self.health = 20
         self.forces = [0,0]
         self.invMass = 1
@@ -19,13 +19,14 @@ class BasicEnemy:
         self.physics(dt)
 
     def physics(self, dt):
-        fric = 0.8
+        fric = 0.98
         accel = [self.forces[0]*self.invMass,self.forces[1]*self.invMass]
         self.vel[0] += accel[0]*dt
         self.vel[1] += accel[1]*dt
         self.rect[0] += self.vel[0]*dt
         self.rect[1] += self.vel[1]*dt
         self.vel = [self.vel[0]*fric,self.vel[1]*fric]
+        self.forces = [0,0]
 
     def trackPlayer(self, playerRect):
         dir = [playerRect[0] - self.rect[0], playerRect[1] - self.rect[1]]
