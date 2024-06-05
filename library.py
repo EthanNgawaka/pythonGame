@@ -1,4 +1,5 @@
 import pygame
+import random
 import math
 import time
 
@@ -11,14 +12,17 @@ def add(a, b):
 def subtract(a, b):
     return [a[0]-b[0], a[1]-b[1]]
 
+def magnitude(a):
+    return math.sqrt(a[0]**2 + a[1]**2)
+
 def init(windowW, windowH, caption):
     pygame.init()
     window = pygame.display.set_mode((windowW,windowH))
     pygame.display.set_caption(caption)
     return window
 
-def drawRect(window, rect, col): # col = (R, G, B)
-    pygame.draw.rect(window, col, pygame.Rect(*rect))
+def drawRect(window, rect, col, width=0): # col = (R, G, B)
+    pygame.draw.rect(window, col, pygame.Rect(*rect), width)
 
 def drawCircle(window, circle, col): # circle = (center, radius)
     pygame.draw.circle(window, col, circle[0], circle[1])

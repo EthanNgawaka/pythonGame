@@ -34,14 +34,19 @@ class Player:
         self.bullets = []
         self.dmgTimer = 0
         self.ac = 0
-        self.attackRate = 0.5
+        self.attackRate = 0.1
+        self.dmg = 5
 
-    def takeDmg(self, dmgAmount, dmgKnockback = [0,0]):
-        self.health -= dmgAmount
-        self.vel = add(self.vel, dmgKnockback)
-        self.dmgTimer = 1
-        print("ouch!")
-        print(f"health: {self.health}")
+    def takeDmg(self, dmgAmount, dmgKnockback = [0,0], enemy = False):
+
+        if self.dmgTimer <= 0:
+            if enemy:
+                enemy.vel = scalMult(dmgKnockback, -1)
+            self.health -= dmgAmount
+            self.vel = add(self.vel, dmgKnockback)
+            self.dmgTimer = 2
+            print("ouch!")
+            print(f"health: {self.health}")
 
     def physics(self, dt):
         self.rect[0] += self.vel[0]*dt
@@ -77,7 +82,7 @@ class Player:
         bv[1] = math.sin(theta)*bulletSpeed
         self.ac -= 1 * dt
         if pygame.mouse.get_pressed(num_buttons=3)[0] and self.ac < 0:
-            self.bullets.append(Bullet(self.rect[0],self.rect[1],bv))
+            self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4,self.rect[1]+self.rect[3]/4,bv))
             self.ac = self.attackRate
         # [x, y]
         
@@ -94,32 +99,59 @@ class Player:
         self.physics(dt)
         for bullet in self.bullets:
             bullet.update(dt)
+        if self.dmgTimer > 0:
+            self.dmgTimer -= dt
 
     def draw(self, window):
-        drawCircle(window, (self.center, self.r), self.col)
+        if self.dmgTimer > 0:
+            if math.floor(self.dmgTimer*10) % 2 != 0:
+                drawCircle(window, (self.center, self.r), self.col)
+        else:
+            drawCircle(window, (self.center, self.r), self.col)
+
+        drawRect(window, self.rect, self.col, 2)
         for bullet in self.bullets:
             bullet.draw(window)
 
-player = Player(0,0)
-testEnemy = BasicEnemy(110,110)
+player = Player(W/2, H/2)
+spawnRate = 1
+spawnTimer = 0
+enemiesOnScreen = []
 
 
 def update(window, dt):
-    global keys
+    global keys, spawnRate, spawnTimer, enemiesOnScreen
     player.update(window, dt)
-    testEnemy.update(window, player, dt)
+    
+    if spawnTimer <= 0:
+        spawnTimer = spawnRate
+        spawnLoc = random.randint(0,3)
+        match spawnLoc:
+            case 0: # left
+                enemiesOnScreen.append(BasicEnemy(-player.rect[2],random.randint(0,H-player.rect[3])))
+            case 1: # right
+                enemiesOnScreen.append(BasicEnemy(W+player.rect[2],random.randint(0,H-player.rect[3])))
+            case 2: # up
+                enemiesOnScreen.append(BasicEnemy(random.randint(0,W-player.rect[3]), -player.rect[3]))
+            case 3: # down
+                enemiesOnScreen.append(BasicEnemy(random.randint(0,W-player.rect[3]), H+player.rect[3]))
+        
+    else:
+        spawnTimer -= dt
+
+    for enemy in enemiesOnScreen:
+        enemy.update(window,player,dt,enemiesOnScreen);
 
     keys = pygame.key.get_pressed()
-
 
 def draw(window, dt):
     drawRect(window, (0, 0, W, H), (0, 0, 255))
     player.draw(window)
-    testEnemy.draw(window)
+    for enemy in enemiesOnScreen:
+        enemy.draw(window);
 
 maxFPS = 60
 clock = pygame.time.Clock()
-
 def main():
     window = init(W, H, "bingus 2.0")
 

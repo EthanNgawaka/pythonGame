@@ -2,7 +2,7 @@ from library import *
 
 class BasicEnemy:
     def __init__(self, x, y):
-        self.rect = [x,y,20,20]
+        self.rect = [x,y,30,30]
         self.r = self.rect[2]/2
         self.col = (255,0,0)
         self.vel = [0,0]
@@ -14,19 +14,30 @@ class BasicEnemy:
         self.contactKnockback = 200
 
     def draw(self, window):
-        drawCircle(window,((self.rect[0]+self.r,self.rect[1]+self.r),self.r),self.col)
+        if self.health > 0:
+            drawCircle(window,((self.rect[0]+self.r,self.rect[1]+self.r),self.r),self.col)
 
-    def update(self, window, player, dt):
-        self.trackPlayer(player.rect)
-        self.physics(dt)
-        self.collisions(player)
+    def update(self, window, player, dt, enemiesOnScreen):
+        if self.health > 0:
+            self.trackPlayer(player.rect)
+            self.physics(dt)
+            self.collisions(player, enemiesOnScreen)
 
-    def collisions(self, player):
+    def collisions(self, player, enemiesOnScreen):
         collisionCheck = AABBCollision(self.rect, player.rect)
         if collisionCheck:
-            knockbackVec = scalMult(collisionCheck, self.contactKnockback)
-            player.takeDmg(self.contactDmg, scalMult(knockbackVec, -1))
-            self.vel = scalMult(knockbackVec, 0.25)
+            knockbackVec = scalMult(collisionCheck, self.contactKnockback/magnitude(collisionCheck))
+            player.takeDmg(self.contactDmg, scalMult(knockbackVec, -1), self)
+
+        for bullet in player.bullets:
+            check = AABBCollision(self.rect,bullet.rect)
+            if check:
+                self.health -= player.dmg
+                player.bullets.remove(bullet)
+                if self.health <= 0:
+                    enemiesOnScreen.remove(self)
+                    break
+
     def physics(self, dt):
         fric = 0.98
         accel = [self.forces[0]*self.invMass,self.forces[1]*self.invMass]
