@@ -5,8 +5,6 @@ import time
 def init(windowW, windowH, caption):
     pygame.init()
     window = pygame.display.set_mode((windowW,windowH))
-    W = windowW
-    H = windowH
     pygame.display.set_caption(caption)
     return window
 
