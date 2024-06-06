@@ -73,7 +73,7 @@ class Player:
         self.r = w / 2
         self.rect = [x, y, w, h]  # position = self.rect[0], self.rect[1]
         self.center = [x+w/2,y+h/2]
-        self.col = (155, 155, 155)
+        self.col = (127, 35, 219)
         self.vel = [0, 0]
         self.speed = 5000
         self.mhealth = 100
@@ -84,6 +84,7 @@ class Player:
         self.attackRate = 0.1
         self.dmg = 5
         self.coins = 0
+        self.inaccuracy = 0.1
 
     def takeDmg(self, dmgAmount, dmgKnockback = [0,0], enemy = False):
 
@@ -123,7 +124,8 @@ class Player:
         dis = subtract(pygame.mouse.get_pos(), self.rect)
         dx = dis[0]
         dy = dis[1]
-        theta = math.atan2(dy, dx)
+        inac = random.uniform(1 * self.inaccuracy,-1 * self.inaccuracy)
+        theta = math.atan2(dy, dx) + inac
         bv = [0,0]
         bulletSpeed = 500
         bv[0] = math.cos(theta)*bulletSpeed
@@ -161,8 +163,8 @@ class Player:
                 drawCircle(window, (self.center, self.r), self.col)
         else:
             drawCircle(window, (self.center, self.r), self.col)
+            
         ratio = self.health / self.mhealth
-
         healthBarPos = [160, 18.5]
         pygame.draw.rect(window, (255, 0, 0), (*healthBarPos, 200, 20))
         pygame.draw.rect(window, (0, 255, 0), (*healthBarPos, 200 * ratio, 20))
@@ -171,39 +173,46 @@ class Player:
 
 
 player = Player(W/2, H/2)
-spawnRate = 1
-spawnTimer = 0
 enemiesOnScreen = []
 coinManager = CoinManager()
+spawnTimer = 0
+waveTimer = 60
+
+def Espawn(sc, dt, etype):
+    global waveTimer
+    if waveTimer > 0:
+        global spawnTimer
+        for i in range(1):
+            if spawnTimer <= 0:
+                spawnTimer = sc
+                spawnLoc = random.randint(0,3)
+                match spawnLoc:
+                    case 0: # left
+                        enemiesOnScreen.append(etype(-player.rect[2],random.randint(0,H-player.rect[3])))
+                    case 1: # right
+                        enemiesOnScreen.append(etype(W+player.rect[2],random.randint(0,H-player.rect[3])))
+                    case 2: # up
+                        enemiesOnScreen.append(etype(random.randint(0,W-player.rect[3]), -player.rect[3]))
+                    case 3: # down
+                        enemiesOnScreen.append(etype(random.randint(0,W-player.rect[3]), H+player.rect[3]))
+            
+            else:
+                spawnTimer -= dt
+                waveTimer -= dt
+                print(waveTimer)
 
 def update(window, dt):
     global keys, spawnRate, spawnTimer, enemiesOnScreen
     player.update(window, dt)
     coinManager.update(dt, player)
     
-    if spawnTimer <= 0:
-        spawnTimer = spawnRate
-        spawnLoc = random.randint(0,3)
-        match spawnLoc:
-            case 0: # left
-                enemiesOnScreen.append(BasicEnemy(-player.rect[2],random.randint(0,H-player.rect[3])))
-            case 1: # right
-                enemiesOnScreen.append(BasicEnemy(W+player.rect[2],random.randint(0,H-player.rect[3])))
-            case 2: # up
-                enemiesOnScreen.append(BasicEnemy(random.randint(0,W-player.rect[3]), -player.rect[3]))
-            case 3: # down
-                enemiesOnScreen.append(BasicEnemy(random.randint(0,W-player.rect[3]), H+player.rect[3]))
-        
-    else:
-        spawnTimer -= dt
-
     for enemy in enemiesOnScreen:
         enemy.update(window,player,dt,enemiesOnScreen,coinManager);
 
     keys = pygame.key.get_pressed()
 
 def draw(window, dt):
-    drawRect(window, (0, 0, W, H), (0, 0, 255))
+    drawRect(window, (0, 0, W, H), (50, 50, 50))
     player.draw(window)
     coinManager.draw(window)
     for enemy in enemiesOnScreen:
@@ -213,13 +222,13 @@ maxFPS = 60
 clock = pygame.time.Clock()
 def main():
     window = init(W, H, "bingus 2.0")
-
     running = True
     while running:  # main game loop
         dt = clock.tick(maxFPS) / 1000.0
         #print(1/dt)
         update(window, dt)
         draw(window, dt)
+        Espawn(1, dt, BasicEnemy)
         pygame.display.flip()
 
         for event in pygame.event.get():
