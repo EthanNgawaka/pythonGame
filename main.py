@@ -8,6 +8,7 @@ keys = [0] * 512  #init keys to avoid index error (pygame has 512 keycodes)
 # eg) if keys[pygame.KEY_a]:
 #         print("a down")
 
+
 class Bullet:
     def __init__(self,bx,by,v):
         w, h = 20, 20
@@ -30,7 +31,8 @@ class Player:
         self.col = (155, 155, 155)
         self.vel = [0, 0]
         self.speed = 5000
-        self.health = 100
+        self.mhealth = 100
+        self.health = self.mhealth
         self.bullets = []
         self.dmgTimer = 0
         self.ac = 0
@@ -92,6 +94,9 @@ class Player:
         # Bullet(self,x,y,vel)
         # vel = bullet speed * vec
         # self.bullets.append(Bullet(self.rect[0],self.rect[1],vel))
+
+        #hp bar
+        
     
 
     def update(self, window, dt):
@@ -108,10 +113,12 @@ class Player:
                 drawCircle(window, (self.center, self.r), self.col)
         else:
             drawCircle(window, (self.center, self.r), self.col)
-
-        drawRect(window, self.rect, self.col, 2)
+        ratio = self.health / self.mhealth
+        pygame.draw.rect(window, (255, 0, 0), (10, 10, 200, 20))
+        pygame.draw.rect(window, (0, 255, 0), (10, 10, 200 * ratio, 20))
         for bullet in self.bullets:
             bullet.draw(window)
+
 
 player = Player(W/2, H/2)
 spawnRate = 1
