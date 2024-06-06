@@ -12,6 +12,9 @@ class BasicEnemy:
         self.invMass = 1
         self.contactDmg = 5
         self.contactKnockback = 200
+        self.dmgKnockback = 100
+        self.stunTimer = 0
+        self.stunTime = 0.5
 
     def draw(self, window):
         if self.health > 0:
@@ -19,7 +22,7 @@ class BasicEnemy:
 
     def update(self, window, player, dt, enemiesOnScreen):
         if self.health > 0:
-            self.trackPlayer(player.rect)
+            self.trackPlayer(player.rect, dt)
             self.physics(dt)
             self.collisions(player, enemiesOnScreen)
 
@@ -33,10 +36,25 @@ class BasicEnemy:
             check = AABBCollision(self.rect,bullet.rect)
             if check:
                 self.health -= player.dmg
+
+                distVec = subtract(self.rect, bullet.rect)
+                mag = magnitude(distVec)
+                if mag != 0:
+                    self.vel = scalMult(distVec, self.dmgKnockback/mag)
+                    self.stunTimer = self.stunTime
+
                 player.bullets.remove(bullet)
                 if self.health <= 0:
                     enemiesOnScreen.remove(self)
                     break
+
+        repulsionForce = 5000
+        distThreshold = self.rect[2]
+        for enemy in enemiesOnScreen:
+            distVec = subtract(self.rect, enemy.rect)
+            mag = magnitude(distVec)
+            if mag < distThreshold and mag != 0:
+                self.forces = add(self.forces, scalMult(distVec, repulsionForce/mag))
 
     def physics(self, dt):
         fric = 0.98
@@ -48,12 +66,15 @@ class BasicEnemy:
         self.vel = [self.vel[0]*fric,self.vel[1]*fric]
         self.forces = [0,0]
 
-    def trackPlayer(self, playerRect):
-        dir = [playerRect[0] - self.rect[0], playerRect[1] - self.rect[1]]
-        magnitude = math.sqrt(dir[0]**2 + dir[1]**2)
-        if magnitude != 0:
-            moveSpeed = self.speed/magnitude
-            self.forces[0] += moveSpeed * dir[0]
-            self.forces[1] += moveSpeed * dir[1]
+    def trackPlayer(self, playerRect, dt):
+        if self.stunTimer > 0:
+            self.stunTimer -= dt
+        else:
+            dir = [playerRect[0] - self.rect[0], playerRect[1] - self.rect[1]]
+            magnitude = math.sqrt(dir[0]**2 + dir[1]**2)
+            if magnitude != 0:
+                moveSpeed = self.speed/magnitude
+                self.forces[0] += moveSpeed * dir[0]
+                self.forces[1] += moveSpeed * dir[1]
 
 	

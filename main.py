@@ -1,8 +1,8 @@
 from library import *
 from enemies import *
 
-W = 800
-H = 600
+W = 1600
+H = 900
 keys = [0] * 512  #init keys to avoid index error (pygame has 512 keycodes)
 # to access the state of a key (true for down false for up) use "keys[pygame.KEYCODE]"
 # eg) if keys[pygame.KEY_a]:

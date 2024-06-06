@@ -1,4 +1,5 @@
 import pygame
+import pygame._sdl2 as pg_sdl2
 import random
 import math
 import time
@@ -17,7 +18,15 @@ def magnitude(a):
 
 def init(windowW, windowH, caption):
     pygame.init()
-    window = pygame.display.set_mode((windowW,windowH))
+    window = pygame.display.set_mode((windowW,windowH), flags=pygame.SCALED | pygame.HIDDEN)
+    display_info = pygame.display.Info()
+    SCALE = (display_info.current_w/windowW, display_info.current_h/windowH)
+    nativeWindow = pg_sdl2.Window.from_display_module()
+    nativeWindow.size = (windowW * SCALE[0], windowH * SCALE[1])
+    nativeWindow.position = pg_sdl2.WINDOWPOS_CENTERED
+    nativeWindow.show()
+
+    pygame.display.toggle_fullscreen()
     pygame.display.set_caption(caption)
     return window
 
