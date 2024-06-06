@@ -58,3 +58,7 @@ def AABBCollision(rect1, rect2): # rect = (x,y,w,h) returns min trans vec if tru
     mtv = (xtv,0) if abs(xtv) < abs(ytv) else (0,ytv)
     return mtv
 
+def drawText(window, string, col, pos, size):
+    font = pygame.font.SysFont("Arial",size)
+    img = font.render(string, True, col)
+    window.blit(img, pos)

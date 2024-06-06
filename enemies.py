@@ -20,13 +20,13 @@ class BasicEnemy:
         if self.health > 0:
             drawCircle(window,((self.rect[0]+self.r,self.rect[1]+self.r),self.r),self.col)
 
-    def update(self, window, player, dt, enemiesOnScreen):
+    def update(self, window, player, dt, enemiesOnScreen, coinManager):
         if self.health > 0:
             self.trackPlayer(player.rect, dt)
             self.physics(dt)
-            self.collisions(player, enemiesOnScreen)
+            self.collisions(player, enemiesOnScreen, coinManager)
 
-    def collisions(self, player, enemiesOnScreen):
+    def collisions(self, player, enemiesOnScreen, coinManager):
         collisionCheck = AABBCollision(self.rect, player.rect)
         if collisionCheck:
             knockbackVec = scalMult(collisionCheck, self.contactKnockback/magnitude(collisionCheck))
@@ -45,6 +45,7 @@ class BasicEnemy:
 
                 player.bullets.remove(bullet)
                 if self.health <= 0:
+                    coinManager.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,random.randint(2,10))
                     enemiesOnScreen.remove(self)
                     break
 
