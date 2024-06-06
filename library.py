@@ -4,6 +4,14 @@ import random
 import math
 import time
 
+def lerp(i, j, t):
+    return i * (1-t) + j*t
+
+def rectLerp(rect1, rect2, t):
+    outputX = lerp(rect1[0], rect2[0], t)
+    outputY = lerp(rect1[1], rect2[1], t)
+    return [outputX, outputY, rect1[2], rect1[3]]
+
 def scalMult(vec, scal):
     return [vec[0]*scal, vec[1]*scal]
 
@@ -58,7 +66,13 @@ def AABBCollision(rect1, rect2): # rect = (x,y,w,h) returns min trans vec if tru
     mtv = (xtv,0) if abs(xtv) < abs(ytv) else (0,ytv)
     return mtv
 
-def drawText(window, string, col, pos, size):
+def drawText(window, string, col, pos, size, drawAtCenter=False):
     font = pygame.font.SysFont("Arial",size)
     img = font.render(string, True, col)
-    window.blit(img, pos)
+    if drawAtCenter:
+        textRect = img.get_rect()
+        textRect.center = pos
+        window.blit(img, textRect)
+    else:
+        window.blit(img, pos)
+

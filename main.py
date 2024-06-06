@@ -1,5 +1,7 @@
 from library import *
 from enemies import *
+from coinManager import *
+from shopManager import *
 
 W = 1600
 H = 900
@@ -8,51 +10,6 @@ keys = [0] * 512  #init keys to avoid index error (pygame has 512 keycodes)
 # eg) if keys[pygame.KEY_a]:
 #         print("a down")
 
-class CoinManager:
-    def __init__(self):
-        self.coins = []
-
-    def draw(self, window):
-        for coin in self.coins:
-            coin.draw(window)
-
-    def update(self, dt, player):
-        for coin in self.coins:
-            coin.update(dt, player, self)
-
-    def spawnCoin(self, x, y, qty):
-        for i in range(qty):
-            theta = random.randint(0,360)*math.pi/180
-            vel = scalMult([math.cos(theta), math.sin(theta)],random.randint(0,500))
-            self.coins.append(Coin(x, y, vel))
-
-class Coin:
-    def __init__(self, x, y, vel):
-        self.rect = [x, y, 10, 10]
-        self.vel = vel
-        self.col = (255, 255, 0)
-        self.distThreshold = 150
-
-    def update(self, dt, player, coinManager):
-        attractionSpeed = 60
-        distVec = subtract(player.rect, self.rect)
-        mag = magnitude(distVec)
-        if mag < self.distThreshold:
-            self.distThreshold = 999
-            if mag > 0:
-                self.vel = add(self.vel, scalMult(distVec,attractionSpeed/mag))
-
-        self.rect[0] += self.vel[0]*dt
-        self.rect[1] += self.vel[1]*dt
-        self.vel = scalMult(self.vel, 0.9)
-
-        if AABBCollision(player.rect, self.rect):
-            player.coins+=1
-            print(player.coins)
-            coinManager.coins.remove(self)
-
-    def draw(self, window):
-        drawRect(window, self.rect, self.col)
 
 class Bullet:
     def __init__(self,bx,by,v):
@@ -171,10 +128,11 @@ class Player:
 
 
 player = Player(W/2, H/2)
-spawnRate = 1
-spawnTimer = 0
+spawnRate = 999
+spawnTimer = 999
 enemiesOnScreen = []
 coinManager = CoinManager()
+shopManager = shopManager(W, H)
 
 def update(window, dt):
     global keys, spawnRate, spawnTimer, enemiesOnScreen
@@ -200,6 +158,8 @@ def update(window, dt):
     for enemy in enemiesOnScreen:
         enemy.update(window,player,dt,enemiesOnScreen,coinManager);
 
+    shopManager.update(dt)
+
     keys = pygame.key.get_pressed()
 
 def draw(window, dt):
@@ -209,6 +169,8 @@ def draw(window, dt):
     for enemy in enemiesOnScreen:
         enemy.draw(window);
 
+    shopManager.draw(window)
+
 maxFPS = 60
 clock = pygame.time.Clock()
 def main():
@@ -217,9 +179,9 @@ def main():
     running = True
     while running:  # main game loop
         dt = clock.tick(maxFPS) / 1000.0
-        #print(1/dt)
         update(window, dt)
         draw(window, dt)
+        drawText(window, f"FPS: {1/dt}", (255,255,255),(W-150, 20), 30)
         pygame.display.flip()
 
         for event in pygame.event.get():
