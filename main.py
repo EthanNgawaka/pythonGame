@@ -49,8 +49,7 @@ def update(window, dt):
     
     for enemy in enemiesOnScreen:
         enemy.update(window,player,dt,enemiesOnScreen,coinManager);
-
-    shopManager.update(dt)
+        
     Espawn(1, dt, BasicEnemy)
 
     keys = pygame.key.get_pressed()
@@ -62,8 +61,6 @@ def draw(window, dt):
     for enemy in enemiesOnScreen:
         enemy.draw(window);
 
-    shopManager.draw(window)
-
 maxFPS = 60
 clock = pygame.time.Clock()
 def main():
@@ -73,7 +70,11 @@ def main():
         dt = clock.tick(maxFPS) / 1000.0
         update(window, dt)
         draw(window, dt)
-        drawText(window, f"FPS: {1/dt}", (255,255,255),(W-150, 20), 30)
+        drawText(window, f"Time left: {round(waveTimer)}", (255,255,255),(W-199, 20), 30)
+        drawText(window, f"FPS: {1/dt}", (255,255,255),(W-150, 50), 30)
+        if waveTimer <= 0 and len(enemiesOnScreen) == 0:
+            shopManager.draw(window)
+            shopManager.update(dt)
 
         pygame.display.flip()
 

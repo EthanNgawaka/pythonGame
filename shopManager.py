@@ -1,5 +1,5 @@
 from library import *
-
+llc = True
 class shopManager:
     def __init__(self, screenW, screenH):
         self.choiceW = 150
@@ -24,9 +24,29 @@ class shopManager:
         drawRect(window, self.backgroundRect, (55,55,55))
         for i in self.choices:
             pos = [self.backgroundRect[0]+i["pos"][0], self.backgroundRect[1]+i["pos"][1], self.choiceW, self.choiceW]
-            drawRect(window, pos, (155,155,155)) 
+            drawRect(window, pos, (155,155,155))
             drawText(window, i["name"], (255,255,255), (pos[0]+pos[2]/2,pos[1]-50), 30, True)
             drawText(window, f"${i['price']}", (255,255,255), (pos[0]+pos[2]/2,pos[1]+pos[3]+50), 30, True)
+            mx, my = pygame.mouse.get_pos()
+            rect1 = pos
+            rect2 = (mx,my,0,0)
+            if AABBCollision(rect1,rect2):
+                global llc
+                if pygame.mouse.get_pressed(num_buttons=3)[0] == True:
+                    
+                    if mx < 650 and llc == False:
+                        print("1")
+                        llc = True
+                    elif mx > 950 and llc == False:
+                        print("3")
+                        llc = True
+                    elif mx > 650 and mx < 950 and llc == False:
+                        print("2")
+                        llc = True
+                else:
+                    llc = False
+                    
+
 
     def update(self, dt):
         self.backgroundRect = rectLerp(self.backgroundRect,self.backgroundRectTarget,0.1)
