@@ -56,13 +56,14 @@ class WaveManager:
     def __init__(self):
         self.spawnRate = 2
         self.spawnTimer = 0
-        self.maxWaveTimer = 10
+        self.maxWaveTimer = 1
         self.waveTimer = self.maxWaveTimer
         self.swapVal = 1
         self.wave = 1
 
     def newWave(self):
         self.waveTimer = self.maxWaveTimer
+        self.spawnTimer = 0
         self.wave += 1
 
     def spawnEnemy(self, enemiesOnScreen):
@@ -105,6 +106,7 @@ class WaveManager:
             shopManager.draw(window)
             shopManager.update(dt, mouse)
             if self.swapVal == 1:
+                shopManager.newCards()
                 self.newWave()
 
 
