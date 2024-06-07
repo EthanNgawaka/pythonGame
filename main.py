@@ -34,7 +34,6 @@ class Mouse:
         if pressed[0]:
             if self.down[0]:
                 self.pressed[0] = False
-
             else:
                 self.pressed[0] = True
             self.down[0] = True

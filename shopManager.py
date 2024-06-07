@@ -21,9 +21,22 @@ class Choice:
                 print(self.name)
                 pass # run ability func from parent and delete self
         
+speedUp = 0
+atkSpeedUp = 0
+dmgup = 0
+maxHealthUp = 0
+bulletSpeedUp = 0
+activeCooldownUp = 0
+choicesText = ["speedUp","atkSpeedUp","dmgup","maxHealthUp","bulletSpeedUp","activeCooldownUp"]
+choicesVars = [speedUp,atkSpeedUp,dmgup,maxHealthUp,bulletSpeedUp,activeCooldownUp]
+choicesCols = [(0,255,255),(150,0,255),(255,0,0),(255,100,0),(50,50,50),(0,0,255)]
+
 class shopManager:
     def __init__(self, screenW, screenH):
         self.choiceW = 150
+        self.a = random.randint(0,5)
+        self.b = random.randint(0,5)
+        self.c = random.randint(0,5)
         backgroundW = 900
         backgroundH = 600
         self.bgCol = (55,55,55)
