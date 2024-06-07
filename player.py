@@ -6,7 +6,10 @@ class Bullet:
         self.r = w / 2
         self.rect = [bx,by,h,w]
         self.vel = v
-    def update(self,dt):
+    def update(self,dt, player):
+        mag = magnitude(self.vel)
+        if mag > player.bulletSpeed:
+            self.vel = scalMult(self.vel, player.bulletSpeed/mag)
         self.rect[0] += self.vel[0] * dt
         self.rect[1] += self.vel[1] * dt
     def draw(self,window):
@@ -33,6 +36,12 @@ class Player:
         self.inaccuracy = 0.13
         self.bulletSpeed = 500
         self.itemQty = {}
+        self.homing = 0
+
+    def homingSpeed(self):
+        self.homing += 1
+        self.bulletSpeed /= 2
+        self.dmg *= 0.8
 
     def accuracyUp(self):
         self.inaccuracy -= 0.02
@@ -74,6 +83,8 @@ class Player:
                 self.bulletSpeedUp()
             case "accuracyUp":
                 self.accuracyUp()
+            case "homingSpeed":
+                self.homingSpeed()
 
     def takeDmg(self, dmgAmount, dmgKnockback = [0,0], enemy = False):
 
@@ -143,7 +154,7 @@ class Player:
         self.input(dt, keys)
         self.physics(dt)
         for bullet in self.bullets:
-            bullet.update(dt)
+            bullet.update(dt, self)
         if self.dmgTimer > 0:
             self.dmgTimer -= dt
 

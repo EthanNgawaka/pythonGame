@@ -33,12 +33,14 @@ class BasicEnemy:
             player.takeDmg(self.contactDmg, scalMult(knockbackVec, -1), self)
 
         for bullet in player.bullets:
+            distVec = subtract(self.rect, bullet.rect)
+            mag = magnitude(distVec)
+            if mag < player.homing*150:
+                bullet.vel = add(bullet.vel, scalMult(distVec, player.bulletSpeed/(4*mag)))
             check = AABBCollision(self.rect,bullet.rect)
             if check:
                 self.health -= player.dmg
 
-                distVec = subtract(self.rect, bullet.rect)
-                mag = magnitude(distVec)
                 if mag != 0:
                     self.vel = scalMult(distVec, self.dmgKnockback/mag)
                     self.stunTimer = self.stunTime

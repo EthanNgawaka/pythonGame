@@ -56,7 +56,7 @@ class WaveManager:
     def __init__(self):
         self.spawnRate = 2
         self.spawnTimer = 0
-        self.maxWaveTimer = 1
+        self.maxWaveTimer = 3
         self.waveTimer = self.maxWaveTimer
         self.swapVal = 1
         self.wave = 1
