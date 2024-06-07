@@ -32,6 +32,15 @@ class Player:
         self.coins = 0
         self.inaccuracy = 0.1
 
+    def speedUp(self): # to add new card at this func
+        self.speed += 500
+        print(self.speed)
+
+    def triggerCardFunc(self,name):
+        match name:
+            case "speedUp": # then add: case "name": self.name()
+                self.speedUp()
+
     def takeDmg(self, dmgAmount, dmgKnockback = [0,0], enemy = False):
 
         if self.dmgTimer <= 0:

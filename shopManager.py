@@ -14,7 +14,7 @@ choicesCols = [(0,255,255),(150,0,255),(255,0,0),(255,100,0),(50,50,50),(0,0,255
 # ie we chose a speedUp card, the card calls player.triggerCardFunc("speedUp") which runs the necessary code to make the card func
 
 shopCards = [
-        {"name": "test1", "basePrice": 10, "col": (0,255,255)},
+        {"name": "speedUp", "basePrice": 10, "col": (0,255,255)},
         {"name": "test2", "basePrice": 11, "col": (255,0,255)},
         {"name": "test3", "basePrice": 12, "col": (255,255,255)},
 ]
@@ -33,12 +33,13 @@ class Choice:
         drawText(window, self.name, (255,255,255), (pos[0]+pos[2]/2,pos[1]-50), 30, True)
         drawText(window, f"${self.price}", (255,255,255), (pos[0]+pos[2]/2,pos[1]+pos[3]+50), 30, True)
 
-    def update(self, mouse, parent):
+    def update(self, mouse, parent, player):
         pos = parent.getDrawRect(self.rect)
-        if AABBCollision(pos, [mouse.x,mouse.y,0,0]):
+        if AABBCollision(pos, [mouse.x,mouse.y,0,0]) and parent.store:
             if mouse.pressed[0]:
                 print(self.name)
-                pass # run ability func from parent and delete self
+                player.triggerCardFunc(self.name)
+                parent.choices.remove(self)
 
 class shopManager:
     def __init__(self, screenW, screenH):
@@ -82,10 +83,10 @@ class shopManager:
         for choice in self.choices:
             choice.draw(window, self)
 
-    def update(self, dt, mouse):
-        for choice in self.choices:
-            choice.update(mouse, self)
+    def update(self, dt, mouse, player=None):
         if self.store:
+            for choice in self.choices:
+                choice.update(mouse, self, player)
             self.backgroundRect = rectLerp(self.backgroundRect,self.backgroundRectTarget,0.1)
         else:
             self.backgroundRect = rectLerp(self.backgroundRect,self.spawnPos,0.1)

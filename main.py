@@ -79,7 +79,7 @@ class WaveManager:
             case 3: # down
                 enemiesOnScreen.append(enemyType(random.randint(0,W-player.rect[3]), H+player.rect[3]))
 
-    def update(self, dt, enemiesOnScreen, shopManager, mouse, coinManager):
+    def update(self, dt, enemiesOnScreen, shopManager, mouse, coinManager, player):
         if self.waveTimer > 0:
             self.waveTimer -= dt
             if self.spawnTimer > 0:
@@ -92,7 +92,7 @@ class WaveManager:
             shopManager.store = True
         
         if shopManager.store:
-            shopManager.update(dt, mouse)
+            shopManager.update(dt, mouse, player)
             if not shopManager.store:
                 self.swapVal = 20
 
@@ -118,7 +118,7 @@ def update(window, dt):
     if waveManager.swapVal == 1: # if not in store or transitioning from store
         player.update(window, dt, keys)
         coinManager.update(dt, player)
-    waveManager.update(dt, enemiesOnScreen, shopManager, mouse, coinManager)
+    waveManager.update(dt, enemiesOnScreen, shopManager, mouse, coinManager, player)
     
     for enemy in enemiesOnScreen:
         enemy.update(window,player,dt,enemiesOnScreen,coinManager);
