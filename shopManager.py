@@ -1,23 +1,16 @@
 from library import *
-        
-speedUp = 0
-atkSpeedUp = 0
-dmgup = 0
-maxHealthUp = 0
-bulletSpeedUp = 0
-activeCooldownUp = 0
-choicesText = ["speedUp","atkSpeedUp","dmgup","maxHealthUp","bulletSpeedUp","activeCooldownUp"]
-choicesVars = [speedUp,atkSpeedUp,dmgup,maxHealthUp,bulletSpeedUp,activeCooldownUp]
-choicesCols = [(0,255,255),(150,0,255),(255,0,0),(255,100,0),(50,50,50),(0,0,255)]
+
 # idea here is to have a list of cards w/ properties like name, basePrice, and col
 # then in player class we have a func called triggerCardFunc(name), which takes name and finds the function of the same name in player class
 # ie we chose a speedUp card, the card calls player.triggerCardFunc("speedUp") which runs the necessary code to make the card func
 
 shopCards = [
-        {"name": "speedUp", "basePrice": 10, "col": (0,255,255)},
-        {"name": "atkSpeedUp", "basePrice": 11, "col": (255,0,255)},
-        {"name": "dmgUp", "basePrice": 11, "col": (200,0,0)},
-        {"name": "healthUp", "basePrice": 11, "col": (0,255,0)},
+        {"name": "speedUp", "basePrice": 50, "col": (0,255,255)},
+        {"name": "atkSpeedUp", "basePrice": 100, "col": (255,0,255)},
+        {"name": "dmgUp", "basePrice": 150, "col": (200,0,0)},
+        {"name": "healthUp", "basePrice": 50, "col": (0,255,0)},
+        {"name": "bulletSpeed", "basePrice": 50, "col": (0,255,0)},
+        {"name": "accuracyUp", "basePrice": 100, "col": (0,255,0)},
 ]
 
 class Choice:
@@ -27,18 +20,24 @@ class Choice:
         self.col = col
         self.name = name
         self.price = price
+        self.cost = price
 
     def draw(self, window, parent):
         pos = parent.getDrawRect(self.rect)
         drawRect(window, pos, self.col)
         drawText(window, self.name, (255,255,255), (pos[0]+pos[2]/2,pos[1]-50), 30, True)
-        drawText(window, f"${self.price}", (255,255,255), (pos[0]+pos[2]/2,pos[1]+pos[3]+50), 30, True)
+        drawText(window, f"${self.cost}", (255,255,255), (pos[0]+pos[2]/2,pos[1]+pos[3]+50), 30, True)
 
     def update(self, mouse, parent, player):
         pos = parent.getDrawRect(self.rect)
+        if self.name in player.itemQty.keys():
+            self.cost = self.price*(1+player.itemQty[self.name]/10)
+        else:
+            self.cost = self.price
+        self.cost = math.floor(self.cost)
         if AABBCollision(pos, [mouse.x,mouse.y,0,0]) and parent.store:
-            if mouse.pressed[0]:
-                print(self.name)
+            if mouse.pressed[0] and player.coins >= self.cost:
+                player.coins -= self.cost
                 player.triggerCardFunc(self.name)
                 parent.choices.remove(self)
 

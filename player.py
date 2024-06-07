@@ -21,39 +21,59 @@ class Player:
         self.center = [x+w/2,y+h/2]
         self.col = (127, 35, 219)
         self.vel = [0, 0]
-        self.speed = 5000
+        self.speed = 2500
         self.mhealth = 100
         self.health = self.mhealth
         self.bullets = []
         self.dmgTimer = 0
         self.ac = 0
-        self.attackRate = 0.25
+        self.attackRate = 0.35
         self.dmg = 5
-        self.coins = 0
-        self.inaccuracy = 0.1
+        self.coins = 1000000
+        self.inaccuracy = 0.13
+        self.bulletSpeed = 500
+        self.itemQty = {}
+
+    def accuracyUp(self):
+        self.inaccuracy -= 0.02
 
     def speedUp(self):
         self.speed += 500
         print(self.speed)
+
     def atkSpeedUp(self):
-        self.attackRate += -0.01
+        self.attackRate *= 0.9 # have to do this otherwise u get 0 firerate really quickly
         print(self.attackRate)
+
     def dmgUp(self):
-        self.dmg += 1
+        self.dmg += 2
         print(self.dmg)
+
     def healthUp(self):
         self.health += 20
 
+    def bulletSpeedUp(self):
+        self.bulletSpeed += 100
+
     def triggerCardFunc(self,name):
+        if name in self.itemQty.keys():
+            self.itemQty[name] += 1
+            print(self.itemQty[name])
+        else:
+            self.itemQty[name] = 1
         match name:
-            case "speedUp": # then add: case "name": self.name()
+            case "speedUp":
                 self.speedUp()
-            case "atkSpeedUp": # then add: case "name": self.name()
+            case "atkSpeedUp":
                 self.atkSpeedUp()
-            case "dmgUp": # then add: case "name": self.name()
+            case "dmgUp":
                 self.dmgUp()
-            case "healthUp": # then add: case "name": self.name()
+            case "healthUp":
                 self.healthUp()
+            case "bulletSpeed": 
+                self.bulletSpeedUp()
+            case "accuracyUp":
+                self.accuracyUp()
 
     def takeDmg(self, dmgAmount, dmgKnockback = [0,0], enemy = False):
 
@@ -93,12 +113,15 @@ class Player:
         dis = subtract(pygame.mouse.get_pos(), self.rect)
         dx = dis[0]
         dy = dis[1]
-        inac = random.uniform(1 * self.inaccuracy,-1 * self.inaccuracy)
+        if self.inaccuracy < 0:
+            inac = 0
+        else:
+            inac = random.uniform(1 * self.inaccuracy,-1 * self.inaccuracy)
+
         theta = math.atan2(dy, dx) + inac
         bv = [0,0]
-        bulletSpeed = 500
-        bv[0] = math.cos(theta)*bulletSpeed
-        bv[1] = math.sin(theta)*bulletSpeed
+        bv[0] = math.cos(theta)*self.bulletSpeed
+        bv[1] = math.sin(theta)*self.bulletSpeed
         self.ac -= 1 * dt
         if pygame.mouse.get_pressed(num_buttons=3)[0] and self.ac < 0:
             self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4,self.rect[1]+self.rect[3]/4,bv))
