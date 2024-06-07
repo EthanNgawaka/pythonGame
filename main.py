@@ -17,10 +17,13 @@ enemiesOnScreen = []
 coinManager = CoinManager()
 shopManager = shopManager(W, H)
 spawnTimer = 0
-waveTimer = 60
+waveTimer = 1
 
 def Espawn(sc, dt, etype):
     global waveTimer
+    if shopManager.store == False:
+        waveTimer = 1
+        shopManager.store = True
     if waveTimer > 0:
         global spawnTimer
         for i in range(1):
