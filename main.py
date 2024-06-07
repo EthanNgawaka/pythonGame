@@ -22,7 +22,7 @@ waveTimer = 1
 def Espawn(sc, dt, etype):
     global waveTimer
     if shopManager.store == False:
-        waveTimer = 1
+        waveTimer = 5
         shopManager.store = True
     if waveTimer > 0:
         global spawnTimer

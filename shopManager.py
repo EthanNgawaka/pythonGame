@@ -1,8 +1,23 @@
 from library import *
 llc = True
+speedUp = 0
+atkSpeedUp = 0
+dmgup = 0
+maxHealthUp = 0
+bulletSpeedUp = 0
+activeCooldownUp = 0
+choicesText = ["speedUp","atkSpeedUp","dmgup","maxHealthUp","bulletSpeedUp","activeCooldownUp"]
+choicesVars = [speedUp,atkSpeedUp,dmgup,maxHealthUp,bulletSpeedUp,activeCooldownUp]
+choicesCols = [(0,255,255),(150,0,255),(255,0,0),(255,100,0),(50,50,50),(0,0,255)]
+
+
+
 class shopManager:
     def __init__(self, screenW, screenH):
         self.choiceW = 150
+        self.a = random.randint(0,5)
+        self.b = random.randint(0,5)
+        self.c = random.randint(0,5)
         backgroundW = 900
         backgroundH = 600
 
@@ -37,14 +52,22 @@ class shopManager:
         self.backgroundRect2[1] = self.backgroundRect[1]
         drawRect(window, self.backgroundRect, (55,55,55))
         drawRect(window, self.backgroundRect2, (255,0,0))
+        index = 1
         for i in self.choices:
+            if index == 1:
+                self.ch = self.a
+            elif index == 2:
+                self.ch = self.b
+            elif index == 3:
+                self.ch = self.c
             pos = [self.backgroundRect[0]+i["pos"][0], self.backgroundRect[1]+i["pos"][1], self.choiceW, self.choiceW]
-            drawRect(window, pos, (155,155,155))
-            drawText(window, i["name"], (255,255,255), (pos[0]+pos[2]/2,pos[1]-50), 30, True)
+            drawRect(window, pos, (choicesCols[self.ch]))
+            drawText(window, choicesText[self.ch], (255,255,255), (pos[0]+pos[2]/2,pos[1]-50), 30, True)
             drawText(window, f"${i['price']}", (255,255,255), (pos[0]+pos[2]/2,pos[1]+pos[3]+50), 30, True)
             mx, my = pygame.mouse.get_pos()
             rect1 = pos
             rect2 = (mx,my,0,0)
+            index += 1
             if AABBCollision(self.backgroundRect2,rect2):
                 global llc
                 if pygame.mouse.get_pressed(num_buttons=3)[0] == True:
@@ -55,17 +78,17 @@ class shopManager:
                 if pygame.mouse.get_pressed(num_buttons=3)[0] == True:
                     
                     if mx < 650 and llc == False:
-                        print("1")
+                        print(choicesText[self.a])
+                        
                         llc = True
                     elif mx > 950 and llc == False:
-                        print("3")
+                        print(choicesText[self.b])
                         llc = True
                     elif mx > 650 and mx < 950 and llc == False:
-                        print("2")
+                        print(choicesText[self.c])
                         llc = True
                 else:
                     llc = False
-                    
 
 
     def update(self, dt):
