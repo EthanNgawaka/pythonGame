@@ -15,8 +15,9 @@ choicesCols = [(0,255,255),(150,0,255),(255,0,0),(255,100,0),(50,50,50),(0,0,255
 
 shopCards = [
         {"name": "speedUp", "basePrice": 10, "col": (0,255,255)},
-        {"name": "test2", "basePrice": 11, "col": (255,0,255)},
-        {"name": "test3", "basePrice": 12, "col": (255,255,255)},
+        {"name": "atkSpeedUp", "basePrice": 11, "col": (255,0,255)},
+        {"name": "dmgUp", "basePrice": 11, "col": (200,0,0)},
+        {"name": "healthUp", "basePrice": 11, "col": (0,255,0)},
 ]
 
 class Choice:

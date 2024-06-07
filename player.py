@@ -27,19 +27,33 @@ class Player:
         self.bullets = []
         self.dmgTimer = 0
         self.ac = 0
-        self.attackRate = 0.1
+        self.attackRate = 0.25
         self.dmg = 5
         self.coins = 0
         self.inaccuracy = 0.1
 
-    def speedUp(self): # to add new card at this func
+    def speedUp(self):
         self.speed += 500
         print(self.speed)
+    def atkSpeedUp(self):
+        self.attackRate += -0.01
+        print(self.attackRate)
+    def dmgUp(self):
+        self.dmg += 1
+        print(self.dmg)
+    def healthUp(self):
+        self.health += 20
 
     def triggerCardFunc(self,name):
         match name:
             case "speedUp": # then add: case "name": self.name()
                 self.speedUp()
+            case "atkSpeedUp": # then add: case "name": self.name()
+                self.atkSpeedUp()
+            case "dmgUp": # then add: case "name": self.name()
+                self.dmgUp()
+            case "healthUp": # then add: case "name": self.name()
+                self.healthUp()
 
     def takeDmg(self, dmgAmount, dmgKnockback = [0,0], enemy = False):
 
