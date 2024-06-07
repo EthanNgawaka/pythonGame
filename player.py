@@ -37,6 +37,8 @@ class Player:
         self.bulletSpeed = 500
         self.itemQty = {}
         self.homing = 0
+        self.bulletCount = 1
+        self.speedinac = 0
 
     def homingSpeed(self):
         self.homing += 1
@@ -64,6 +66,13 @@ class Player:
     def bulletSpeedUp(self):
         self.bulletSpeed += 100
 
+    def shotgun(self):
+        self.bulletCount += 3
+        self.dmg /= 2
+        self.inaccuracy += 0.1
+        self.speedinac += 50
+        self.attackRate += 0.1
+
     def triggerCardFunc(self,name):
         if name in self.itemQty.keys():
             self.itemQty[name] += 1
@@ -85,6 +94,8 @@ class Player:
                 self.accuracyUp()
             case "homingSpeed":
                 self.homingSpeed()
+            case "shotgun":
+                self.shotgun()
 
     def takeDmg(self, dmgAmount, dmgKnockback = [0,0], enemy = False):
 
@@ -124,19 +135,21 @@ class Player:
         dis = subtract(pygame.mouse.get_pos(), self.rect)
         dx = dis[0]
         dy = dis[1]
-        if self.inaccuracy < 0:
-            inac = 0
-        else:
-            inac = random.uniform(1 * self.inaccuracy,-1 * self.inaccuracy)
-
-        theta = math.atan2(dy, dx) + inac
-        bv = [0,0]
-        bv[0] = math.cos(theta)*self.bulletSpeed
-        bv[1] = math.sin(theta)*self.bulletSpeed
+        
         self.ac -= 1 * dt
         if pygame.mouse.get_pressed(num_buttons=3)[0] and self.ac < 0:
-            self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4,self.rect[1]+self.rect[3]/4,bv))
-            self.ac = self.attackRate
+            for i in range(self.bulletCount):
+                if self.inaccuracy < 0:
+                    inac = 0
+                else:
+                    inac = random.uniform(1 * self.inaccuracy,-1 * self.inaccuracy)
+                theta = math.atan2(dy, dx) + inac
+                bv = [0,0]
+                bv[0] = math.cos(theta)*self.bulletSpeed + random.uniform(self.speedinac,-self.speedinac)
+                bv[1] = math.sin(theta)*self.bulletSpeed + random.uniform(self.speedinac,-self.speedinac)
+                
+                self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4,self.rect[1]+self.rect[3]/4,bv))
+                self.ac = self.attackRate
         # [x, y]
         
         # theta = math.atan2(mousey-playery, mousex-playerx))

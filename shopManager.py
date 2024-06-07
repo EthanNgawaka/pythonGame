@@ -12,6 +12,7 @@ shopCards = [
         {"name": "bulletSpeed", "basePrice": 50, "col": (0,255,0)},
         {"name": "accuracyUp", "basePrice": 100, "col": (0,255,0)},
         {"name": "homingSpeed", "basePrice": 0, "col": (255,255,0)},
+        {"name": "shotgun", "basePrice": 100, "col": (199,199,199)},
 ]
 
 class Choice:
