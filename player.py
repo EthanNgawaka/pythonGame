@@ -39,6 +39,8 @@ class Player:
         self.homing = 0
         self.bulletCount = 1
         self.speedinac = 0
+        self.dash = False
+        self.ability1Cooldown = 0
 
     def homingSpeed(self):
         self.homing += 1
@@ -64,6 +66,9 @@ class Player:
         self.health += 20
 
     def bulletSpeedUp(self):
+        self.bulletSpeed += 100
+    
+    def dash(self):
         self.bulletSpeed += 100
 
     def shotgun(self):
@@ -96,6 +101,9 @@ class Player:
                 self.homingSpeed()
             case "shotgun":
                 self.shotgun()
+            case "Dash":
+                self.dashUp()
+                self.dash = True
 
     def takeDmg(self, dmgAmount, dmgKnockback = [0,0], enemy = False):
 
@@ -126,6 +134,19 @@ class Player:
             dir[0] += -1
         if keys[pygame.K_d]:
             dir[0] += 1
+
+        #dash
+        if keys[pygame.K_SPACE] and self.ability1Cooldown <= 0:
+            SF = math.sqrt(dir[0]**2 + dir[1]**2)
+            if SF != 0:
+                self.vel[0] += 100000 * dt * dir[0] / SF
+                self.vel[1] += 100000 * dt * dir[1] / SF
+                print(self.vel)
+                self.ability1Cooldown = 5
+        elif self.ability1Cooldown > 0:
+            self.ability1Cooldown -= dt
+
+
         SF = math.sqrt(dir[0]**2 + dir[1]**2)
         if SF != 0:
             self.vel[0] += self.speed * dt * dir[0] / SF

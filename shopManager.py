@@ -1,5 +1,4 @@
 from library import *
-
 # idea here is to have a list of cards w/ properties like name, basePrice, and col
 # then in player class we have a func called triggerCardFunc(name), which takes name and finds the function of the same name in player class
 # ie we chose a speedUp card, the card calls player.triggerCardFunc("speedUp") which runs the necessary code to make the card func
@@ -13,6 +12,7 @@ shopCards = [
         {"name": "accuracyUp", "basePrice": 100, "col": (0,255,0)},
         {"name": "homingSpeed", "basePrice": 0, "col": (255,255,0)},
         {"name": "shotgun", "basePrice": 100, "col": (199,199,199)},
+        {"name": "dash", "basePrice": 100, "col": (0,255,255)},
 ]
 
 class Choice:
