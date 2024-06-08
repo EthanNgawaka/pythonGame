@@ -2,7 +2,7 @@ from library import *
 
 class Bullet:
     def __init__(self,bx,by,v,dmg):
-        w, h = dmg*3, dmg*3
+        w, h = dmg, dmg
         self.r = w / 2
         self.rect = [bx,by,h,w]
         self.vel = v
@@ -43,7 +43,7 @@ class Player:
         self.ability1Cooldown = 0
         self.dmgMultiplier = 1
         self.atkRateMultiplier = 1
-        self.doubleShot()
+        self.minBlltSize = 9
 
     def doubleShot(self):
         self.bulletCount += 1
@@ -88,6 +88,9 @@ class Player:
         self.inaccuracy += 0.1
         self.speedinac += 50
         self.attackRate += 0.1
+
+    def getBulletSize(self):
+        return [max(self.minBlltSize, self.dmgMultiplier*(self.dmg+2)*2)]*2
 
     def triggerCardFunc(self,name):
         if name in self.itemQty.keys():
@@ -167,7 +170,7 @@ class Player:
             self.vel[1] += self.speed * dt * dir[1] / SF
         
         # shooting
-        bulletRect = [self.dmgMultiplier*self.dmg*3/2] * 2
+        bulletRect = self.getBulletSize()
         mousePos = pygame.mouse.get_pos()
         dis = subtract(mousePos, self.center)
         dx = dis[0]
@@ -185,7 +188,7 @@ class Player:
                 bv[0] = math.cos(theta)*self.bulletSpeed + random.uniform(self.speedinac,-self.speedinac)
                 bv[1] = math.sin(theta)*self.bulletSpeed + random.uniform(self.speedinac,-self.speedinac)
                 
-                self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, bv, self.dmg*self.dmgMultiplier))
+                self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, bv, self.getBulletSize()[0]))
                 self.ac = self.attackRate/self.atkRateMultiplier
         # [x, y]
         
