@@ -1,8 +1,8 @@
 from library import *
 
 class Bullet:
-    def __init__(self,bx,by,v):
-        w, h = 20, 20
+    def __init__(self,bx,by,v,dmg):
+        w, h = dmg*3, dmg*3
         self.r = w / 2
         self.rect = [bx,by,h,w]
         self.vel = v
@@ -41,6 +41,20 @@ class Player:
         self.speedinac = 0
         self.dash = False
         self.ability1Cooldown = 0
+        self.dmgMultiplier = 1
+        self.atkRateMultiplier = 1
+        self.doubleShot()
+
+    def doubleShot(self):
+        self.bulletCount += 1
+        self.accuracyUp()
+
+    def minigun(self):
+        self.dmgMultiplier = 0.2
+        self.inaccuracy += 0.1
+        self.speedinac += 50
+        self.atkRateMultiplier = 5
+        self.bulletSpeed += 500
 
     def homingSpeed(self):
         self.homing += 1
@@ -52,15 +66,12 @@ class Player:
 
     def speedUp(self):
         self.speed += 500
-        print(self.speed)
 
     def atkSpeedUp(self):
         self.attackRate *= 0.9 # have to do this otherwise u get 0 firerate really quickly
-        print(self.attackRate)
 
     def dmgUp(self):
         self.dmg += 2
-        print(self.dmg)
 
     def healthUp(self):
         self.health += 20
@@ -81,7 +92,6 @@ class Player:
     def triggerCardFunc(self,name):
         if name in self.itemQty.keys():
             self.itemQty[name] += 1
-            print(self.itemQty[name])
         else:
             self.itemQty[name] = 1
         match name:
@@ -104,6 +114,10 @@ class Player:
             case "Dash":
                 self.dashUp()
                 self.dash = True
+            case "minigun":
+                self.minigun()
+            case "doubleShot":
+                self.doubleShot()
 
     def takeDmg(self, dmgAmount, dmgKnockback = [0,0], enemy = False):
 
@@ -147,13 +161,15 @@ class Player:
             self.ability1Cooldown -= dt
 
 
-        SF = math.sqrt(dir[0]**2 + dir[1]**2)
+        SF = magnitude(dir)
         if SF != 0:
             self.vel[0] += self.speed * dt * dir[0] / SF
             self.vel[1] += self.speed * dt * dir[1] / SF
         
         # shooting
-        dis = subtract(pygame.mouse.get_pos(), self.rect)
+        bulletRect = [self.dmgMultiplier*self.dmg*3/2] * 2
+        mousePos = pygame.mouse.get_pos()
+        dis = subtract(mousePos, self.center)
         dx = dis[0]
         dy = dis[1]
         
@@ -169,8 +185,8 @@ class Player:
                 bv[0] = math.cos(theta)*self.bulletSpeed + random.uniform(self.speedinac,-self.speedinac)
                 bv[1] = math.sin(theta)*self.bulletSpeed + random.uniform(self.speedinac,-self.speedinac)
                 
-                self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4,self.rect[1]+self.rect[3]/4,bv))
-                self.ac = self.attackRate
+                self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, bv, self.dmg*self.dmgMultiplier))
+                self.ac = self.attackRate/self.atkRateMultiplier
         # [x, y]
         
         # theta = math.atan2(mousey-playery, mousex-playerx))
