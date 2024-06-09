@@ -10,9 +10,13 @@ shopCards = [
         {"name": "healthUp", "basePrice": 50, "col": (0,255,0)},
         {"name": "bulletSpeed", "basePrice": 50, "col": (0,255,0)},
         {"name": "accuracyUp", "basePrice": 100, "col": (0,255,0)},
-        {"name": "homingSpeed", "basePrice": 0, "col": (255,255,0)},
+]
+rareCards = [
         {"name": "shotgun", "basePrice": 100, "col": (199,199,199)},
         {"name": "dash", "basePrice": 100, "col": (0,255,255)},
+]
+legendaryCards = [
+        {"name": "homingSpeed", "basePrice": 0, "col": (255,255,0)},
         {"name": "minigun", "basePrice": 200, "col": (0,255,255)},
         {"name": "doubleShot", "basePrice": 250, "col": (0,255,255)},
 ]
@@ -47,6 +51,7 @@ class Choice:
 
 class shopManager:
     def __init__(self, screenW, screenH):
+        self.type = "shop"
         self.choiceW = 150
         backgroundW = 900
         backgroundH = 600
@@ -70,7 +75,14 @@ class shopManager:
         choiceSpacing = [(backgroundW - self.choiceW*3)/4, (backgroundH-self.choiceW)/2]
         
         for i in range(3):
-            randomCardChoice = shopCards[random.randint(0,len(shopCards)-1)]
+            match self.type:
+                case "shop":
+                    randomCardChoice = shopCards[random.randint(0,len(shopCards)-1)]
+                case "rare":
+                    randomCardChoice = rareCards[random.randint(0,len(rareCards)-1)]
+                case "legendary":
+                    randomCardChoice = legendaryCards[random.randint(0,len(legendaryCards)-1)]
+
             self.choices.append(Choice([choiceSpacing[0]*(i+1)+self.choiceW*i, choiceSpacing[1]], randomCardChoice["name"], randomCardChoice["basePrice"], randomCardChoice["col"]))
 
     def getDrawRect(self,offsetRect):

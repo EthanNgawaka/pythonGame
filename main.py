@@ -106,6 +106,12 @@ class WaveManager:
             shopManager.draw(window)
             shopManager.update(dt, mouse)
             if self.swapVal == 1:
+                if self.wave == 3:
+                    shopManager.type = "rare"
+                elif self.wave == 7:
+                    shopManager.type = "legendary"
+                else:
+                    shopManager.type = "shop"
                 shopManager.newCards()
                 self.newWave()
 
