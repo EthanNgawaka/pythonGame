@@ -18,32 +18,49 @@ class Bullet:
 
 class Player:
     def __init__(self, x, y):
+
+        # physics, consts, timers, and  rect stuff
         w, h = 40, 40
         self.r = w / 2
         self.rect = [x, y, w, h]  # position = self.rect[0], self.rect[1]
         self.center = [x+w/2,y+h/2]
         self.col = (127, 35, 219)
         self.vel = [0, 0]
-        self.speed = 2500
-        self.mhealth = 100
-        self.health = self.mhealth
-        self.bullets = []
+        self.dir = [0, 0]
+
+        self.minBlltSize = 9
+        self.ac = 0 # attack timer
         self.dmgTimer = 0
-        self.ac = 0
-        self.attackRate = 0.35
-        self.dmg = 5
-        self.coins = 1000000
-        self.inaccuracy = 0.13
-        self.bulletSpeed = 500
-        self.itemQty = {}
-        self.homing = 0
-        self.bulletCount = 1
-        self.speedinac = 0
-        self.dash = False
-        self.ability1Cooldown = 0
+
+        self.activeKeys = [pygame.K_SPACE, pygame.K_e, pygame.K_q]
+
+        # player properties
+        # movement and health
+        self.speed = 2500
+        self.mhealth = 100 #max health
+        self.health = self.mhealth
+        # dmg and firerate stuff
         self.dmgMultiplier = 1
         self.atkRateMultiplier = 1
-        self.minBlltSize = 9
+        self.dmg = 5
+        self.homing = 0
+        # bullet stuff
+        self.speedinac = 0
+        self.attackRate = 0.35
+        self.bulletCount = 1
+        self.bullets = []
+        self.inaccuracy = 0.13
+        self.bulletSpeed = 500
+        # misc
+        self.coins = 1000000
+        self.itemQty = {}
+        self.actives = {"Space":None, "E":None, "Q":None} # "Key": [Cooldown, Timer, ActiveFunc]
+
+    def buyDash(self):
+        for index in self.actives:
+            if not self.actives[index]:
+                self.actives[index] = [2, 0, self.dash]
+                return
 
     def doubleShot(self):
         self.bulletCount += 1
@@ -79,8 +96,11 @@ class Player:
     def bulletSpeedUp(self):
         self.bulletSpeed += 100
     
-    def dash(self):
-        self.bulletSpeed += 100
+    def dash(self, dt):
+        SF = magnitude(self.dir)
+        if SF != 0:
+            self.vel[0] += 100000 * dt * self.dir[0] / SF
+            self.vel[1] += 100000 * dt * self.dir[1] / SF
 
     def shotgun(self):
         self.bulletCount += 3
@@ -115,8 +135,7 @@ class Player:
             case "shotgun":
                 self.shotgun()
             case "Dash":
-                self.dashUp()
-                self.dash = True
+                self.buyDash()
             case "minigun":
                 self.minigun()
             case "doubleShot":
@@ -130,8 +149,6 @@ class Player:
             self.health -= dmgAmount
             self.vel = add(self.vel, dmgKnockback)
             self.dmgTimer = 2
-            print("ouch!")
-            print(f"health: {self.health}")
 
     def physics(self, dt):
         self.rect[0] += self.vel[0]*dt
@@ -142,32 +159,20 @@ class Player:
 
     def input(self, dt, keys):
         # movement
-        dir = [0, 0]
+        self.dir = [0, 0]
         if keys[pygame.K_w]:
-            dir[1] += -1
+            self.dir[1] += -1
         if keys[pygame.K_s]:
-            dir[1] += 1
+            self.dir[1] += 1
         if keys[pygame.K_a]:
-            dir[0] += -1
+            self.dir[0] += -1
         if keys[pygame.K_d]:
-            dir[0] += 1
+            self.dir[0] += 1
 
-        #dash
-        if keys[pygame.K_SPACE] and self.ability1Cooldown <= 0:
-            SF = math.sqrt(dir[0]**2 + dir[1]**2)
-            if SF != 0:
-                self.vel[0] += 100000 * dt * dir[0] / SF
-                self.vel[1] += 100000 * dt * dir[1] / SF
-                print(self.vel)
-                self.ability1Cooldown = 5
-        elif self.ability1Cooldown > 0:
-            self.ability1Cooldown -= dt
-
-
-        SF = magnitude(dir)
+        SF = magnitude(self.dir)
         if SF != 0:
-            self.vel[0] += self.speed * dt * dir[0] / SF
-            self.vel[1] += self.speed * dt * dir[1] / SF
+            self.vel[0] += self.speed * dt * self.dir[0] / SF
+            self.vel[1] += self.speed * dt * self.dir[1] / SF
         
         # shooting
         bulletRect = self.getBulletSize()
@@ -190,18 +195,17 @@ class Player:
                 
                 self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, bv, self.getBulletSize()[0]))
                 self.ac = self.attackRate/self.atkRateMultiplier
-        # [x, y]
-        
-        # theta = math.atan2(mousey-playery, mousex-playerx))
 
-        # find theta then find vec (cos theta, sin theta)
-        # Bullet(self,x,y,vel)
-        # vel = bullet speed * vec
-        # self.bullets.append(Bullet(self.rect[0],self.rect[1],vel))
-
-        #hp bar
-        
-    
+        # "Key": [Cooldown, Timer, ActiveFunc]
+        for i in range(len(self.actives)):
+            activeObj = self.actives[list(self.actives.keys())[i]]
+            if activeObj != None:
+                print(activeObj[1])
+                if activeObj[1] >= 0:
+                    activeObj[1] -= dt
+                elif keys[self.activeKeys[i]]:
+                    activeObj[2](dt)
+                    activeObj[1] = activeObj[0]
 
     def update(self, window, dt, keys):
         self.input(dt, keys)
@@ -226,3 +230,7 @@ class Player:
         pygame.draw.rect(window, (0, 255, 0), (*healthBarPos, 200 * ratio, 20))
         for bullet in self.bullets:
             bullet.draw(window)
+        # "Key": [Cooldown, Timer, ActiveFunc]
+        for i in range(len(self.actives)):
+            activeObj = self.actives[list(self.actives.keys())[i]]
+            # draw card for active
