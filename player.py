@@ -17,7 +17,7 @@ class Bullet:
         
 
 class Player:
-    def __init__(self, x, y):
+    def __init__(self, x, y, ctrl):
 
         # physics, consts, timers, and  rect stuff
         w, h = 40, 40
@@ -27,6 +27,7 @@ class Player:
         self.col = (127, 35, 219)
         self.vel = [0, 0]
         self.dir = [0, 0]
+        self.ctrl = ctrl
 
         self.minBlltSize = 9
         self.ac = 0 # attack timer
@@ -44,6 +45,7 @@ class Player:
         self.atkRateMultiplier = 1
         self.dmg = 5
         self.homing = 0
+        self.bdir = [0,0]
         # bullet stuff
         self.speedinac = 0
         self.attackRate = 0.35
@@ -182,19 +184,44 @@ class Player:
         dy = dis[1]
         
         self.ac -= 1 * dt
-        if pygame.mouse.get_pressed(num_buttons=3)[0] and self.ac < 0:
-            for i in range(self.bulletCount):
-                if self.inaccuracy < 0:
-                    inac = 0
-                else:
-                    inac = random.uniform(1 * self.inaccuracy,-1 * self.inaccuracy)
-                theta = math.atan2(dy, dx) + inac
-                bv = [0,0]
-                bv[0] = math.cos(theta)*self.bulletSpeed + random.uniform(self.speedinac,-self.speedinac)
-                bv[1] = math.sin(theta)*self.bulletSpeed + random.uniform(self.speedinac,-self.speedinac)
-                
-                self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, bv, self.getBulletSize()[0]))
-                self.ac = self.attackRate/self.atkRateMultiplier
+        if self.ctrl == False:
+            if pygame.mouse.get_pressed(num_buttons=3)[0] and self.ac < 0:
+                for i in range(self.bulletCount):
+                    if self.inaccuracy < 0:
+                        inac = 0
+                    else:
+                        inac = random.uniform(1 * self.inaccuracy,-1 * self.inaccuracy)
+                    theta = math.atan2(dy, dx) + inac
+                    bv = [0,0]
+                    bv[0] = math.cos(theta)*self.bulletSpeed + random.uniform(self.speedinac,-self.speedinac)
+                    bv[1] = math.sin(theta)*self.bulletSpeed + random.uniform(self.speedinac,-self.speedinac)
+                    
+                    self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, bv, self.getBulletSize()[0]))
+                    self.ac = self.attackRate/self.atkRateMultiplier
+        elif self.ctrl == True:
+            self.bdir = [0, 0]
+            if keys[pygame.K_i]:
+                self.bdir[1] += -1
+            if keys[pygame.K_k]:
+                self.bdir[1] += 1
+            if keys[pygame.K_j]:
+                self.bdir[0] += -1
+            if keys[pygame.K_l]:
+                self.bdir[0] += 1
+            if self.bdir != [0,0] and self.ac < 0:
+                for i in range(self.bulletCount):
+                    if self.inaccuracy < 0:
+                        inac = 0
+                    else:
+                        inac = random.uniform(1 * self.inaccuracy,-1 * self.inaccuracy)
+                    bv = [0,0]
+                    bv[0] = self.bdir[0]*self.bulletSpeed + random.uniform(self.speedinac,-self.speedinac)
+                    bv[1] = self.bdir[1]*self.bulletSpeed + random.uniform(self.speedinac,-self.speedinac)
+                    
+                    self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, bv, self.getBulletSize()[0]))
+                    self.ac = self.attackRate/self.atkRateMultiplier
+
+
 
         # "Key": [Cooldown, Timer, ActiveFunc]
         for i in range(len(self.actives)):

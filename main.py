@@ -4,15 +4,22 @@ from coinManager import *
 from shopManager import *
 from player import *
 
-W = 1600
-H = 900
+steamdeck = False
+stctrl = False
+if steamdeck == True:
+    W = 1278
+    H = 970
+else:
+    W = 1600
+    H = 800
+
 keys = [0] * 512  #init keys to avoid index error (pygame has 512 keycodes)
 # to access the state of a key (true for down false for up) use "keys[pygame.KEYCODE]"
 # eg) if keys[pygame.KEY_a]:
 #         print("a down")
 
 
-player = Player(W/2, H/2)
+player = Player(W/2, H/2, stctrl)
 enemiesOnScreen = []
 coinManager = CoinManager()
 shopManager = shopManager(W, H)
