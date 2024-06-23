@@ -28,7 +28,10 @@ class Player:
         self.vel = [0, 0]
         self.dir = [0, 0]
         self.ctrl = ctrl
-
+        self.weapon = 2
+        #1 = gun
+        #2 = sword
+        
         self.minBlltSize = 9
         self.ac = 0 # attack timer
         self.dmgTimer = 0
@@ -53,6 +56,12 @@ class Player:
         self.bullets = []
         self.inaccuracy = 0.13
         self.bulletSpeed = 500
+        #sword stuff
+        self.swing = False
+        self.swlength = 30
+        self.swangle = 1.5
+        self.swcool = 20
+        self.srect = [-100,-100,10,10]
         # misc
         self.coins = 1000000
         self.itemQty = {}
@@ -186,18 +195,39 @@ class Player:
         self.ac -= 1 * dt
         if self.ctrl == False:
             if pygame.mouse.get_pressed(num_buttons=3)[0] and self.ac < 0:
-                for i in range(self.bulletCount):
-                    if self.inaccuracy < 0:
-                        inac = 0
-                    else:
-                        inac = random.uniform(1 * self.inaccuracy,-1 * self.inaccuracy)
-                    theta = math.atan2(dy, dx) + inac
-                    bv = [0,0]
-                    bv[0] = math.cos(theta)*self.bulletSpeed + random.uniform(self.speedinac,-self.speedinac)
-                    bv[1] = math.sin(theta)*self.bulletSpeed + random.uniform(self.speedinac,-self.speedinac)
+                if self.weapon == 1:
+                    for i in range(self.bulletCount):
+                        if self.inaccuracy < 0:
+                            inac = 0
+                        else:
+                            inac = random.uniform(1 * self.inaccuracy,-1 * self.inaccuracy)
+                        theta = math.atan2(dy, dx) + inac
+                        bv = [0,0]
+                        bv[0] = math.cos(theta)*self.bulletSpeed + random.uniform(self.speedinac,-self.speedinac)
+                        bv[1] = math.sin(theta)*self.bulletSpeed + random.uniform(self.speedinac,-self.speedinac)
+                        
+                        self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, bv, self.getBulletSize()[0]))
+                        self.ac = self.attackRate/self.atkRateMultiplier
                     
-                    self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, bv, self.getBulletSize()[0]))
-                    self.ac = self.attackRate/self.atkRateMultiplier
+                elif self.weapon == 2:
+                    if self.swangle >= -1.5:
+                        print(self.swangle)
+                        self.swangle -= dt * 20
+                        self.swing = True
+                    else:
+                        self.swing = False
+                        self.swangle = 1.5
+                        print("swing!")
+                        self.ac = self.attackRate/self.atkRateMultiplier
+            elif self.swing == True and pygame.mouse.get_pressed(num_buttons=3)[0] == False:
+                self.swing = False
+                self.swangle = 1.5
+                print("swing!")
+                self.ac = self.attackRate/self.atkRateMultiplier
+                    
+                    
+
+        #ijkl controlls (this is for the steam deck/ if they want to use 8 directional shooting instead if mouse)
         elif self.ctrl == True:
             self.bdir = [0, 0]
             if keys[pygame.K_i]:
@@ -261,3 +291,21 @@ class Player:
         for i in range(len(self.actives)):
             activeObj = self.actives[list(self.actives.keys())[i]]
             # draw card for active
+
+        # all da sword stuff
+        if self.weapon == 2 and self.swing == True:
+            #this is a test for rotation
+            
+            mousePos = pygame.mouse.get_pos()
+            dis = subtract(mousePos, self.center)
+            dx = dis[0]
+            dy = dis[1]
+            theta = math.atan2(dy, dx) + self.swangle
+            sx, sy = 0,0
+            index = self.swlength
+            for i in range(self.swlength):
+                sx = self.center[0] + math.cos(theta) * (index * 2)
+                sy = self.center[1] + math.sin(theta) * (index * 2)
+                index += 1
+                self.srect = [sx,sy,10,10]
+                drawCircle(window, ((sx,sy), 5), (255,255,255))

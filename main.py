@@ -4,7 +4,7 @@ from coinManager import *
 from shopManager import *
 from player import *
 
-steamdeck = False
+steamdeck = True
 stctrl = False
 if steamdeck == True:
     W = 1278

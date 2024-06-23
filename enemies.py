@@ -38,8 +38,10 @@ class BasicEnemy:
             if mag < player.homing*150:
                 bullet.vel = add(bullet.vel, scalMult(distVec, player.bulletSpeed/(4*mag)))
             check = AABBCollision(self.rect,bullet.rect)
-            if check:
+            check2 = AABBCollision(self.rect,player.srect)
+            if check or check2:
                 self.health -= player.dmg*player.dmgMultiplier
+                
 
                 if mag != 0:
                     self.vel = scalMult(distVec, self.dmgKnockback/mag)
