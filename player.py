@@ -19,16 +19,12 @@ class Bullet:
 class Sword:
     def __init__(self):
         self.swing = False
-        self.swlength = 30
+        self.swlength = 60
         self.swangle = 1.5
         self.swcool = 20
         self.swordrect = [0,0,10,10]
         self.swc = 1
-        
-    def reset(self,dt, player):
-        self.swing = False
-        self.swangle = 1.5
-        print("swing!")
+        self.swordsegments = []
 
     def draw(self,window,player):
             center = player.center
@@ -38,10 +34,9 @@ class Sword:
             sx, sy = 0,0
             index = sword.swlength
             for i in range(sword.swlength):
-                sx = center[0] + math.cos(theta) * (index * 1.5)
-                sy = center[1] + math.sin(theta) * (index * 1.5)
-                self.swordrect = [sx, sy, 5,5]
-                print(sx, sy)
+                sx = center[0] + math.cos(theta) * (index)
+                sy = center[1] + math.sin(theta) * (index)
+                self.swordsegments.append((sx,sy,10,10))
                 index += 1
                 drawCircle(window, ((sx,sy), 5), (255,255,255))
 
@@ -81,7 +76,7 @@ class Player:
         # dmg and firerate stuff
         self.dmgMultiplier = 1
         self.atkRateMultiplier = 1
-        self.dmg = 5
+        self.dmg = 1
         self.homing = 0
         self.bdir = [0,0]
         # bullet stuff

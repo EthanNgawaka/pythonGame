@@ -16,6 +16,7 @@ class BasicEnemy:
         self.contactKnockback = 200
         self.stunTimer = 0
         self.stunTime = 0.5
+        self.iSec = 1
         
     def draw(self, window):
         if self.health > 0:
@@ -26,43 +27,55 @@ class BasicEnemy:
         if self.health > 0:
             self.trackPlayer(player.rect, dt)
             self.physics(dt)
-            self.collisions(player, enemiesOnScreen, coinManager, sword.swordrect)
+            self.collisions(player, enemiesOnScreen, coinManager, sword, dt)
 
-    def collisions(self, player, enemiesOnScreen, coinManager, swordrect):
+    def collisions(self, player, enemiesOnScreen, coinManager, sword, dt):
         collisionCheck = AABBCollision(self.rect, player.rect)
         if collisionCheck:
             knockbackVec = scalMult(collisionCheck, self.contactKnockback/magnitude(collisionCheck))
             player.takeDmg(self.contactDmg, scalMult(knockbackVec, -1), self)
 
-        for bullet in player.bullets:
-            distVec = subtract(self.rect, bullet.rect)
-            mag = magnitude(distVec)
-            if mag < player.homing*150:
-                bullet.vel = add(bullet.vel, scalMult(distVec, player.bulletSpeed/(4*mag)))
-            check = AABBCollision(self.rect,bullet.rect)
-            if check:
-                self.health -= player.dmg*player.dmgMultiplier
-                
+        if self.iSec <= 0:
+            for bullet in player.bullets:
+                distVec = subtract(self.rect, bullet.rect)
+                mag = magnitude(distVec)
+                if mag < player.homing*150:
+                    bullet.vel = add(bullet.vel, scalMult(distVec, player.bulletSpeed/(4*mag)))
+                check = AABBCollision(self.rect,bullet.rect)
+                if check:
+                    self.health -= player.dmg*player.dmgMultiplier
+                    self.iSec = 2
 
-                if mag != 0:
-                    self.vel = scalMult(distVec, self.dmgKnockback/mag)
-                    self.stunTimer = self.stunTime
+                    if mag != 0:
+                        self.vel = scalMult(distVec, self.dmgKnockback/mag)
+                        self.stunTimer = self.stunTime
 
-                player.bullets.remove(bullet)
-                if self.health <= 0:
-                    coinManager.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,random.randint(2,10))
-                    enemiesOnScreen.remove(self)
-                    break
-        
-        distVec = subtract(self.rect, swordrect)
-        mag = magnitude(distVec)
-        if AABBCollision(self.rect, swordrect):
-            self.health -= player.dmg*player.dmgMultiplier
-            self.vel = scalMult(distVec, self.dmgKnockback/mag)
-            self.stunTimer = self.stunTime
-            if self.health <= 0:
-                    coinManager.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,random.randint(2,10))
-                    enemiesOnScreen.remove(self)
+                    player.bullets.remove(bullet)
+                    if self.health <= 0:
+                        coinManager.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,random.randint(2,10))
+                        enemiesOnScreen.remove(self)
+                        break
+            
+            for i in sword.swordsegments:
+                distVec = subtract(self.rect, i)
+                mag = magnitude(distVec)
+                check = AABBCollision(self.rect,i)
+                if check:
+                    self.health -= player.dmg*player.dmgMultiplier
+                    self.iSec = 2
+                    print("hit!")
+                    
+
+                    if mag != 0:
+                        self.vel = scalMult(distVec, self.dmgKnockback/mag)
+                        self.stunTimer = self.stunTime
+
+                    if self.health <= 0:
+                        coinManager.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,random.randint(2,10))
+                        enemiesOnScreen.remove(self)
+                        break
+            sword.swordsegments = []
+        self.iSec -= dt
 
         repulsionForce = 5000
         distThreshold = self.rect[2]

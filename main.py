@@ -24,7 +24,7 @@ enemiesOnScreen = []
 coinManager = CoinManager()
 shopManager = shopManager(W, H)
 spawnTimer = 0
-waveTimer = 1
+waveTimer = 3
 
 class Mouse:
     def __init__(self):
@@ -87,6 +87,7 @@ class WaveManager:
                 enemiesOnScreen.append(enemyType(random.randint(0,W-player.rect[3]), H+player.rect[3]))
 
     def update(self, dt, enemiesOnScreen, shopManager, mouse, coinManager, player):
+        
         if self.waveTimer > 0:
             self.waveTimer -= dt
             if self.spawnTimer > 0:
@@ -151,6 +152,7 @@ def draw(window, dt):
     waveManager.draw(dt, window, shopManager)
     
     drawText(window, f"FPS: {1/dt}", (255,255,255),(W-150, 150), 30)
+
 maxFPS = 60
 clock = pygame.time.Clock()
 def main():
