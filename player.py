@@ -1,4 +1,5 @@
 from library import *
+from enemies import *
 
 class Bullet:
     def __init__(self,bx,by,v,dmg):
@@ -14,7 +15,41 @@ class Bullet:
         self.rect[1] += self.vel[1] * dt
     def draw(self,window):
         drawCircle(window, ((self.rect[0]+self.r, self.rect[1]+self.r), self.r), (255,255,255))
+
+class Sword:
+    def __init__(self):
+        self.swing = False
+        self.swlength = 30
+        self.swangle = 1.5
+        self.swcool = 20
+        self.swordrect = [0,0,10,10]
+        self.swc = 1
         
+    def reset(self,dt, player):
+        self.swing = False
+        self.swangle = 1.5
+        print("swing!")
+
+    def draw(self,window,player):
+            center = player.center
+            mousePos = pygame.mouse.get_pos()
+            dx, dy = subtract(mousePos, center)
+            theta = math.atan2(dy, dx) + sword.swangle
+            sx, sy = 0,0
+            index = sword.swlength
+            for i in range(sword.swlength):
+                sx = center[0] + math.cos(theta) * (index * 1.5)
+                sy = center[1] + math.sin(theta) * (index * 1.5)
+                self.swordrect = [sx, sy, 5,5]
+                print(sx, sy)
+                index += 1
+                drawCircle(window, ((sx,sy), 5), (255,255,255))
+
+                
+
+        
+
+sword = Sword()
 
 class Player:
     def __init__(self, x, y, ctrl):
@@ -23,12 +58,12 @@ class Player:
         w, h = 40, 40
         self.r = w / 2
         self.rect = [x, y, w, h]  # position = self.rect[0], self.rect[1]
-        self.center = [x+w/2,y+h/2]
+        self.center = [x+w/2,y+h/2] 
         self.col = (127, 35, 219)
         self.vel = [0, 0]
         self.dir = [0, 0]
         self.ctrl = ctrl
-        self.weapon = 2
+        self.weapon = 1
         #1 = gun
         #2 = sword
         
@@ -56,12 +91,7 @@ class Player:
         self.bullets = []
         self.inaccuracy = 0.13
         self.bulletSpeed = 500
-        #sword stuff
-        self.swing = False
-        self.swlength = 30
-        self.swangle = 1.5
-        self.swcool = 20
-        self.srect = [-100,-100,10,10]
+        self.knockback = 100
         # misc
         self.coins = 1000000
         self.itemQty = {}
@@ -122,6 +152,13 @@ class Player:
 
     def getBulletSize(self):
         return [max(self.minBlltSize, self.dmgMultiplier*(self.dmg+2)*2)]*2
+    
+    def sword(self):
+        self.weapon = 2
+        self.knockback = 400
+        self.atkRateMultiplier = 1.1
+        self.dmg += 5
+        
 
     def triggerCardFunc(self,name):
         if name in self.itemQty.keys():
@@ -151,6 +188,8 @@ class Player:
                 self.minigun()
             case "doubleShot":
                 self.doubleShot()
+            case "sword":
+                self.sword()
 
     def takeDmg(self, dmgAmount, dmgKnockback = [0,0], enemy = False):
 
@@ -168,7 +207,7 @@ class Player:
         self.vel[0] *= 0.9
         self.vel[1] *= 0.9
 
-    def input(self, dt, keys):
+    def input(self, dt, keys, window, player):
         # movement
         self.dir = [0, 0]
         if keys[pygame.K_w]:
@@ -210,20 +249,9 @@ class Player:
                         self.ac = self.attackRate/self.atkRateMultiplier
                     
                 elif self.weapon == 2:
-                    if self.swangle >= -1.5:
-                        print(self.swangle)
-                        self.swangle -= dt * 20
-                        self.swing = True
-                    else:
-                        self.swing = False
-                        self.swangle = 1.5
-                        print("swing!")
-                        self.ac = self.attackRate/self.atkRateMultiplier
-            elif self.swing == True and pygame.mouse.get_pressed(num_buttons=3)[0] == False:
-                self.swing = False
-                self.swangle = 1.5
-                print("swing!")
-                self.ac = self.attackRate/self.atkRateMultiplier
+                        if sword.swing == False:
+                            sword.swing = True
+                            self.ac = self.attackRate/self.atkRateMultiplier
                     
                     
 
@@ -264,15 +292,15 @@ class Player:
                     activeObj[2](dt)
                     activeObj[1] = activeObj[0]
 
-    def update(self, window, dt, keys):
-        self.input(dt, keys)
+    def update(self, window, dt, keys, player):
+        self.input(dt, keys, window, player)
         self.physics(dt)
         for bullet in self.bullets:
             bullet.update(dt, self)
         if self.dmgTimer > 0:
             self.dmgTimer -= dt
 
-    def draw(self, window):
+    def draw(self, window, player, dt):
         drawText(window, f"Coins: {self.coins}", (255,255,0), (10,50), 40)
         drawText(window, f"HP: {self.health}", (0,255,0), (10,10), 40)
         if self.dmgTimer > 0:
@@ -291,21 +319,11 @@ class Player:
         for i in range(len(self.actives)):
             activeObj = self.actives[list(self.actives.keys())[i]]
             # draw card for active
+        if sword.swing == True and sword.swangle >= -1.5:
+                sword.draw(window,player)
+                sword.swangle -= 0.2
+                if sword.swangle <= -1.5:
+                    sword.swangle = 1.5
+                    sword.swing = False
 
-        # all da sword stuff
-        if self.weapon == 2 and self.swing == True:
-            #this is a test for rotation
-            
-            mousePos = pygame.mouse.get_pos()
-            dis = subtract(mousePos, self.center)
-            dx = dis[0]
-            dy = dis[1]
-            theta = math.atan2(dy, dx) + self.swangle
-            sx, sy = 0,0
-            index = self.swlength
-            for i in range(self.swlength):
-                sx = self.center[0] + math.cos(theta) * (index * 2)
-                sy = self.center[1] + math.sin(theta) * (index * 2)
-                index += 1
-                self.srect = [sx,sy,10,10]
-                drawCircle(window, ((sx,sy), 5), (255,255,255))
+        

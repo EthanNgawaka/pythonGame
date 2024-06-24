@@ -26,7 +26,7 @@ def magnitude(a):
 
 def init(windowW, windowH, caption):
     pygame.init()
-    window = pygame.display.set_mode((windowW,windowH))#, flags=pygame.SCALED | pygame.HIDDEN)
+    window = pygame.display.set_mode((windowW,windowH), pygame.FULLSCREEN)#, flags=pygame.SCALED | pygame.HIDDEN)
     #display_info = pygame.display.Info()
     #SCALE = (display_info.current_w/windowW, display_info.current_h/windowH)
     #nativeWindow = pg_sdl2.Window.from_display_module()

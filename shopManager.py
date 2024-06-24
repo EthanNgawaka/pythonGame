@@ -19,6 +19,7 @@ legendaryCards = [
         {"name": "homingSpeed", "basePrice": 0, "col": (255,255,0)},
         {"name": "minigun", "basePrice": 200, "col": (0,255,255)},
         {"name": "doubleShot", "basePrice": 250, "col": (0,255,255)},
+        {"name": "sword", "basePrice": 250, "col": (255,255,255)},
 ]
 
 class Choice:

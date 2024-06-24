@@ -4,14 +4,14 @@ from coinManager import *
 from shopManager import *
 from player import *
 
-steamdeck = True
+steamdeck = False
 stctrl = False
 if steamdeck == True:
     W = 1278
     H = 970
 else:
-    W = 1600
-    H = 800
+    W = 1920
+    H = 1080
 
 keys = [0] * 512  #init keys to avoid index error (pygame has 512 keycodes)
 # to access the state of a key (true for down false for up) use "keys[pygame.KEYCODE]"
@@ -104,6 +104,7 @@ class WaveManager:
                 self.swapVal = 20
 
     def draw(self, dt, window, shopManager):
+        
         drawText(window, f"Time left: {math.ceil(self.waveTimer)}", (255,255,255),(W-200, 50), 30) # hard coded pos shd change this
         drawText(window, f"Wave {self.wave}", (255,255,255),(W-200, 20), 30) # hard coded pos shd change this
         if shopManager.store and len(enemiesOnScreen) == 0:
@@ -121,6 +122,7 @@ class WaveManager:
                     shopManager.type = "shop"
                 shopManager.newCards()
                 self.newWave()
+                
 
 
 waveManager = WaveManager()
@@ -129,12 +131,12 @@ def update(window, dt):
     global keys, enemiesOnScreen, mouse
 
     if waveManager.swapVal == 1: # if not in store or transitioning from store
-        player.update(window, dt, keys)
+        player.update(window, dt, keys, player)
         coinManager.update(dt, player)
     waveManager.update(dt, enemiesOnScreen, shopManager, mouse, coinManager, player)
     
     for enemy in enemiesOnScreen:
-        enemy.update(window,player,dt,enemiesOnScreen,coinManager);
+        enemy.update(window,player,dt,enemiesOnScreen,coinManager, sword);
 
     #input stuff
     mouse.update()
@@ -142,14 +144,13 @@ def update(window, dt):
 
 def draw(window, dt):
     drawRect(window, (0, 0, W, H), (50, 50, 50))
-    player.draw(window)
+    player.draw(window, player, dt)
     coinManager.draw(window)
     for enemy in enemiesOnScreen:
         enemy.draw(window);
     waveManager.draw(dt, window, shopManager)
     
     drawText(window, f"FPS: {1/dt}", (255,255,255),(W-150, 150), 30)
-
 maxFPS = 60
 clock = pygame.time.Clock()
 def main():

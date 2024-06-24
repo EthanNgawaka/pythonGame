@@ -1,4 +1,6 @@
 from library import *
+from player import *
+
 
 class BasicEnemy:
     def __init__(self, x, y):
@@ -12,21 +14,21 @@ class BasicEnemy:
         self.invMass = 1
         self.contactDmg = 5
         self.contactKnockback = 200
-        self.dmgKnockback = 100
         self.stunTimer = 0
         self.stunTime = 0.5
-
+        
     def draw(self, window):
         if self.health > 0:
             drawCircle(window,((self.rect[0]+self.r,self.rect[1]+self.r),self.r),self.col)
 
-    def update(self, window, player, dt, enemiesOnScreen, coinManager):
+    def update(self, window, player, dt, enemiesOnScreen, coinManager, sword):
+        self.dmgKnockback = player.knockback
         if self.health > 0:
             self.trackPlayer(player.rect, dt)
             self.physics(dt)
-            self.collisions(player, enemiesOnScreen, coinManager)
+            self.collisions(player, enemiesOnScreen, coinManager, sword.swordrect)
 
-    def collisions(self, player, enemiesOnScreen, coinManager):
+    def collisions(self, player, enemiesOnScreen, coinManager, swordrect):
         collisionCheck = AABBCollision(self.rect, player.rect)
         if collisionCheck:
             knockbackVec = scalMult(collisionCheck, self.contactKnockback/magnitude(collisionCheck))
@@ -38,8 +40,7 @@ class BasicEnemy:
             if mag < player.homing*150:
                 bullet.vel = add(bullet.vel, scalMult(distVec, player.bulletSpeed/(4*mag)))
             check = AABBCollision(self.rect,bullet.rect)
-            check2 = AABBCollision(self.rect,player.srect)
-            if check or check2:
+            if check:
                 self.health -= player.dmg*player.dmgMultiplier
                 
 
@@ -52,6 +53,16 @@ class BasicEnemy:
                     coinManager.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,random.randint(2,10))
                     enemiesOnScreen.remove(self)
                     break
+        
+        distVec = subtract(self.rect, swordrect)
+        mag = magnitude(distVec)
+        if AABBCollision(self.rect, swordrect):
+            self.health -= player.dmg*player.dmgMultiplier
+            self.vel = scalMult(distVec, self.dmgKnockback/mag)
+            self.stunTimer = self.stunTime
+            if self.health <= 0:
+                    coinManager.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,random.randint(2,10))
+                    enemiesOnScreen.remove(self)
 
         repulsionForce = 5000
         distThreshold = self.rect[2]
