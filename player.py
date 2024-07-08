@@ -58,7 +58,7 @@ class Player:
         self.vel = [0, 0]
         self.dir = [0, 0]
         self.ctrl = ctrl
-        self.weapon = 1
+        self.weapon = 2
         #1 = gun
         #2 = sword
         
@@ -76,9 +76,10 @@ class Player:
         # dmg and firerate stuff
         self.dmgMultiplier = 1
         self.atkRateMultiplier = 1
-        self.dmg = 1
+        self.dmg = 5
         self.homing = 0
         self.bdir = [0,0]
+        self.dmginc = 2
         # bullet stuff
         self.speedinac = 0
         self.attackRate = 0.35
@@ -124,7 +125,7 @@ class Player:
         self.attackRate *= 0.9 # have to do this otherwise u get 0 firerate really quickly
 
     def dmgUp(self):
-        self.dmg += 2
+        self.dmg += self.dmginc
 
     def healthUp(self):
         self.health += 20
@@ -152,7 +153,8 @@ class Player:
         self.weapon = 2
         self.knockback = 400
         self.atkRateMultiplier = 1.1
-        self.dmg += 5
+        self.dmg *= 0.1
+        self.dmginc = 0.1
         
 
     def triggerCardFunc(self,name):

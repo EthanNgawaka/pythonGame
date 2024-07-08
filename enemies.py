@@ -15,8 +15,9 @@ class BasicEnemy:
         self.contactDmg = 5
         self.contactKnockback = 200
         self.stunTimer = 0
-        self.stunTime = 0.5
-        self.iSec = 1
+        self.stunTime = 0.1
+        self.iSec = 0
+        self.iSecM = 0.5
         
     def draw(self, window):
         if self.health > 0:
@@ -44,7 +45,7 @@ class BasicEnemy:
                 check = AABBCollision(self.rect,bullet.rect)
                 if check:
                     self.health -= player.dmg*player.dmgMultiplier
-                    self.iSec = 2
+                    self.iSec = self.iSecM
 
                     if mag != 0:
                         self.vel = scalMult(distVec, self.dmgKnockback/mag)
@@ -62,7 +63,7 @@ class BasicEnemy:
                 check = AABBCollision(self.rect,i)
                 if check:
                     self.health -= player.dmg*player.dmgMultiplier
-                    self.iSec = 2
+                    self.iSec = self.iSecM
                     print("hit!")
                     
 
