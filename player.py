@@ -11,8 +11,19 @@ class Bullet:
         mag = magnitude(self.vel)
         if mag > player.bulletSpeed:
             self.vel = scalMult(self.vel, player.bulletSpeed/mag)
-        self.rect[0] += self.vel[0] * dt
-        self.rect[1] += self.vel[1] * dt
+        if player.weapon == 1:
+            self.rect[0] += self.vel[0] * dt
+            self.rect[1] += self.vel[1] * dt
+        elif player.weapon == 3:
+            self.rect[0] = player.center[0] + self.vel[0]
+            self.rect[1] = player.center[1] + self.vel[1]
+        elif player.weapon == 4:
+            self.vel[0] += player.bulletSpeed/10000
+            bv = [0,0]
+            bv[0] = math.cos(self.vel[0])* 100
+            bv[1] = math.sin(self.vel[0])* 100
+            self.rect[0] = player.center[0] + bv[0]
+            self.rect[1] = player.center[1] + bv[1]
     def draw(self,window):
         drawCircle(window, ((self.rect[0]+self.r, self.rect[1]+self.r), self.r), (255,255,255))
 
@@ -58,10 +69,12 @@ class Player:
         self.vel = [0, 0]
         self.dir = [0, 0]
         self.ctrl = ctrl
-        self.weapon = 2
+        self.weapon = 4
         #1 = gun
         #2 = sword
-        
+        #3 = orbit
+
+
         self.minBlltSize = 9
         self.ac = 0 # attack timer
         self.dmgTimer = 0
@@ -249,6 +262,30 @@ class Player:
                         if sword.swing == False:
                             sword.swing = True
                             self.ac = self.attackRate/self.atkRateMultiplier
+                elif self.weapon == 3:
+                    for i in range(self.bulletCount):
+                        theta = math.atan2(dy, dx)
+                        bv = [0,0]
+                        bv[0] = math.cos(theta)* 100
+                        bv[1] = math.sin(theta)* 100
+                        
+                        self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, bv, self.getBulletSize()[0]))
+                        self.ac = self.attackRate/self.atkRateMultiplier
+                elif self.weapon == 4:
+                    for i in range(self.bulletCount):
+                        if self.inaccuracy < 0:
+                            inac = 0
+                        else:
+                            inac = random.uniform(1 * self.inaccuracy,-1 * self.inaccuracy)
+                        mousePos = pygame.mouse.get_pos()
+                        dis = subtract(mousePos, self.center)
+                        dx = dis[0]
+                        dy = dis[1]
+                        theta = math.atan2(dy, dx)
+                        bv = [theta + inac,1]
+                        
+                        self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, bv, self.getBulletSize()[0]))
+                        self.ac = self.attackRate/self.atkRateMultiplier
                     
                     
 
@@ -294,9 +331,12 @@ class Player:
         self.physics(dt)
         for bullet in self.bullets:
             bullet.update(dt, self)
+            if bullet.vel[0] > 12:
+                self.bullets.remove(bullet)
         if self.dmgTimer > 0:
             self.dmgTimer -= dt
 
+            
     def draw(self, window, player, dt):
         drawText(window, f"Coins: {self.coins}", (255,255,0), (10,50), 40)
         drawText(window, f"HP: {self.health}", (0,255,0), (10,10), 40)

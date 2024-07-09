@@ -17,7 +17,7 @@ class BasicEnemy:
         self.stunTimer = 0
         self.stunTime = 0.1
         self.iSec = 0
-        self.iSecM = 0.5
+        self.iSecM = 0.1
         
     def draw(self, window):
         if self.health > 0:
