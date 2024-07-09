@@ -11,19 +11,21 @@ class Bullet:
         mag = magnitude(self.vel)
         if mag > player.bulletSpeed:
             self.vel = scalMult(self.vel, player.bulletSpeed/mag)
-        if player.weapon == 1:
-            self.rect[0] += self.vel[0] * dt
-            self.rect[1] += self.vel[1] * dt
-        elif player.weapon == 3:
-            self.rect[0] = player.center[0] + self.vel[0]
-            self.rect[1] = player.center[1] + self.vel[1]
-        elif player.weapon == 4:
-            self.vel[0] += player.bulletSpeed/10000
-            bv = [0,0]
-            bv[0] = math.cos(self.vel[0])* 100
-            bv[1] = math.sin(self.vel[0])* 100
-            self.rect[0] = player.center[0] + bv[0]
-            self.rect[1] = player.center[1] + bv[1]
+
+        self.rect[0] += self.vel[0] * dt
+        self.rect[1] += self.vel[1] * dt
+        
+        # tiny planet scraps
+        #elif player.weapon == 3:
+            #self.rect[0] = player.center[0] + self.vel[0]
+            #self.rect[1] = player.center[1] + self.vel[1]
+        #elif player.weapon == 4:
+            #self.vel[0] += player.bulletSpeed/10000
+            #bv = [0,0]
+            #bv[0] = math.cos(self.vel[0])* 100
+            #bv[1] = math.sin(self.vel[0])* 100
+            #self.rect[0] = player.center[0] + bv[0]
+            #self.rect[1] = player.center[1] + bv[1]
     def draw(self,window):
         drawCircle(window, ((self.rect[0]+self.r, self.rect[1]+self.r), self.r), (255,255,255))
 
@@ -51,14 +53,9 @@ class Sword:
                 index += 1
                 drawCircle(window, ((sx,sy), 5), (255,255,255))
 
-                
-
-        
-
-sword = Sword()
 
 class Player:
-    def __init__(self, x, y, ctrl):
+    def __init__(self, x, y):
 
         # physics, consts, timers, and  rect stuff
         w, h = 40, 40
@@ -68,32 +65,27 @@ class Player:
         self.col = (127, 35, 219)
         self.vel = [0, 0]
         self.dir = [0, 0]
-        self.ctrl = ctrl
-        self.weapon = 4
-        #1 = gun
-        #2 = sword
-        #3 = orbit
-
+        self.weapon = "gun"
 
         self.minBlltSize = 9
-        self.ac = 0 # attack timer
+        self.atkTimer = 0 # attack timer
         self.dmgTimer = 0
 
         self.activeKeys = [pygame.K_SPACE, pygame.K_e, pygame.K_q]
 
         # player properties
-        # movement and health
+            # movement and health
         self.speed = 2500
-        self.mhealth = 100 #max health
-        self.health = self.mhealth
-        # dmg and firerate stuff
+        self.maxHealth = 100 #max health
+        self.health = self.maxHealth
+            # dmg and firerate stuff
         self.dmgMultiplier = 1
         self.atkRateMultiplier = 1
         self.dmg = 5
         self.homing = 0
         self.bdir = [0,0]
         self.dmginc = 2
-        # bullet stuff
+            # bullet stuff
         self.speedinac = 0
         self.attackRate = 0.35
         self.bulletCount = 1
@@ -101,7 +93,8 @@ class Player:
         self.inaccuracy = 0.13
         self.bulletSpeed = 500
         self.knockback = 100
-        # misc
+            # misc
+        self.sword = Sword()
         self.coins = 1000000
         self.itemQty = {}
         self.actives = {"Space":None, "E":None, "Q":None} # "Key": [Cooldown, Timer, ActiveFunc]
@@ -162,7 +155,7 @@ class Player:
     def getBulletSize(self):
         return [max(self.minBlltSize, self.dmgMultiplier*(self.dmg+2)*2)]*2
     
-    def sword(self):
+    def buySword(self):
         self.weapon = 2
         self.knockback = 400
         self.atkRateMultiplier = 1.1
@@ -199,7 +192,7 @@ class Player:
             case "doubleShot":
                 self.doubleShot()
             case "sword":
-                self.sword()
+                self.buySword()
 
     def takeDmg(self, dmgAmount, dmgKnockback = [0,0], enemy = False):
 
@@ -241,10 +234,10 @@ class Player:
         dx = dis[0]
         dy = dis[1]
         
-        self.ac -= 1 * dt
-        if self.ctrl == False:
-            if pygame.mouse.get_pressed(num_buttons=3)[0] and self.ac < 0:
-                if self.weapon == 1:
+        self.atkTimer -= dt
+        if pygame.mouse.get_pressed(num_buttons=3)[0] and self.atkTimer < 0:
+            match self.weapon:
+                case "gun":
                     for i in range(self.bulletCount):
                         if self.inaccuracy < 0:
                             inac = 0
@@ -256,62 +249,64 @@ class Player:
                         bv[1] = math.sin(theta)*self.bulletSpeed + random.uniform(self.speedinac,-self.speedinac)
                         
                         self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, bv, self.getBulletSize()[0]))
-                        self.ac = self.attackRate/self.atkRateMultiplier
-                    
-                elif self.weapon == 2:
-                        if sword.swing == False:
-                            sword.swing = True
-                            self.ac = self.attackRate/self.atkRateMultiplier
-                elif self.weapon == 3:
-                    for i in range(self.bulletCount):
-                        theta = math.atan2(dy, dx)
-                        bv = [0,0]
-                        bv[0] = math.cos(theta)* 100
-                        bv[1] = math.sin(theta)* 100
-                        
-                        self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, bv, self.getBulletSize()[0]))
-                        self.ac = self.attackRate/self.atkRateMultiplier
-                elif self.weapon == 4:
-                    for i in range(self.bulletCount):
-                        if self.inaccuracy < 0:
-                            inac = 0
-                        else:
-                            inac = random.uniform(1 * self.inaccuracy,-1 * self.inaccuracy)
-                        mousePos = pygame.mouse.get_pos()
-                        dis = subtract(mousePos, self.center)
-                        dx = dis[0]
-                        dy = dis[1]
-                        theta = math.atan2(dy, dx)
-                        bv = [theta + inac,1]
-                        
-                        self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, bv, self.getBulletSize()[0]))
-                        self.ac = self.attackRate/self.atkRateMultiplier
+                        self.atkTimer = self.attackRate/self.atkRateMultiplier
+                
+                case "sword":
+                    if self.sword.swing == False:
+                        self.sword.swing = True
+                        self.atkTimer = self.attackRate/self.atkRateMultiplier
+
+            # scraps of ngarus tiny planet implimentation
+            #elif self.weapon == 3:
+                #for i in range(self.bulletCount):
+                    #theta = math.atan2(dy, dx)
+                    #bv = [0,0]
+                    #bv[0] = math.cos(theta)* 100
+                    #bv[1] = math.sin(theta)* 100
+                    #
+                    #self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, bv, self.getBulletSize()[0]))
+                    #self.atkTimer = self.attackRate/self.atkRateMultiplier
+            #elif self.weapon == 4:
+                #for i in range(self.bulletCount):
+                    #if self.inaccuracy < 0:
+                        #inac = 0
+                    #else:
+                        #inac = random.uniform(1 * self.inaccuracy,-1 * self.inaccuracy)
+                    #mousePos = pygame.mouse.get_pos()
+                    #dis = subtract(mousePos, self.center)
+                    #dx = dis[0]
+                    #dy = dis[1]
+                    #theta = math.atan2(dy, dx)
+                    #bv = [theta + inac,1]
+                    #
+                    #self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, bv, self.getBulletSize()[0]))
+                    #self.atkTimer = self.attackRate/self.atkRateMultiplier
                     
                     
 
         #ijkl controlls (this is for the steam deck/ if they want to use 8 directional shooting instead if mouse)
-        elif self.ctrl == True:
-            self.bdir = [0, 0]
-            if keys[pygame.K_i]:
-                self.bdir[1] += -1
-            if keys[pygame.K_k]:
-                self.bdir[1] += 1
-            if keys[pygame.K_j]:
-                self.bdir[0] += -1
-            if keys[pygame.K_l]:
-                self.bdir[0] += 1
-            if self.bdir != [0,0] and self.ac < 0:
-                for i in range(self.bulletCount):
-                    if self.inaccuracy < 0:
-                        inac = 0
-                    else:
-                        inac = random.uniform(1 * self.inaccuracy,-1 * self.inaccuracy)
-                    bv = [0,0]
-                    bv[0] = self.bdir[0]*self.bulletSpeed + random.uniform(self.speedinac,-self.speedinac)
-                    bv[1] = self.bdir[1]*self.bulletSpeed + random.uniform(self.speedinac,-self.speedinac)
-                    
-                    self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, bv, self.getBulletSize()[0]))
-                    self.ac = self.attackRate/self.atkRateMultiplier
+        #elif self.ctrl == True:
+            #self.bdir = [0, 0]
+            #if keys[pygame.K_i]:
+                #self.bdir[1] += -1
+            #if keys[pygame.K_k]:
+                #self.bdir[1] += 1
+            #if keys[pygame.K_j]:
+                #self.bdir[0] += -1
+            #if keys[pygame.K_l]:
+                #self.bdir[0] += 1
+            #if self.bdir != [0,0] and self.atkTimer < 0:
+                #for i in range(self.bulletCount):
+                    #if self.inaccuracy < 0:
+                        #inac = 0
+                    #else:
+                        #inac = random.uniform(1 * self.inaccuracy,-1 * self.inaccuracy)
+                    #bv = [0,0]
+                    #bv[0] = self.bdir[0]*self.bulletSpeed + random.uniform(self.speedinac,-self.speedinac)
+                    #bv[1] = self.bdir[1]*self.bulletSpeed + random.uniform(self.speedinac,-self.speedinac)
+                    #
+                    #self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, bv, self.getBulletSize()[0]))
+                    #self.atkTimer = self.attackRate/self.atkRateMultiplier
 
 
 
@@ -329,10 +324,10 @@ class Player:
     def update(self, window, dt, keys, player):
         self.input(dt, keys, window, player)
         self.physics(dt)
+
         for bullet in self.bullets:
             bullet.update(dt, self)
-            if bullet.vel[0] > 12:
-                self.bullets.remove(bullet)
+
         if self.dmgTimer > 0:
             self.dmgTimer -= dt
 
@@ -346,21 +341,25 @@ class Player:
         else:
             drawCircle(window, (self.center, self.r), self.col)
             
-        ratio = self.health / self.mhealth
+        ratio = self.health / self.maxHealth
         healthBarPos = [160, 18.5]
         pygame.draw.rect(window, (255, 0, 0), (*healthBarPos, 200, 20))
         pygame.draw.rect(window, (0, 255, 0), (*healthBarPos, 200 * ratio, 20))
+
+        # Weapons
         for bullet in self.bullets:
             bullet.draw(window)
+        if self.sword.swing == True and self.sword.swangle >= -1.5:
+                self.sword.draw(window,player)
+                self.sword.swangle -= 0.2
+                if self.sword.swangle <= -1.5:
+                    self.sword.swangle = 1.5
+                    self.sword.swing = False
+
+        # Actives
         # "Key": [Cooldown, Timer, ActiveFunc]
         for i in range(len(self.actives)):
             activeObj = self.actives[list(self.actives.keys())[i]]
             # draw card for active
-        if sword.swing == True and sword.swangle >= -1.5:
-                sword.draw(window,player)
-                sword.swangle -= 0.2
-                if sword.swangle <= -1.5:
-                    sword.swangle = 1.5
-                    sword.swing = False
 
         
