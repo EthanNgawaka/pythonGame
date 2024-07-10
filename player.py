@@ -2,30 +2,42 @@ from library import *
 from enemies import *
 
 class Bullet:
-    def __init__(self,bx,by,v,dmg):
+    def __init__(self,bx,by,v,dmg,bulletType="standardBullet"):
         w, h = dmg, dmg
         self.r = w / 2
         self.rect = [bx,by,h,w]
         self.vel = v
+        self.type = bulletType
+        self.haloDistMax = 150
+        self.haloDist = 0
+        self.theta = 0
+
     def update(self,dt, player):
         mag = magnitude(self.vel)
         if mag > player.bulletSpeed:
             self.vel = scalMult(self.vel, player.bulletSpeed/mag)
 
-        self.rect[0] += self.vel[0] * dt
-        self.rect[1] += self.vel[1] * dt
-        
+        match self.type:
+            case "standardBullet":
+                self.rect[0] += self.vel[0] * dt
+                self.rect[1] += self.vel[1] * dt
+
+            case "haloBullet": # using vel[0] for index of bullet
+                if self.haloDist < self.haloDistMax:
+                    self.haloDist += 200 * dt
+                
+                phi = self.vel[0]*math.pi/4 + self.theta
+                self.rect = [player.center[0]-self.r/2+self.haloDist*math.cos(phi), player.center[1]-self.r/2+self.haloDist*math.sin(phi),self.rect[2],self.rect[3]]
+
+                self.theta += dt * (math.pi)
+
+            case "orbitBullet":
+                pass
+
         # tiny planet scraps
         #elif player.weapon == 3:
             #self.rect[0] = player.center[0] + self.vel[0]
             #self.rect[1] = player.center[1] + self.vel[1]
-        #elif player.weapon == 4:
-            #self.vel[0] += player.bulletSpeed/10000
-            #bv = [0,0]
-            #bv[0] = math.cos(self.vel[0])* 100
-            #bv[1] = math.sin(self.vel[0])* 100
-            #self.rect[0] = player.center[0] + bv[0]
-            #self.rect[1] = player.center[1] + bv[1]
     def draw(self,window):
         drawCircle(window, ((self.rect[0]+self.r, self.rect[1]+self.r), self.r), (255,255,255))
 
@@ -43,10 +55,10 @@ class Sword:
             center = player.center
             mousePos = pygame.mouse.get_pos()
             dx, dy = subtract(mousePos, center)
-            theta = math.atan2(dy, dx) + sword.swangle
+            theta = math.atan2(dy, dx) + player.sword.swangle
             sx, sy = 0,0
-            index = sword.swlength
-            for i in range(sword.swlength):
+            index = player.sword.swlength
+            for i in range(player.sword.swlength):
                 sx = center[0] + math.cos(theta) * (index)
                 sy = center[1] + math.sin(theta) * (index)
                 self.swordsegments.append((sx,sy,10,10))
@@ -99,11 +111,27 @@ class Player:
         self.itemQty = {}
         self.actives = {"Space":None, "E":None, "Q":None} # "Key": [Cooldown, Timer, ActiveFunc]
 
+    def buyBulletHalo(self):
+        for index in self.actives:
+            if not self.actives[index]:
+                self.actives[index] = [15, 0, self.bulletHalo]
+                return
+
     def buyDash(self):
         for index in self.actives:
             if not self.actives[index]:
-                self.actives[index] = [2, 0, self.dash]
+                self.actives[index] = [1.5, 0, self.dash]
                 return
+
+    def dash(self, dt):
+        SF = magnitude(self.dir)
+        if SF != 0:
+            self.vel[0] += 100000 * dt * self.dir[0] / SF
+            self.vel[1] += 100000 * dt * self.dir[1] / SF
+
+    def bulletHalo(self, dt):
+        for i in range(0,8):
+            self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, [i,0], self.getBulletSize(self.dmg*2.5)[0], "haloBullet"))
 
     def doubleShot(self):
         self.bulletCount += 1
@@ -139,11 +167,6 @@ class Player:
     def bulletSpeedUp(self):
         self.bulletSpeed += 100
     
-    def dash(self, dt):
-        SF = magnitude(self.dir)
-        if SF != 0:
-            self.vel[0] += 100000 * dt * self.dir[0] / SF
-            self.vel[1] += 100000 * dt * self.dir[1] / SF
 
     def shotgun(self):
         self.bulletCount += 3
@@ -152,8 +175,10 @@ class Player:
         self.speedinac += 50
         self.attackRate += 0.1
 
-    def getBulletSize(self):
-        return [max(self.minBlltSize, self.dmgMultiplier*(self.dmg+2)*2)]*2
+    def getBulletSize(self, dmg=0):
+        if dmg == 0:
+            dmg = self.dmg
+        return [max(self.minBlltSize, self.dmgMultiplier*(dmg+2)*2)]*2
     
     def buySword(self):
         self.weapon = 2
@@ -191,8 +216,10 @@ class Player:
                 self.minigun()
             case "doubleShot":
                 self.doubleShot()
-            case "sword":
-                self.buySword()
+            case "halo":
+                self.buyHalo()
+            #case "sword":
+            #    self.buySword()
 
     def takeDmg(self, dmgAmount, dmgKnockback = [0,0], enemy = False):
 

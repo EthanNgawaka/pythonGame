@@ -14,12 +14,13 @@ shopCards = [
 rareCards = [
         {"name": "shotgun", "basePrice": 100, "col": (199,199,199)},
         {"name": "dash", "basePrice": 100, "col": (0,255,255)},
+        {"name": "halo", "basePrice": 100, "col": (0,255,255)},
 ]
 legendaryCards = [
         {"name": "homingSpeed", "basePrice": 0, "col": (255,255,0)},
         {"name": "minigun", "basePrice": 200, "col": (0,255,255)},
-        {"name": "doubleShot", "basePrice": 250, "col": (0,255,255)},
-        {"name": "sword", "basePrice": 250, "col": (255,255,255)},
+        {"name": "doubleShot", "basePrice": 250, "col": (0,255,255)}
+        #{"name": "sword", "basePrice": 250, "col": (255,255,255)}, thought this was gonna be its own player? is ok if not just confused
 ]
 
 class Choice:

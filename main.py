@@ -131,7 +131,7 @@ def update(window, dt):
     waveManager.update(dt, enemiesOnScreen, shopManager, mouse, coinManager, player)
     
     for enemy in enemiesOnScreen:
-        enemy.update(window,player,dt,enemiesOnScreen,coinManager, player.sword);
+        enemy.update(window,player,dt,enemiesOnScreen,coinManager);
 
     #input stuff
     mouse.update()
