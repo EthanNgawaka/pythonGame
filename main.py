@@ -140,7 +140,6 @@ def update(window, dt):
     mouse.update()
     keys = pygame.key.get_pressed()
     camera.update(dt)
-    camera.setTarget([player.rect[0]-W/2, player.rect[1]-H/2])
 
 def draw(window, dt):
     drawRect(window, (camera.pos[0], camera.pos[1], W, H), (50, 50, 50))
