@@ -100,8 +100,8 @@ class WaveManager:
 
     def draw(self, dt, window, shopManager):
         
-        drawText(window, f"Time left: {math.ceil(self.waveTimer)}", (255,255,255),(W-200, 50), 30) # hard coded pos shd change this
-        drawText(window, f"Wave {self.wave}", (255,255,255),(W-200, 20), 30) # hard coded pos shd change this
+        drawText(window, f"Time left: {math.ceil(self.waveTimer)}", (255,255,255),(W-200, 50), 30, drawAsUI=True) # hard coded pos shd change this
+        drawText(window, f"Wave {self.wave}", (255,255,255),(W-200, 20), 30, drawAsUI=True) # hard coded pos shd change this
         if shopManager.store and len(enemiesOnScreen) == 0:
             shopManager.draw(window)
         elif self.swapVal > 1:
@@ -133,25 +133,31 @@ def update(window, dt):
     for enemy in enemiesOnScreen:
         enemy.update(window,player,dt,enemiesOnScreen,coinManager);
 
+    if keys[pygame.K_SPACE]:
+        camera.shake()
+
     #input stuff
     mouse.update()
     keys = pygame.key.get_pressed()
+    camera.update(dt)
+    camera.setTarget([player.rect[0]-W/2, player.rect[1]-H/2])
 
 def draw(window, dt):
-    drawRect(window, (0, 0, W, H), (50, 50, 50))
+    drawRect(window, (camera.pos[0], camera.pos[1], W, H), (50, 50, 50))
     player.draw(window, player, dt)
     coinManager.draw(window)
     for enemy in enemiesOnScreen:
         enemy.draw(window);
     waveManager.draw(dt, window, shopManager)
     
-    drawText(window, f"FPS: {1/dt}", (255,255,255),(W-150, 150), 30)
+    drawText(window, f"FPS: {1/dt}", (255,255,255),(W-150, 150), 30, drawAsUI=True)
 
 maxFPS = 60
 clock = pygame.time.Clock()
 def main():
     window = init(W, H, "bingus 2.0")
     running = True
+
     while running:  # main game loop
         dt = clock.tick(maxFPS) / 1000.0
         update(window, dt)

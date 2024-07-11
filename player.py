@@ -360,8 +360,8 @@ class Player:
 
             
     def draw(self, window, player, dt):
-        drawText(window, f"Coins: {self.coins}", (255,255,0), (10,50), 40)
-        drawText(window, f"HP: {self.health}", (0,255,0), (10,10), 40)
+        drawText(window, f"Coins: {self.coins}", (255,255,0), (10,50), 40, drawAsUI=True)
+        drawText(window, f"HP: {self.health}", (0,255,0), (10,10), 40, drawAsUI=True)
         if self.dmgTimer > 0:
             if math.floor(self.dmgTimer*10) % 2 != 0:
                 drawCircle(window, (self.center, self.r), self.col)
