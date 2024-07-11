@@ -69,7 +69,7 @@ class Sword:
 class Player:
     def __init__(self, x, y):
 
-        # physics, consts, timers, and  rect stuff
+# physics, consts, timers, and  rect stuff
         w, h = 40, 40
         self.r = w / 2
         self.rect = [x, y, w, h]  # position = self.rect[0], self.rect[1]
@@ -85,19 +85,19 @@ class Player:
 
         self.activeKeys = [pygame.K_SPACE, pygame.K_e, pygame.K_q]
 
-        # player properties
-            # movement and health
+# player properties
+    # movement and health
         self.speed = 2500
         self.maxHealth = 100 #max health
         self.health = self.maxHealth
-            # dmg and firerate stuff
+    # dmg and firerate stuff
         self.dmgMultiplier = 1
         self.atkRateMultiplier = 1
         self.dmg = 5
         self.homing = 0
         self.bdir = [0,0]
         self.dmginc = 2
-            # bullet stuff
+    # bullet stuff
         self.speedinac = 0
         self.attackRate = 0.35
         self.bulletCount = 1
@@ -105,12 +105,13 @@ class Player:
         self.inaccuracy = 0.13
         self.bulletSpeed = 500
         self.knockback = 100
-            # misc
+    # misc
         self.sword = Sword()
         self.coins = 1000000
         self.itemQty = {}
         self.actives = {"Space":None, "E":None, "Q":None} # "Key": [Cooldown, Timer, ActiveFunc]
 
+    # active items
     def buyBulletHalo(self):
         for index in self.actives:
             if not self.actives[index]:
@@ -133,6 +134,7 @@ class Player:
         for i in range(0,8):
             self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, [i,0], self.getBulletSize(self.dmg*2.5)[0], "haloBullet"))
 
+    # passive items
     def doubleShot(self):
         self.bulletCount += 1
         self.accuracyUp()
@@ -166,7 +168,6 @@ class Player:
 
     def bulletSpeedUp(self):
         self.bulletSpeed += 100
-    
 
     def shotgun(self):
         self.bulletCount += 3
@@ -194,6 +195,8 @@ class Player:
         else:
             self.itemQty[name] = 1
         match name:
+
+            #passives
             case "speedUp":
                 self.speedUp()
             case "atkSpeedUp":
@@ -210,14 +213,16 @@ class Player:
                 self.homingSpeed()
             case "shotgun":
                 self.shotgun()
-            case "Dash":
-                self.buyDash()
             case "minigun":
                 self.minigun()
             case "doubleShot":
                 self.doubleShot()
+
+            # actives
             case "halo":
                 self.buyHalo()
+            case "Dash":
+                self.buyDash()
             #case "sword":
             #    self.buySword()
 
