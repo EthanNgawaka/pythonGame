@@ -109,19 +109,20 @@ class Player:
         self.sword = Sword()
         self.coins = 1000000
         self.itemQty = {}
-        self.actives = {"Space":None, "E":None, "Q":None} # "Key": [Cooldown, Timer, ActiveFunc]
+        self.actives = {"Space":None, "E":None, "Q":None} # "Key": [Cooldown, Timer, ActiveFunc, name, text offset]
+        
 
     # active items
     def buyBulletHalo(self):
         for index in self.actives:
             if not self.actives[index]:
-                self.actives[index] = [15, 0, self.bulletHalo]
+                self.actives[index] = [15, 0, self.bulletHalo, "Halo", 26]
                 return
 
     def buyDash(self):
         for index in self.actives:
             if not self.actives[index]:
-                self.actives[index] = [1.5, 0, self.dash]
+                self.actives[index] = [1.5, 0, self.dash, "Dash", 20]
                 return
 
     def dash(self, dt):
@@ -220,8 +221,8 @@ class Player:
 
             # actives
             case "halo":
-                self.buyHalo()
-            case "Dash":
+                self.buyBulletHalo()
+            case "dash":
                 self.buyDash()
             #case "sword":
             #    self.buySword()

@@ -133,8 +133,7 @@ def update(window, dt):
     for enemy in enemiesOnScreen:
         enemy.update(window,player,dt,enemiesOnScreen,coinManager);
 
-    if keys[pygame.K_SPACE]:
-        camera.shake()
+        
 
     #input stuff
     mouse.update()
@@ -151,6 +150,45 @@ def draw(window, dt):
     
     drawText(window, f"FPS: {1/dt}", (255,255,255),(W-150, 150), 30, drawAsUI=True)
 
+    if player.actives["Space"]:
+            cool = player.actives["Space"][1]
+            perc = cool/player.actives["Space"][0]
+            name = player.actives["Space"][3]
+            amogus = player.actives["Space"][4]
+            if cool <= 0:
+                col = (255,255,255)
+            else:
+                col = (150,150,150)
+            drawRect(window,(50,H - 200,100,200),(100,100,100))
+            drawRect(window,(50,H - 200 + perc*200,100,200),col)
+            drawText(window, name, (0,0,0),(50 + amogus, H - 100), 30, drawAsUI=True)
+
+    if player.actives["E"]:
+            cool = player.actives["E"][1]
+            perc = cool/player.actives["E"][0]
+            name = player.actives["E"][3]
+            amogus = player.actives["E"][4]
+            if cool <= 0:
+                col = (255,255,255)
+            else:
+                col = (150,150,150)
+            drawRect(window,(200,H - 200,100,200),(100,100,100))
+            drawRect(window,(200,H - 200 + perc*200,100,200),col)
+            drawText(window, name, (0,0,0),(200 + amogus, H - 100), 30, drawAsUI=True)
+
+    if player.actives["Q"]:
+            cool = player.actives["Q"][1]
+            perc = cool/player.actives["Q"][0]
+            name = player.actives["Q"][3]
+            amogus = player.actives["Q"][4]
+            if cool <= 0:
+                col = (255,255,255)
+            else:
+                col = (150,150,150)
+            drawRect(window,(350,H - 200,100,200),(100,100,100))
+            drawRect(window,(350,H - 200 + perc*200,100,200),col)
+            drawText(window, name, (0,0,0),(350 + amogus, H - 100), 30, drawAsUI=True)
+
 maxFPS = 60
 clock = pygame.time.Clock()
 def main():
@@ -161,6 +199,7 @@ def main():
         dt = clock.tick(maxFPS) / 1000.0
         update(window, dt)
         draw(window, dt)
+            
 
         pygame.display.flip()
 
