@@ -58,7 +58,8 @@ class BasicEnemy:
 
                             player.bullets.remove(bullet)
                             if self.health <= 0:
-                                coinManager.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,random.randint(2,10))
+                                coinDrop = round(random.randint(2,10) * player.lootMultiplier)
+                                coinManager.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,coinDrop)
                                 enemiesOnScreen.remove(self)
                                 break
                 case "sword": 
@@ -69,7 +70,6 @@ class BasicEnemy:
                         if check:
                             self.health -= player.dmg*player.dmgMultiplier
                             self.iFrames = self.iFramesMax
-                            print("hit!")
                             
 
                             if mag != 0:

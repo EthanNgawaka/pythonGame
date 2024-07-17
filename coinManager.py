@@ -40,7 +40,6 @@ class Coin:
 
         if AABBCollision(player.rect, self.rect):
             player.coins+=1
-            print(player.coins)
             coinManager.coins.remove(self)
 
     def draw(self, window):

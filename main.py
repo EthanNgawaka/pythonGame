@@ -63,6 +63,7 @@ class WaveManager:
         self.wave = 1
 
     def newWave(self):
+        player.shieldCur = player.shieldMax
         self.waveTimer = self.maxWaveTimer
         self.spawnTimer = 0
         self.wave += 1
@@ -81,7 +82,8 @@ class WaveManager:
                 enemiesOnScreen.append(enemyType(random.randint(0,W-player.rect[3]), H+player.rect[3]))
 
     def update(self, dt, enemiesOnScreen, shopManager, mouse, coinManager, player):
-        
+        if player.spawnMultiplyer >= 1:
+            self.spawnRate = 2 - player.spawnMultiplyer* 0.2
         if self.waveTimer > 0:
             self.waveTimer -= dt
             if self.spawnTimer > 0:
@@ -188,6 +190,7 @@ def draw(window, dt):
             drawRect(window,(350,H - 200,100,200),(100,100,100))
             drawRect(window,(350,H - 200 + perc*200,100,200),col)
             drawText(window, name, (0,0,0),(350 + amogus, H - 100), 30, drawAsUI=True)
+    player.statShow(window, W)
 
 maxFPS = 60
 clock = pygame.time.Clock()
@@ -199,6 +202,7 @@ def main():
         dt = clock.tick(maxFPS) / 1000.0
         update(window, dt)
         draw(window, dt)
+        
             
 
         pygame.display.flip()

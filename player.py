@@ -107,10 +107,30 @@ class Player:
         self.knockback = 100
     # misc
         self.sword = Sword()
+        self.shieldMax = 0
+        self.shieldCur = 0
+        self.spawnMultiplyer = 0
         self.coins = 1000000
+        self.foragerval = 0
+        self.lootMultiplier = 1
         self.itemQty = {}
         self.actives = {"Space":None, "E":None, "Q":None} # "Key": [Cooldown, Timer, ActiveFunc, name, text offset]
+        self.cooldownReduct = 10
+
         
+        
+
+    
+    def statShow(self, window, W):
+        drawText(window, f"Speed: {self.speed/500}", (255,255,255),(10, 150), 30, drawAsUI=True)
+        drawText(window, f"Dmg: {self.dmg}", (255,255,255),(10, 200), 30, drawAsUI=True)
+        drawText(window, f"Acc: {self.inaccuracy}", (255,255,255),(10, 250), 30, drawAsUI=True)
+        drawText(window, f"BSpeed: {self.bulletSpeed/500}", (255,255,255),(10, 300), 30, drawAsUI=True)
+        if self.actives["Space"]:
+            drawText(window, f"cool1: {self.actives["Space"][0]}", (255,255,255),(10, 350), 30, drawAsUI=True)
+        
+        
+
 
     # active items
     def buyBulletHalo(self):
@@ -177,6 +197,20 @@ class Player:
         self.speedinac += 50
         self.attackRate += 0.1
 
+    def fighter(self):
+        self.spawnMultiplyer += 1
+        
+    def shield(self):
+        self.shieldMax += 1
+
+    def activeCooldown(self):
+        for index in self.actives:
+            if self.actives[index]:
+                self.actives[index][0] = (self.actives[index][0]/100) *95
+                self.cooldownReduct += 5
+        return
+
+    
     def getBulletSize(self, dmg=0):
         if dmg == 0:
             dmg = self.dmg
@@ -188,7 +222,9 @@ class Player:
         self.atkRateMultiplier = 1.1
         self.dmg *= 0.1
         self.dmginc = 0.1
-        
+    
+    def forager(self):
+        self.foragerval += 1
 
     def triggerCardFunc(self,name):
         if name in self.itemQty.keys():
@@ -218,6 +254,14 @@ class Player:
                 self.minigun()
             case "doubleShot":
                 self.doubleShot()
+            case "forager":
+                self.forager()
+            case "fighter":
+                self.fighter()
+            case "shield":
+                self.shield()
+            case "activecooldown":
+                self.activeCooldown()
 
             # actives
             case "halo":
@@ -232,7 +276,10 @@ class Player:
         if self.dmgTimer <= 0:
             if enemy:
                 enemy.vel = scalMult(dmgKnockback, -1)
-            self.health -= dmgAmount
+            if self.shieldCur <= 0:
+                self.health -= dmgAmount
+            else:
+                self.shieldCur -= 1
             self.vel = add(self.vel, dmgKnockback)
             self.dmgTimer = 2
 
@@ -242,6 +289,7 @@ class Player:
         self.center = [self.rect[0]+self.rect[2]/2,self.rect[1]+self.rect[3]/2]
         self.vel[0] *= 0.9
         self.vel[1] *= 0.9
+        
 
     def input(self, dt, keys, window, player):
         # movement
@@ -347,7 +395,6 @@ class Player:
         for i in range(len(self.actives)):
             activeObj = self.actives[list(self.actives.keys())[i]]
             if activeObj != None:
-                print(activeObj[1])
                 if activeObj[1] >= 0:
                     activeObj[1] -= dt
                 elif keys[self.activeKeys[i]]:
@@ -358,11 +405,14 @@ class Player:
         self.input(dt, keys, window, player)
         self.physics(dt)
 
+
         for bullet in self.bullets:
             bullet.update(dt, self)
 
         if self.dmgTimer > 0:
             self.dmgTimer -= dt
+        if self.foragerval <= 1:
+            self.lootMultiplier = 1.25 + (0.25 * self.foragerval)
 
             
     def draw(self, window, player, dt):

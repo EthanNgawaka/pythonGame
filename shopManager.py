@@ -10,19 +10,22 @@ shopCards = [
         {"name": "healthUp", "basePrice": 50, "col": (0,255,0)},
         {"name": "bulletSpeed", "basePrice": 50, "col": (0,255,0)},
         {"name": "accuracyUp", "basePrice": 100, "col": (0,255,0)},
+        {"name": "activecooldown", "basePrice": 100, "col": (0,0,0)},
 ]
 rareCards = [
         {"name": "shotgun", "basePrice": 100, "col": (199,199,199)},
         {"name": "dash", "basePrice": 100, "col": (0,255,255)},
         {"name": "halo", "basePrice": 100, "col": (0,255,255)},
+        {"name": "forager", "basePrice": 100, "col": (0,0,255)},
+        {"name": "fighter", "basePrice": 100, "col": (255,255,255)},
+        {"name": "shield", "basePrice": 100, "col": (0,0,255)},
 ]
 legendaryCards = [
         {"name": "homingSpeed", "basePrice": 0, "col": (255,255,0)},
         {"name": "minigun", "basePrice": 200, "col": (0,255,255)},
         {"name": "doubleShot", "basePrice": 250, "col": (0,255,255)}
-        #{"name": "sword", "basePrice": 250, "col": (255,255,255)}, thought this was gonna be its own player? is ok if not just confused
+        #{"name": "sword", "basePrice": 250, "col": (255,255,255)}, thought this was gonna be its own player? is ok if not just confused i was just adding it here to see it in game :D
 ]
-
 class Choice:
     def __init__(self, choiceSpacing, name, price, col):
         self.choiceW = 150
