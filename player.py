@@ -123,7 +123,13 @@ class Player:
         self.spdhold = 0
         self.atshold = 0
         self.pierces = 0
-        
+        self.lifeSteal = 0
+        self.hotShotDmg = 0
+        self.revives = 0
+        self.invinceTimer = 0
+        self.revCol = [255,255,255]
+        self.atkMSav = 1
+        self.choicehovering = "none"
         
 
     
@@ -133,8 +139,9 @@ class Player:
         drawText(window, f"Acc: {self.inaccuracy}", (255,255,255),(10, 250), 30, drawAsUI=True)
         drawText(window, f"BSpeed: {self.bulletSpeed/500}", (255,255,255),(10, 300), 30, drawAsUI=True)
         drawText(window, f"AtkSpeed: {self.attackRate}", (255,255,255),(10, 350), 30, drawAsUI=True)
-        if self.actives["Space"]:
-            drawText(window, f"tst: {self.actives["Space"][0]}", (255,255,255),(10, 450), 30, drawAsUI=True)
+        drawText(window, f"AtkSpeedMult: {self.atkRateMultiplier}", (255,255,255),(10, 400), 30, drawAsUI=True)
+        
+        drawText(window, self.choicehovering, (255,255,255),(10, 450), 30, drawAsUI=True)
         
         
 
@@ -181,6 +188,12 @@ class Player:
         self.spdhold = self.speed
         self.boostTime = 5
 
+    def hotShot(self):
+        self.hotShotDmg += 1
+
+    def lifeStealUp(self):
+        self.lifeSteal += 1
+
     # passive items
     def doubleShot(self):
         self.bulletCount += 1
@@ -191,6 +204,7 @@ class Player:
         self.inaccuracy += 0.1
         self.speedinac += 50
         self.atkRateMultiplier = 5
+        self.atkMSav = 5
         self.bulletSpeed += 500
 
     def homingSpeed(self):
@@ -212,6 +226,7 @@ class Player:
 
     def healthUp(self):
         self.health += 20
+        self.maxHealth += 20
 
     def bulletSpeedUp(self):
         self.bulletSpeed += 100
@@ -234,6 +249,9 @@ class Player:
 
     def piercing(self):
         self.pierces += 1
+
+    def lifeUp(self):
+        self.revives += 1
     
     def getBulletSize(self, dmg=0):
         if dmg == 0:
@@ -244,6 +262,7 @@ class Player:
         self.weapon = 2
         self.knockback = 400
         self.atkRateMultiplier = 1.1
+        self.atkMSav = 1.1
         self.dmg *= 0.1
         self.dmginc = 0.1
     
@@ -288,6 +307,12 @@ class Player:
                 self.activeCooldown()
             case "piercing":
                 self.piercing()
+            case "lifeStealUp":
+                self.lifeStealUp()
+            case "hotShotUp":
+                self.hotShot()
+            case "pheonix":
+                self.lifeUp()
 
             # actives
             case "halo":
@@ -300,8 +325,8 @@ class Player:
             #    self.buySword()
 
     def takeDmg(self, dmgAmount, dmgKnockback = [0,0], enemy = False):
-
-        if self.dmgTimer <= 0:
+        
+        if self.dmgTimer <= 0 and self.invinceTimer <= 0:
             if enemy:
                 enemy.vel = scalMult(dmgKnockback, -1)
             if self.shieldCur <= 0:
@@ -310,6 +335,10 @@ class Player:
                 self.shieldCur -= 1
             self.vel = add(self.vel, dmgKnockback)
             self.dmgTimer = 2
+            if self.health <= 0 and self.revives > 0:
+                self.health = self.maxHealth
+                self.invinceTimer = 3
+            
 
     def physics(self, dt):
         self.rect[0] += self.vel[0]*dt
@@ -446,6 +475,17 @@ class Player:
         self.physics(dt)
         if self.boostState == True:
             self.boostReset(dt)
+        if self.invinceTimer <= 0:
+            self.col = (127, 35, 219)
+            self.reCol = [255,255,255]
+            self.atkRateMultiplier = self.atkMSav
+        else:
+            self.invinceTimer -= dt
+            self.revCol[0] -= dt * ((255 - 127)/5)
+            self.revCol[1] -= dt * ((255 - 35)/5)
+            self.revCol[2] -= dt * ((255 - 219)/5)
+            self.col = (self.revCol)
+            self.atkRateMultiplier = self.atkMSav * 2
 
         for bullet in self.bullets:
             bullet.update(dt, self)
@@ -469,6 +509,8 @@ class Player:
         healthBarPos = [160, 18.5]
         pygame.draw.rect(window, (255, 0, 0), (*healthBarPos, 200, 20))
         pygame.draw.rect(window, (0, 255, 0), (*healthBarPos, 200 * ratio, 20))
+        if self.invinceTimer > 0:
+            drawText(window, f"{round(self.invinceTimer)}", (100,100,100),(self.rect[0] + 12.5, self.rect[1]), 30, drawAsUI=True)
 
         # Weapons
         for bullet in self.bullets:

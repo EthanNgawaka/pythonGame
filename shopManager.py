@@ -21,6 +21,9 @@ rareCards = [
         {"name": "shieldUp", "basePrice": 150, "col": (0,0,255)},
         {"name": "boost", "basePrice": 200, "col": (0,0,255)},
         {"name": "piercing", "basePrice": 150, "col": (0,255,0)},
+        {"name": "lifeStealUp", "basePrice": 150, "col": (0,255,0)},
+        {"name": "hotShotUp", "basePrice": 150, "col": (0,255,0)},
+        {"name": "pheonix", "basePrice": 300, "col": (0,255,255)},
 ]
 legendaryCards = [
         {"name": "homingSpeed", "basePrice": 0, "col": (255,255,0)},
@@ -51,10 +54,12 @@ class Choice:
             self.cost = self.price
         self.cost = math.floor(self.cost)
         if AABBCollision(pos, [mouse.x,mouse.y,0,0]) and parent.store:
+            player.choicehovering = self.name
             if mouse.pressed[0] and player.coins >= self.cost:
                 player.coins -= self.cost
                 player.triggerCardFunc(self.name)
                 parent.choices.remove(self)
+        
 
 class shopManager:
     def __init__(self, screenW, screenH):
@@ -108,6 +113,7 @@ class shopManager:
 
     def update(self, dt, mouse, player=None):
         if self.store:
+            player.choicehovering = "none"
             for choice in self.choices:
                 choice.update(mouse, self, player)
             self.backgroundRect = rectLerp(self.backgroundRect,self.backgroundRectTarget,0.1)
