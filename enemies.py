@@ -55,8 +55,11 @@ class BasicEnemy:
                             if mag != 0:
                                 self.vel = scalMult(distVec, self.dmgKnockback/mag)
                                 self.stunTimer = self.stunTime
-
-                            player.bullets.remove(bullet)
+                            
+                            if bullet.pierces <= 0:
+                                player.bullets.remove(bullet)
+                            else:
+                                bullet.pierces -= 1
                             if self.health <= 0:
                                 coinDrop = round(random.randint(2,10) * player.lootMultiplier)
                                 coinManager.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,coinDrop)

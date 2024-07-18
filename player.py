@@ -2,7 +2,7 @@ from library import *
 from enemies import *
 
 class Bullet:
-    def __init__(self,bx,by,v,dmg,bulletType="standardBullet"):
+    def __init__(self,bx,by,v,dmg,pierces,bulletType="standardBullet"):
         w, h = dmg, dmg
         self.r = w / 2
         self.rect = [bx,by,h,w]
@@ -11,6 +11,7 @@ class Bullet:
         self.haloDistMax = 150
         self.haloDist = 0
         self.theta = 0
+        self.pierces = pierces
 
     def update(self,dt, player):
         mag = magnitude(self.vel)
@@ -121,7 +122,7 @@ class Player:
         self.dmghold = 0
         self.spdhold = 0
         self.atshold = 0
-        
+        self.pierces = 0
         
         
 
@@ -172,7 +173,7 @@ class Player:
 
     def bulletHalo(self, dt):
         for i in range(0,8):
-            self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, [i,0], self.getBulletSize(self.dmg*2.5)[0], "haloBullet"))
+            self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, [i,0], self.getBulletSize(self.dmg*2.5)[0],self.pierces, "haloBullet"))
 
     def boost(self, dt):
         self.dmghold = self.dmg
@@ -231,6 +232,8 @@ class Player:
     def activeCooldown(self):
         self.cooldownReduct += 5
 
+    def piercing(self):
+        self.pierces += 1
     
     def getBulletSize(self, dmg=0):
         if dmg == 0:
@@ -279,16 +282,20 @@ class Player:
                 self.forager()
             case "fighter":
                 self.fighter()
-            case "shield":
+            case "shieldUp":
                 self.shield()
             case "activecooldown":
                 self.activeCooldown()
+            case "piercing":
+                self.piercing()
 
             # actives
             case "halo":
                 self.buyBulletHalo()
             case "dash":
                 self.buyDash()
+            case "boost":
+                self.buyBoost()
             #case "sword":
             #    self.buySword()
 
@@ -350,7 +357,7 @@ class Player:
                         bv[0] = math.cos(theta)*self.bulletSpeed + random.uniform(self.speedinac,-self.speedinac)
                         bv[1] = math.sin(theta)*self.bulletSpeed + random.uniform(self.speedinac,-self.speedinac)
                         
-                        self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, bv, self.getBulletSize()[0]))
+                        self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, bv, self.getBulletSize()[0],self.pierces))
                         self.atkTimer = self.attackRate/self.atkRateMultiplier
                 
                 case "sword":

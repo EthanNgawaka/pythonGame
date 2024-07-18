@@ -10,7 +10,7 @@ shopCards = [
         {"name": "healthUp", "basePrice": 50, "col": (0,255,0)},
         {"name": "bulletSpeed", "basePrice": 50, "col": (0,255,0)},
         {"name": "accuracyUp", "basePrice": 100, "col": (0,255,0)},
-        {"name": "activecooldown", "basePrice": 100, "col": (0,0,0)},
+        {"name": "activecooldown", "basePrice": 100, "col": (10,10,10)},
 ]
 rareCards = [
         {"name": "shotgun", "basePrice": 100, "col": (199,199,199)},
@@ -18,8 +18,9 @@ rareCards = [
         {"name": "halo", "basePrice": 100, "col": (0,255,255)},
         {"name": "forager", "basePrice": 150, "col": (0,0,255)},
         {"name": "fighter", "basePrice": 200, "col": (255,255,255)},
-        {"name": "shield", "basePrice": 150, "col": (0,0,255)},
+        {"name": "shieldUp", "basePrice": 150, "col": (0,0,255)},
         {"name": "boost", "basePrice": 200, "col": (0,0,255)},
+        {"name": "piercing", "basePrice": 150, "col": (0,255,0)},
 ]
 legendaryCards = [
         {"name": "homingSpeed", "basePrice": 0, "col": (255,255,0)},
