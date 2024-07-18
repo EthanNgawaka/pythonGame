@@ -16,9 +16,10 @@ rareCards = [
         {"name": "shotgun", "basePrice": 100, "col": (199,199,199)},
         {"name": "dash", "basePrice": 100, "col": (0,255,255)},
         {"name": "halo", "basePrice": 100, "col": (0,255,255)},
-        {"name": "forager", "basePrice": 100, "col": (0,0,255)},
-        {"name": "fighter", "basePrice": 100, "col": (255,255,255)},
-        {"name": "shield", "basePrice": 100, "col": (0,0,255)},
+        {"name": "forager", "basePrice": 150, "col": (0,0,255)},
+        {"name": "fighter", "basePrice": 200, "col": (255,255,255)},
+        {"name": "shield", "basePrice": 150, "col": (0,0,255)},
+        {"name": "boost", "basePrice": 200, "col": (0,0,255)},
 ]
 legendaryCards = [
         {"name": "homingSpeed", "basePrice": 0, "col": (255,255,0)},

@@ -52,7 +52,7 @@ class Mouse:
             self.down[1] = False
 
 mouse = Mouse()
-
+boostResetCap = 0
 class WaveManager:
     def __init__(self):
         self.spawnRate = 2
@@ -92,6 +92,13 @@ class WaveManager:
                 self.spawnTimer = self.spawnRate
                 self.spawnEnemy(enemiesOnScreen)
         elif self.swapVal == 1 and len(enemiesOnScreen) == 0 and len(coinManager.coins) == 0:
+            if player.boostState == True:
+                global boostResetCap
+                player.boostTime = 0
+                boostResetCap = 1
+                player.dmg = player.dmghold
+                player.attackRate = player.atshold
+                player.speed = player.spdhold
             self.swapVal = 0
             shopManager.store = True
         
@@ -125,9 +132,14 @@ class WaveManager:
 waveManager = WaveManager()
 
 def update(window, dt):
-    global keys, enemiesOnScreen, mouse
+    global keys, enemiesOnScreen, mouse, boostResetCap
 
     if waveManager.swapVal == 1: # if not in store or transitioning from store
+        if boostResetCap == 1 and player.boostState == True:
+            player.dmghold = player.dmg
+            player.atshold = player.attackRate
+            player.spdhold = player.speed
+            boostResetCap = 0
         player.update(window, dt, keys, player)
         coinManager.update(dt, player)
     waveManager.update(dt, enemiesOnScreen, shopManager, mouse, coinManager, player)
@@ -164,6 +176,7 @@ def draw(window, dt):
             drawRect(window,(50,H - 200,100,200),(100,100,100))
             drawRect(window,(50,H - 200 + perc*200,100,200),col)
             drawText(window, name, (0,0,0),(50 + amogus, H - 100), 30, drawAsUI=True)
+            drawText(window, f"{round(player.actives["Space"][1], 1)}", (0,0,0),(90, H - 50), 30, drawAsUI=True)
 
     if player.actives["E"]:
             cool = player.actives["E"][1]
@@ -177,6 +190,7 @@ def draw(window, dt):
             drawRect(window,(200,H - 200,100,200),(100,100,100))
             drawRect(window,(200,H - 200 + perc*200,100,200),col)
             drawText(window, name, (0,0,0),(200 + amogus, H - 100), 30, drawAsUI=True)
+            drawText(window, f"{round(player.actives["E"][1], 1)}", (0,0,0),(240, H - 50), 30, drawAsUI=True)
 
     if player.actives["Q"]:
             cool = player.actives["Q"][1]
@@ -190,6 +204,7 @@ def draw(window, dt):
             drawRect(window,(350,H - 200,100,200),(100,100,100))
             drawRect(window,(350,H - 200 + perc*200,100,200),col)
             drawText(window, name, (0,0,0),(350 + amogus, H - 100), 30, drawAsUI=True)
+            drawText(window, f"{round(player.actives["Q"][1], 1)}", (0,0,0),(390, H - 50), 30, drawAsUI=True)
     player.statShow(window, W)
 
 maxFPS = 60

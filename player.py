@@ -115,8 +115,13 @@ class Player:
         self.lootMultiplier = 1
         self.itemQty = {}
         self.actives = {"Space":None, "E":None, "Q":None} # "Key": [Cooldown, Timer, ActiveFunc, name, text offset]
-        self.cooldownReduct = 10
-
+        self.cooldownReduct = 0
+        self.boostState = False
+        self.boostTime = 0
+        self.dmghold = 0
+        self.spdhold = 0
+        self.atshold = 0
+        
         
         
 
@@ -126,8 +131,9 @@ class Player:
         drawText(window, f"Dmg: {self.dmg}", (255,255,255),(10, 200), 30, drawAsUI=True)
         drawText(window, f"Acc: {self.inaccuracy}", (255,255,255),(10, 250), 30, drawAsUI=True)
         drawText(window, f"BSpeed: {self.bulletSpeed/500}", (255,255,255),(10, 300), 30, drawAsUI=True)
+        drawText(window, f"AtkSpeed: {self.attackRate}", (255,255,255),(10, 350), 30, drawAsUI=True)
         if self.actives["Space"]:
-            drawText(window, f"cool1: {self.actives["Space"][0]}", (255,255,255),(10, 350), 30, drawAsUI=True)
+            drawText(window, f"tst: {self.actives["Space"][0]}", (255,255,255),(10, 450), 30, drawAsUI=True)
         
         
 
@@ -144,6 +150,19 @@ class Player:
             if not self.actives[index]:
                 self.actives[index] = [1.5, 0, self.dash, "Dash", 20]
                 return
+            
+    def buyBoost(self):
+        if self.boostState == False: #sketchy setup ask ethan how to remove card from pool when bought *
+            self.boostState = True
+            for index in self.actives:
+                if not self.actives[index]:
+                    self.dmghold = self.dmg
+                    self.atshold = self.attackRate
+                    self.spdhold = self.speed
+                    self.actives[index] = [10, 0, self.boost, "Boost", 20]
+                    return
+            
+                
 
     def dash(self, dt):
         SF = magnitude(self.dir)
@@ -154,6 +173,12 @@ class Player:
     def bulletHalo(self, dt):
         for i in range(0,8):
             self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, [i,0], self.getBulletSize(self.dmg*2.5)[0], "haloBullet"))
+
+    def boost(self, dt):
+        self.dmghold = self.dmg
+        self.atshold = self.attackRate
+        self.spdhold = self.speed
+        self.boostTime = 5
 
     # passive items
     def doubleShot(self):
@@ -204,11 +229,7 @@ class Player:
         self.shieldMax += 1
 
     def activeCooldown(self):
-        for index in self.actives:
-            if self.actives[index]:
-                self.actives[index][0] = (self.actives[index][0]/100) *95
-                self.cooldownReduct += 5
-        return
+        self.cooldownReduct += 5
 
     
     def getBulletSize(self, dmg=0):
@@ -399,12 +420,25 @@ class Player:
                     activeObj[1] -= dt
                 elif keys[self.activeKeys[i]]:
                     activeObj[2](dt)
-                    activeObj[1] = activeObj[0]
-
+                    activeObj[1] = activeObj[0] * (1 - (self.cooldownReduct/100))
+    def boostReset(self, dt):
+        if self.boostTime > 0:
+            self.dmg = self.dmghold * 1.5
+            self.attackRate = self.atshold /3
+            self.speed = self.spdhold* 3
+            self.boostTime -= dt
+            self.col = (255,0,0)
+        else:
+            self.dmg = self.dmghold
+            self.attackRate = self.atshold
+            self.speed = self.spdhold
+            self.col = (127, 35, 219)
+        
     def update(self, window, dt, keys, player):
         self.input(dt, keys, window, player)
         self.physics(dt)
-
+        if self.boostState == True:
+            self.boostReset(dt)
 
         for bullet in self.bullets:
             bullet.update(dt, self)
