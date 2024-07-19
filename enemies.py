@@ -135,6 +135,14 @@ class BasicEnemy:
         self.rect[1] += self.vel[1]*dt
         self.vel = [self.vel[0]*fric,self.vel[1]*fric]
         self.forces = [0,0]
+        if AABBCollision((0, 0, 1920, 5),self.rect) and self.vel[1] < 0:
+            self.vel[1] *= -0.1
+        if AABBCollision((0, 1080-5, 1920, 5),self.rect) and self.vel[1] > 0:
+            self.vel[1] *= -0.1
+        if AABBCollision((0, 0, 5, 1080),self.rect) and self.vel[0] < 0:
+            self.vel[0] *= -0.1
+        if AABBCollision((1920-5, 0, 5, 1080),self.rect) and self.vel[0] > 0:
+            self.vel[0] *= -0.1
 
     def trackPlayer(self, playerRect, dt):
         if self.stunTimer > 0:

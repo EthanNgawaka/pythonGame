@@ -22,6 +22,14 @@ class Bullet:
             case "standardBullet":
                 self.rect[0] += self.vel[0] * dt
                 self.rect[1] += self.vel[1] * dt
+                if AABBCollision((-50, -50, 2020, 5),self.rect) and self.vel[1] < 0:
+                    player.bullets.remove(self)
+                elif AABBCollision((-50, 1080+45, 2020, 5),self.rect) and self.vel[1] > 0:
+                    player.bullets.remove(self)
+                elif AABBCollision((-50, -50, 5, 1180),self.rect) and self.vel[0] < 0:
+                    player.bullets.remove(self)
+                elif AABBCollision((1920+45, -50, 5, 1180),self.rect) and self.vel[0] > 0:
+                    player.bullets.remove(self)
 
             case "haloBullet": # using vel[0] for index of bullet
                 if self.haloDist < self.haloDistMax:
@@ -111,7 +119,7 @@ class Player:
         self.shieldMax = 0
         self.shieldCur = 0
         self.spawnMultiplyer = 0
-        self.coins = 1000000
+        self.coins = 0
         self.foragerval = 0
         self.lootMultiplier = 1
         self.itemQty = {}
@@ -130,18 +138,19 @@ class Player:
         self.revCol = [255,255,255]
         self.atkMSav = 1
         self.choicehovering = "none"
+        self.running = True
         
 
     
     def statShow(self, window, W):
-        drawText(window, f"Speed: {self.speed/500}", (255,255,255),(10, 150), 30, drawAsUI=True)
-        drawText(window, f"Dmg: {self.dmg}", (255,255,255),(10, 200), 30, drawAsUI=True)
+        drawText(window, f"Speed: {round(self.speed/500,3)}", (255,255,255),(10, 150), 30, drawAsUI=True)
+        drawText(window, f"Dmg: {round(self.dmg,3)}", (255,255,255),(10, 200), 30, drawAsUI=True)
         drawText(window, f"Acc: {round(self.inaccuracy,3)}", (255,255,255),(10, 250), 30, drawAsUI=True)
         drawText(window, f"BSpeed: {round(self.bulletSpeed/10,1)}", (255,255,255),(10, 300), 30, drawAsUI=True)
-        drawText(window, f"AtkSpeed: {self.attackRate}", (255,255,255,1),(10, 350), 30, drawAsUI=True)
-        drawText(window, f"AtkSpeedMult: {self.atkRateMultiplier}", (255,255,255),(10, 400), 30, drawAsUI=True)
+        drawText(window, f"AtkSpeed: {round(self.attackRate,3)}", (255,255,255,1),(10, 350), 30, drawAsUI=True)
+        drawText(window, f"AtkSpeedMult: {round(self.atkRateMultiplier,3)}", (255,255,255),(10, 400), 30, drawAsUI=True)
         
-        drawText(window, self.choicehovering, (255,255,255),(10, 450), 30, drawAsUI=True)
+        #drawText(window, self.choicehovering, (255,255,255),(10, 450), 30, drawAsUI=True)
         
         
 
@@ -338,9 +347,19 @@ class Player:
             if self.health <= 0 and self.revives > 0:
                 self.health = self.maxHealth
                 self.invinceTimer = 3
+            elif self.health <= 0:
+                self.running = False
             
 
-    def physics(self, dt):
+    def physics(self, dt, W, H):
+        if AABBCollision((0, 0, W, 5),self.rect) and self.vel[1] < 0:
+            self.vel[1] *= -0.25
+        if AABBCollision((0, H-5, W, 5),self.rect) and self.vel[1] > 0:
+            self.vel[1] *= -0.25
+        if AABBCollision((0, 0, 5, H),self.rect) and self.vel[0] < 0:
+            self.vel[0] *= -0.25
+        if AABBCollision((W-5, 0, 5, H),self.rect) and self.vel[0] > 0:
+            self.vel[0] *= -0.25
         self.rect[0] += self.vel[0]*dt
         self.rect[1] += self.vel[1]*dt
         self.center = [self.rect[0]+self.rect[2]/2,self.rect[1]+self.rect[3]/2]
@@ -348,7 +367,7 @@ class Player:
         self.vel[1] *= 0.9
         
 
-    def input(self, dt, keys, window, player):
+    def input(self, dt, keys, window, player, W, H):
         # movement
         self.dir = [0, 0]
         if keys[pygame.K_w]:
@@ -528,9 +547,9 @@ class Player:
             
         
 
-    def update(self, window, dt, keys, player):
-        self.input(dt, keys, window, player)
-        self.physics(dt)
+    def update(self, window, dt, keys, player, W ,H):
+        self.input(dt, keys, window, player, W, H)
+        self.physics(dt, W, H)
         if self.boostState == True:
             self.boostReset(dt)
         if self.invinceTimer <= 0:
