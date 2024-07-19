@@ -268,7 +268,7 @@ class Player:
         return [max(self.minBlltSize, self.dmgMultiplier*(dmg+2)*2)]*2
     
     def buySword(self):
-        self.weapon = 2
+        self.weapon = "sword"
         self.knockback = 400
         self.atkRateMultiplier = 1.1
         self.atkMSav = 1.1
@@ -330,8 +330,8 @@ class Player:
                 self.buyDash()
             case "boost":
                 self.buyBoost()
-            #case "sword":
-            #    self.buySword()
+            case "sword":
+                self.buySword()
 
     def takeDmg(self, dmgAmount, dmgKnockback = [0,0], enemy = False):
         
