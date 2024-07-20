@@ -4,41 +4,42 @@ from library import *
 # ie we chose a speedUp card, the card calls player.triggerCardFunc("speedUp") which runs the necessary code to make the card func
 
 shopCards = [
-        {"name": "speedUp", "basePrice": 50, "col": (0,255,255)},
-        {"name": "atkSpeedUp", "basePrice": 100, "col": (255,0,255)},
-        {"name": "dmgUp", "basePrice": 150, "col": (200,0,0)},
-        {"name": "healthUp", "basePrice": 50, "col": (0,255,0)},
-        {"name": "bulletSpeed", "basePrice": 50, "col": (0,255,0)},
-        {"name": "accuracyUp", "basePrice": 100, "col": (0,255,0)},
-        {"name": "activecooldown", "basePrice": 100, "col": (10,10,10)},
+        {"name": "speedUp", "basePrice": 50, "col": (0,255,255),"id": 1},
+        {"name": "dmgUp", "basePrice": 150, "col": (200,0,0),"id": 2},
+        {"name": "atkSpeedUp", "basePrice": 100, "col": (255,0,255),"id": 3},
+        {"name": "healthUp", "basePrice": 50, "col": (0,255,0),"id": 4},
+        {"name": "bulletSpeed", "basePrice": 50, "col": (0,255,0),"id": 5},
+        {"name": "activecooldown", "basePrice": 100, "col": (10,10,10),"id": 6},
+        {"name": "accuracyUp", "basePrice": 100, "col": (0,255,0),"id": 7},
 ]
 rareCards = [
-        {"name": "shotgun", "basePrice": 100, "col": (199,199,199)},
-        {"name": "dash", "basePrice": 100, "col": (0,255,255)},
-        {"name": "halo", "basePrice": 100, "col": (0,255,255)},
-        {"name": "forager", "basePrice": 150, "col": (0,0,255)},
-        {"name": "fighter", "basePrice": 200, "col": (255,255,255)},
-        {"name": "shieldUp", "basePrice": 150, "col": (0,0,255)},
-        {"name": "boost", "basePrice": 200, "col": (0,0,255)},
-        {"name": "piercing", "basePrice": 150, "col": (0,255,0)},
-        {"name": "lifeStealUp", "basePrice": 150, "col": (0,255,0)},
-        {"name": "hotShotUp", "basePrice": 150, "col": (0,255,0)},
-        {"name": "pheonix", "basePrice": 300, "col": (0,255,255)},
+        {"name": "shotgun", "basePrice": 100, "col": (199,199,199),"id": 8},
+        {"name": "dash", "basePrice": 100, "col": (0,255,255),"id": 9},
+        {"name": "halo", "basePrice": 100, "col": (0,255,255),"id": 10},
+        {"name": "forager", "basePrice": 150, "col": (0,0,255),"id": 11},
+        {"name": "fighter", "basePrice": 200, "col": (255,255,255),"id": 12},
+        {"name": "shieldUp", "basePrice": 150, "col": (0,0,255),"id": 13},
+        {"name": "boost", "basePrice": 200, "col": (0,0,255),"id": 14},
+        {"name": "piercing", "basePrice": 150, "col": (0,255,0),"id": 15},
+        {"name": "lifeStealUp", "basePrice": 150, "col": (0,255,0),"id": 16},
+        {"name": "hotShotUp", "basePrice": 150, "col": (0,255,0),"id": 17},
+        {"name": "pheonix", "basePrice": 300, "col": (0,255,255),"id": 18},
 ]
 legendaryCards = [
-        {"name": "homingSpeed", "basePrice": 0, "col": (255,255,0)},
-        {"name": "minigun", "basePrice": 200, "col": (0,255,255)},
-        {"name": "doubleShot", "basePrice": 250, "col": (0,255,255)}
+        {"name": "homingSpeed", "basePrice": 0, "col": (255,255,0),"id": 19},
+        {"name": "minigun", "basePrice": 200, "col": (0,255,255),"id": 20},
+        {"name": "doubleShot", "basePrice": 250, "col": (0,255,255),"id": 21}
         #{"name": "sword", "basePrice": 250, "col": (255,255,255)}, thought this was gonna be its own player? is ok if not just confused i was just adding it here to see it in game :D
 ]
 class Choice:
-    def __init__(self, choiceSpacing, name, price, col):
+    def __init__(self, choiceSpacing, name, price, col, id):
         self.choiceW = 150
         self.rect = [choiceSpacing[0], choiceSpacing[1], self.choiceW, self.choiceW]
         self.col = col
         self.name = name
         self.price = price
         self.cost = price
+        self.id = id
 
     def draw(self, window, parent):
         pos = parent.getDrawRect(self.rect)
@@ -55,6 +56,7 @@ class Choice:
         self.cost = math.floor(self.cost)
         if AABBCollision(pos, [mouse.x,mouse.y,0,0]) and parent.store:
             player.choicehovering = self.name
+            player.choicehoveringID = self.id
             if mouse.pressed[0] and player.coins >= self.cost:
                 player.coins -= self.cost
                 player.triggerCardFunc(self.name)
@@ -95,7 +97,7 @@ class shopManager:
                 case "legendary":
                     randomCardChoice = legendaryCards[random.randint(0,len(legendaryCards)-1)]
 
-            self.choices.append(Choice([choiceSpacing[0]*(i+1)+self.choiceW*i, choiceSpacing[1]], randomCardChoice["name"], randomCardChoice["basePrice"], randomCardChoice["col"]))
+            self.choices.append(Choice([choiceSpacing[0]*(i+1)+self.choiceW*i, choiceSpacing[1]], randomCardChoice["name"], randomCardChoice["basePrice"], randomCardChoice["col"], randomCardChoice["id"]))
 
     def getDrawRect(self,offsetRect):
         return [self.backgroundRect[0]+offsetRect[0], self.backgroundRect[1]+offsetRect[1], offsetRect[2], offsetRect[3]]

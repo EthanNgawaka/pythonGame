@@ -138,6 +138,7 @@ class Player:
         self.revCol = [255,255,255]
         self.atkMSav = 1
         self.choicehovering = "none"
+        self.choicehoveringID = 0
         self.running = True
         self.chipList = []
         
@@ -513,60 +514,20 @@ class Player:
             self.col = (127, 35, 219)
     
     def getDescription(self):
-        tDesc = 0
-        desc = ["ERROR","increases how fast the player moves", "Increases bullet damage", "Increases the players firerate", "Increases how much health the player has", "Increases how fast a bullet traves", "Reduces active cooldowns", "Increases accuracy","Lots of bullets but not much damage", "gain the ability to dash", "Shoot a ring of bullets", "Increases gold gain", "Increases enemy spawnrate", "Increases shield level", "Increases firerate, damage and speed for a short period", "Bullets pierce through enemies", "When you hit an enemy gain health", "Set our enemy on fire", "Come back from the dead"]
-        desc2 = ["ERROR","+1 speed","+2 damage","+10% attack rate","+20 max health","+1 bullet speed","-5% active cooldowns","-0.02 innacuracy","+3 bullets, /2 damage", "+1 dash ability", "+1 halo ability", "1.5x gold (+0.25 every level)", "-0.2s enemy spawn time", "+1 shield", "+boost ability", "+1 pierces", "+1 lifeSteal", "+1 burn damage", "+1 revive"]
-        ["shotgun", "dash", "halo", "forager", "fighter", "shieldUp", "boost", "piercing", "lifeStealUp", "hotShotUp", "pheonix"]
-        desc3 = ["ERROR","","","","","",""]
-        if self.choicehovering == "speedUp":
-            tDesc = 1
-        elif self.choicehovering == "dmgUp":
-            tDesc = 2
-        elif self.choicehovering == "atkSpeedUp":
-            tDesc = 3
-        elif self.choicehovering == "healthUp":
-            tDesc = 4
-        elif self.choicehovering == "bulletSpeed":
-            tDesc = 5
-        elif self.choicehovering == "activecooldown":
-            tDesc = 6
-        elif self.choicehovering == "accuracyUp":
-            tDesc = 7
-        elif self.choicehovering == "shotgun":
-            tDesc = 8
-        elif self.choicehovering == "dash":
-            tDesc = 9
-        elif self.choicehovering == "halo":
-            tDesc = 10
-        elif self.choicehovering == "forager":
-            tDesc = 11
-        elif self.choicehovering == "fighter":
-            tDesc = 12
-        elif self.choicehovering == "shieldUp":
-            tDesc = 13
-        elif self.choicehovering == "boost":
-            tDesc = 14
-        elif self.choicehovering == "piercing":
-            tDesc = 15
-        elif self.choicehovering == "lifeStealUp":
-            tDesc = 16
-        elif self.choicehovering == "hotShotUp":
-            tDesc = 17
-        elif self.choicehovering == "pheonix":
-            tDesc = 18
-        return desc[tDesc], desc2,tDesc
+        desc1 = ["ERROR","increases how fast the player moves", "Increases bullet damage", "Increases the players firerate", "Increases how much health the player has", "Increases how fast a bullet traves", "Reduces active cooldowns", "Increases accuracy","Lots of bullets but not much damage", "gain the ability to dash", "Shoot a ring of bullets", "Increases gold gain", "Increases enemy spawnrate", "Increases shield level", "Increases firerate, damage and speed", "Bullets pierce through enemies", "When you hit an enemy gain health", "Set our enemy on fire", "Come back from the dead","Your bullets home in","Spray and pray","Twice the bullets, Twice the fun"]
+        desc2 = ["ERROR","+1 speed","+2 damage","+10% attack rate","+20 max health","+1 bullet speed","-5% active cooldowns","-0.02 innacuracy","+3 bullets", "+1 dash ability", "+1 halo ability", "1.5x gold (+0.25 every level)", "-0.2s enemy spawn time", "+1 shield", "+boost ability", "+1 pierces", "+1 lifeSteal", "+1 burn damage", "+1 revive","+1 homing speed","damage way down","2x bullets"]
+        desc3 = ["ERROR","","","","","","","","half damage","","","","","","","","","","","attackrate way up","",""]
+        return desc1[self.choicehoveringID], desc2[self.choicehoveringID], desc3[self.choicehoveringID]
 
     def choiceDesc(self,window):
         if self.choicehovering != "none":
-            
-            description, desc2, dn = self.getDescription()
-            d2 = desc2[dn]
+            desc1, desc2, desc3 = self.getDescription()
             mx, my = pygame.mouse.get_pos()
             drawRect(window,(mx,my,500,250),(150,150,150))
             drawText(window, self.choicehovering, (0,0,0),(mx + 10,my), 30, drawAsUI=True)
-            drawText(window, description, (0,0,0),(mx + 10,my + 50), 30, drawAsUI=True)
-            drawText(window, d2, (0,0,0),(mx + 10,my + 75), 30, drawAsUI=True)
-            drawText(window, description, (0,0,0),(mx + 10,my + 50), 30, drawAsUI=True)
+            drawText(window, desc1, (0,0,0),(mx + 10,my + 50), 30, drawAsUI=True)
+            drawText(window, desc2, (0,0,0),(mx + 10,my + 75), 30, drawAsUI=True)
+            drawText(window, desc3, (0,0,0),(mx + 10,my + 50), 30, drawAsUI=True)
             
         
 
