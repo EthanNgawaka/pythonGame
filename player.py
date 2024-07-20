@@ -139,6 +139,7 @@ class Player:
         self.atkMSav = 1
         self.choicehovering = "none"
         self.running = True
+        self.chipList = []
         
 
     
@@ -160,12 +161,14 @@ class Player:
         for index in self.actives:
             if not self.actives[index]:
                 self.actives[index] = [15, 0, self.bulletHalo, "Halo", 26]
+                self.chipList.append("halo")
                 return
 
     def buyDash(self):
         for index in self.actives:
             if not self.actives[index]:
                 self.actives[index] = [1.5, 0, self.dash, "Dash", 20]
+                self.chipList.append("dash")
                 return
             
     def buyBoost(self):
@@ -177,6 +180,7 @@ class Player:
                     self.atshold = self.attackRate
                     self.spdhold = self.speed
                     self.actives[index] = [10, 0, self.boost, "Boost", 20]
+                    self.chipList.append("boost")
                     return
             
                 
@@ -199,14 +203,17 @@ class Player:
 
     def hotShot(self):
         self.hotShotDmg += 1
+        self.chipList.append("hotShot")
 
     def lifeStealUp(self):
         self.lifeSteal += 1
+        self.chipList.append("lifeStealUp")
 
     # passive items
     def doubleShot(self):
-        self.bulletCount += 1
+        self.bulletCount *= 2
         self.accuracyUp()
+        self.chipList.append("doubleShot")
 
     def minigun(self):
         self.dmgMultiplier = 0.2
@@ -215,30 +222,38 @@ class Player:
         self.atkRateMultiplier = 5
         self.atkMSav = 5
         self.bulletSpeed += 500
+        self.chipList.append("minigun")
 
     def homingSpeed(self):
         self.homing += 1
         self.bulletSpeed /= 2
         self.dmg *= 0.8
+        self.chipList.append("homingSpeed")
 
     def accuracyUp(self):
         self.inaccuracy -= 0.02
+        self.chipList.append("accuracyUp")
 
     def speedUp(self):
         self.speed += 500
+        self.chipList.append("speedUp")
 
     def atkSpeedUp(self):
         self.attackRate *= 0.9 # have to do this otherwise u get 0 firerate really quickly
+        self.chipList.append("atkSpeedUp")
 
     def dmgUp(self):
         self.dmg += self.dmginc
+        self.chipList.append("dmgUp")
 
     def healthUp(self):
         self.health += 20
         self.maxHealth += 20
+        self.chipList.append("healthUp")
 
     def bulletSpeedUp(self):
         self.bulletSpeed += 100
+        self.chipList.append("bulletSpeedUp")
 
     def shotgun(self):
         self.bulletCount += 3
@@ -246,21 +261,27 @@ class Player:
         self.inaccuracy += 0.1
         self.speedinac += 50
         self.attackRate += 0.1
+        self.chipList.append("shotgun")
 
     def fighter(self):
         self.spawnMultiplyer += 1
+        self.chipList.append("fighter")
         
     def shield(self):
         self.shieldMax += 1
+        self.chipList.append("shield")
 
     def activeCooldown(self):
         self.cooldownReduct += 5
+        self.chipList.append("activeCooldown")
 
     def piercing(self):
         self.pierces += 1
+        self.chipList.append("piercing")
 
     def lifeUp(self):
         self.revives += 1
+        self.chipList.append("lifeUp")
     
     def getBulletSize(self, dmg=0):
         if dmg == 0:
@@ -274,9 +295,11 @@ class Player:
         self.atkMSav = 1.1
         self.dmg *= 0.1
         self.dmginc = 0.1
+        self.chipList.append("sword")
     
     def forager(self):
         self.foragerval += 1
+        self.chipList.append("forager")
 
     def triggerCardFunc(self,name):
         if name in self.itemQty.keys():

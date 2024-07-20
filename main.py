@@ -7,6 +7,9 @@ from player import *
 W = 1920
 H = 1080
 NGARU = True
+pause = False
+escC = False
+esc = False
 
 keys = [0] * 512  #init keys to avoid index error (pygame has 512 keycodes)
 # to access the state of a key (true for down false for up) use "keys[pygame.KEYCODE]"
@@ -51,44 +54,39 @@ class Dev:
 
 
     def update(self, window):
-        drawRect(window, (0, 1080-36, 100, 36), self.col)
-        drawText(window, f"DEV", (0,0,0),(23, 1080-36), 30, drawAsUI=True)
-        self.col = (200,200,200)
-        if AABBCollision((0, H-36, 100, 36), (mouse.x, mouse.y, 5, 5)):
-            self.col = (255,255,255)
-            if mouse.pressed[0]:
-                player.coins = 99999999999999999
-                self.dev = True
-        if self.dev == True:
-            drawRect(window, (1920 - 500, 0, 500, 1080), (100,100,100))
-            drawRect(window, (1920 - 500, 0, 32, 32), (255,0,0))
+        drawRect(window, (W - 500, 0, 500, H), (100,100,100))
+        drawRect(window, (W - 500, 0, 32, 32), (255,0,0))
 
-            self.pause = self.button(window,0,0,"Pause",self.pause)
-            self.god = self.button(window,1,0,"God",self.god)
-            self.skip = self.button(window,2,0,"Skip Wave",self.skip)
-            self.giveStat(window,0,1,"spdUp",player.speedUp,(150,150,150))
-            self.giveStat(window,0,2,"atkSpd",player.atkSpeedUp,(150,150,150))
-            self.giveStat(window,0,3,"dmgUp",player.dmgUp,(150,150,150))
-            self.giveStat(window,0,4,"BSpd",player.bulletSpeedUp,(150,150,150))
-            self.giveStat(window,0,5,"actvCool",player.activeCooldown,(150,150,150))
-            self.giveStat(window,1,1,"shotgun",player.shotgun,(0,255,255))
-            self.giveStat(window,1,2,"lifeSteal",player.lifeStealUp,(0,255,255))
-            self.giveStat(window,1,3,"hotShots",player.hotShot,(0,255,255))
-            self.giveStat(window,1,4,"shield",player.shield,(0,255,255))
-            self.giveStat(window,1,5,"pheonix",player.lifeUp,(0,255,255))
-            self.giveStat(window,1,6,"forager",player.forager,(0,255,255))
-            self.giveStat(window,1,7,"fighter",player.fighter,(0,255,255))
-            self.giveStat(window,1,8,"peircing",player.piercing,(0,255,255))
-            self.giveStat(window,2,1,"minigun",player.minigun,(255,255,0))
-            self.giveStat(window,2,2,"homing",player.homingSpeed,(255,255,0))
-            self.giveStat(window,2,3,"doubleShot",player.doubleShot,(255,255,0))
-            self.giveStat(window,3,1,"dash",player.buyDash,(255,0,0))
-            self.giveStat(window,3,2,"boost",player.buyBoost,(255,0,0))
-            self.giveStat(window,3,3,"halo",player.buyBulletHalo,(255,0,0))
-            self.giveStat(window,3,4,"sword",player.buySword,(255,0,0))
+        self.pause = self.button(window,0,0,"Pause",self.pause)
+        self.god = self.button(window,1,0,"God",self.god)
+        self.skip = self.button(window,2,0,"Skip Wave",self.skip)
+        #commons
+        self.giveStat(window,0,1,"spdUp",player.speedUp,(150,150,150))
+        self.giveStat(window,0,2,"atkSpd",player.atkSpeedUp,(150,150,150))
+        self.giveStat(window,0,3,"dmgUp",player.dmgUp,(150,150,150))
+        self.giveStat(window,0,4,"BSpd",player.bulletSpeedUp,(150,150,150))
+        self.giveStat(window,0,5,"actvCool",player.activeCooldown,(150,150,150))
+        #rare
+        self.giveStat(window,1,1,"shotgun",player.shotgun,(0,255,255))
+        self.giveStat(window,1,2,"lifeSteal",player.lifeStealUp,(0,255,255))
+        self.giveStat(window,1,3,"hotShots",player.hotShot,(0,255,255))
+        self.giveStat(window,1,4,"shield",player.shield,(0,255,255))
+        self.giveStat(window,1,5,"pheonix",player.lifeUp,(0,255,255))
+        self.giveStat(window,1,6,"forager",player.forager,(0,255,255))
+        self.giveStat(window,1,7,"fighter",player.fighter,(0,255,255))
+        self.giveStat(window,1,8,"peircing",player.piercing,(0,255,255))
+        #legendary
+        self.giveStat(window,2,1,"minigun",player.minigun,(255,255,0))
+        self.giveStat(window,2,2,"homing",player.homingSpeed,(255,255,0))
+        self.giveStat(window,2,3,"doubleShot",player.doubleShot,(255,255,0))
+        #abilities
+        self.giveStat(window,3,1,"dash",player.buyDash,(255,0,0))
+        self.giveStat(window,3,2,"boost",player.buyBoost,(255,0,0))
+        self.giveStat(window,3,3,"halo",player.buyBulletHalo,(255,0,0))
+        self.giveStat(window,3,4,"sword",player.buySword,(255,0,0))
 
-            if AABBCollision((W - 500, 0, 32, 32), (mouse.x, mouse.y, 5, 5)) and mouse.pressed[0]:
-                self.dev = False
+        if AABBCollision((W - 500, 0, 32, 32), (mouse.x, mouse.y, 5, 5)) and mouse.pressed[0]:
+            self.dev = False
 
         if self.god == 1:
             player.health = 100
@@ -106,8 +104,68 @@ class Dev:
             enemiesOnScreen.clear()
             self.skip = 0
 
+class Menu:
+    def __init__(self):
+        self.w = W/6
+        self.h = H/2
+        self.x = (W/2) - (self.w/2)
+        self.y = (H/2) - (self.h/2)
+        self.rect = (self.x,self.y,self.w,self.h)
+        self.quit = True
+        self.escC = False
+        self.dev = Dev()
         
 
+    def button(self,window,text,y,of,col,txtcol):
+        buttrect = [self.x + (self.w/20),(y * (self.h/9.6 + self.h/(self.h/9.6))) + (self.y + self.h/50),self.w - (self.w/10),self.h/9.6]
+        drawRect(window,(buttrect), col)
+        drawText(window, text, txtcol,((buttrect[0]+(buttrect[2]/2)) - of,buttrect[1]+(buttrect[3] /5)), 30, drawAsUI=True)
+        if AABBCollision((buttrect),(mouse.x - 2.5,mouse.y - 2.5,5,5)) and mouse.pressed[0] == True:
+            return False
+        else:
+            return True
+        
+    def pause(self):
+        global pause
+        esc = keys[pygame.K_ESCAPE]
+        if esc:
+            self.dev.dev = False
+            if self.escC:
+                esc = False
+            else:
+                esc = True
+                if pause == True:
+                    pause = False
+                elif pause == False:
+                    pause = True
+            self.escC = True
+        else:
+            self.escC = False
+
+    def draw(self, window):
+
+        drawRect(window,self.rect,(100,100,100))
+        self.quit = self.button(window,"QUIT",7,30,(200,0,0),(255,255,255))
+        devButton = self.button(window,"DEV",0,20,(200,200,200),(0,0,0))
+        index = 0
+        for i in player.chipList:
+            drawRect(window,(1500,(50* index),200,40),(255,255,255))
+            drawText(window, player.chipList[index], (0,0,0),(5 + (1500),50 * index), 30, drawAsUI=True)
+            index += 1
+        if devButton == False:
+            if self.dev.dev == True:
+                self.dev.dev = False
+            else:
+                self.dev.dev = True
+        if self.dev.dev == True:
+            self.dev.update(window)
+            
+
+
+        #drawRect(window,((W/2)-1,0,2,H),(255,255,255)) testing for center
+        
+
+        
 
 class Mouse:
     def __init__(self):
@@ -142,8 +200,8 @@ class Mouse:
             self.down[1] = False
 
 mouse = Mouse()
-dev = Dev()
 boostResetCap = 0
+menu = Menu()
 class WaveManager:
     def __init__(self):
         self.spawnRate = 2
@@ -226,20 +284,22 @@ class WaveManager:
 waveManager = WaveManager()
 
 def update(window, dt):
-    global keys, enemiesOnScreen, mouse, boostResetCap
+    global keys, enemiesOnScreen, mouse, boostResetCap, pause
+    if pause == False:
+        if waveManager.swapVal == 1: # if not in store or transitioning from store
+            if boostResetCap == 1 and player.boostState == True:
+                player.dmghold = player.dmg
+                player.atshold = player.attackRate
+                player.spdhold = player.speed
+                boostResetCap = 0
+            
+            player.update(window, dt, keys, player, W, H)
+        coinManager.update(dt, player)
+        waveManager.update(dt, enemiesOnScreen, shopManager, mouse, coinManager, player)
+        for enemy in enemiesOnScreen:
+            enemy.update(window,player,dt,enemiesOnScreen,coinManager);
 
-    if waveManager.swapVal == 1: # if not in store or transitioning from store
-        if boostResetCap == 1 and player.boostState == True:
-            player.dmghold = player.dmg
-            player.atshold = player.attackRate
-            player.spdhold = player.speed
-            boostResetCap = 0
-        
-        player.update(window, dt, keys, player, W, H)
-    coinManager.update(dt, player)
-    waveManager.update(dt, enemiesOnScreen, shopManager, mouse, coinManager, player)
-    for enemy in enemiesOnScreen:
-        enemy.update(window,player,dt,enemiesOnScreen,coinManager);
+
     
     
 
@@ -303,9 +363,11 @@ def draw(window, dt):
             drawText(window, f"{round(player.actives["Q"][1], 1)}", (0,0,0),(390, H - 50), 30, drawAsUI=True)
     player.choiceDesc(window)
     player.statShow(window, W)
-    global NGARU
-    if NGARU == True:
-        dev.update(window)
+    global NGARU, pause
+    if pause:
+        menu.draw(window)
+    
+    
         
 
 maxFPS = 60
@@ -319,16 +381,14 @@ def main():
         update(window, dt)
         draw(window, dt)
         running = player.running
-        
+        menu.pause()
+        running = menu.quit
             
 
         pygame.display.flip()
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-        if keys[pygame.K_ESCAPE]:
-            running = False
 
     print("Done")
 
