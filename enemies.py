@@ -1,5 +1,6 @@
 from library import *
 from player import *
+from particles import *
 
 
 class BasicEnemy:
@@ -32,7 +33,7 @@ class BasicEnemy:
                 mlep = 0
             drawText(window, f"{round(self.health)}", (255,255,255),(self.rect[0] + mlep, self.rect[1] - 5), 30, drawAsUI=True)
 
-    def update(self, window, player, dt, enemiesOnScreen, coinManager):
+    def update(self, window, player, dt, enemiesOnScreen, coinManager, particlesOnScreen):
         self.dmgKnockback = player.knockback
         if self.health > 0:
             if self.tickCount > 0:
@@ -45,6 +46,8 @@ class BasicEnemy:
                                 coinDrop = round(random.randint(2,10) * player.lootMultiplier)
                                 coinManager.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,coinDrop)
                                 enemiesOnScreen.remove(self)
+                                for i in range(20):
+                                    particlesOnScreen.append(Blood(self.rect[0],self.rect[1]))
                 else:
                     self.tDTimer -= dt
                     if self.colchan > 0:
@@ -54,9 +57,9 @@ class BasicEnemy:
                         self.col = (255,0,0)
             self.trackPlayer(player.rect, dt)
             self.physics(dt)
-            self.collisions(player, enemiesOnScreen, coinManager, dt)
+            self.collisions(player, enemiesOnScreen, coinManager, dt, particlesOnScreen)
 
-    def collisions(self, player, enemiesOnScreen, coinManager, dt):
+    def collisions(self, player, enemiesOnScreen, coinManager, dt, particlesOnScreen):
         collisionCheck = AABBCollision(self.rect, player.rect)
         if collisionCheck:
             knockbackVec = scalMult(collisionCheck, self.contactKnockback/magnitude(collisionCheck))
@@ -95,6 +98,8 @@ class BasicEnemy:
                                 coinDrop = round(random.randint(2,10) * player.lootMultiplier)
                                 coinManager.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,coinDrop)
                                 enemiesOnScreen.remove(self)
+                                for i in range(20):
+                                    particlesOnScreen.append(Blood(self.rect[0],self.rect[1]))
                                 break
                 case "sword": 
                     for i in player.sword.swordsegments:
@@ -113,6 +118,8 @@ class BasicEnemy:
                             if self.health <= 0:
                                 coinManager.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,random.randint(2,10))
                                 enemiesOnScreen.remove(self)
+                                for i in range(20):
+                                    particlesOnScreen.append(Blood(self.rect[0],self.rect[1]))
                                 break
 
         player.sword.swordsegments = []
@@ -187,7 +194,7 @@ class InvisEnemy:
                 mlep = 0
             drawText(window, f"{round(self.health)}", (255,255,255),(self.rect[0] + mlep, self.rect[1] - 5), 30, drawAsUI=True)
 
-    def update(self, window, player, dt, enemiesOnScreen, coinManager):
+    def update(self, window, player, dt, enemiesOnScreen, coinManager, particlesOnScreen):
         self.dmgKnockback = player.knockback
         if self.health > 0:
             if self.tickCount > 0:
@@ -200,6 +207,8 @@ class InvisEnemy:
                                 coinDrop = round(random.randint(2,10) * player.lootMultiplier)
                                 coinManager.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,coinDrop)
                                 enemiesOnScreen.remove(self)
+                                for i in range(20):
+                                    particlesOnScreen.append(Blood(self.rect[0],self.rect[1]))
                 else:
                     self.tDTimer -= dt
                     if self.colchan > 0:
@@ -209,9 +218,9 @@ class InvisEnemy:
                         self.col = (255,0,0)
             self.trackPlayer(player.rect, dt)
             self.physics(dt)
-            self.collisions(player, enemiesOnScreen, coinManager, dt)
+            self.collisions(player, enemiesOnScreen, coinManager, dt, particlesOnScreen)
 
-    def collisions(self, player, enemiesOnScreen, coinManager, dt):
+    def collisions(self, player, enemiesOnScreen, coinManager, dt, particlesOnScreen):
         collisionCheck = AABBCollision(self.rect, player.rect)
         if collisionCheck:
             knockbackVec = scalMult(collisionCheck, self.contactKnockback/magnitude(collisionCheck))
@@ -250,6 +259,8 @@ class InvisEnemy:
                                 coinDrop = round(random.randint(2,10) * player.lootMultiplier)
                                 coinManager.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,coinDrop)
                                 enemiesOnScreen.remove(self)
+                                for i in range(20):
+                                    particlesOnScreen.append(Blood(self.rect[0],self.rect[1]))
                                 break
                 case "sword": 
                     for i in player.sword.swordsegments:
@@ -268,6 +279,8 @@ class InvisEnemy:
                             if self.health <= 0:
                                 coinManager.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,random.randint(2,10))
                                 enemiesOnScreen.remove(self)
+                                for i in range(20):
+                                    particlesOnScreen.append(Blood(self.rect[0],self.rect[1]))
                                 break
 
         player.sword.swordsegments = []
@@ -350,7 +363,7 @@ class DasherEnemy:
                 mlep = 0
             drawText(window, f"{round(self.health)}", (255,255,255),(self.rect[0] + mlep, self.rect[1] - 5), 30, drawAsUI=True)
 
-    def update(self, window, player, dt, enemiesOnScreen, coinManager):
+    def update(self, window, player, dt, enemiesOnScreen, coinManager, particlesOnScreen):
         self.dmgKnockback = player.knockback
         if self.health > 0:
             if self.tickCount > 0:
@@ -363,6 +376,8 @@ class DasherEnemy:
                                 coinDrop = round(random.randint(2,10) * player.lootMultiplier)
                                 coinManager.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,coinDrop)
                                 enemiesOnScreen.remove(self)
+                                for i in range(20):
+                                    particlesOnScreen.append(Blood(self.rect[0],self.rect[1]))
                 else:
                     self.tDTimer -= dt
                     if self.colchan > 0:
@@ -372,9 +387,9 @@ class DasherEnemy:
                         self.col = (255,0,0)
             self.trackPlayer(player.rect, dt)
             self.physics(dt)
-            self.collisions(player, enemiesOnScreen, coinManager, dt)
+            self.collisions(player, enemiesOnScreen, coinManager, dt, particlesOnScreen)
 
-    def collisions(self, player, enemiesOnScreen, coinManager, dt):
+    def collisions(self, player, enemiesOnScreen, coinManager, dt, particlesOnScreen):
         collisionCheck = AABBCollision(self.rect, player.rect)
         if collisionCheck:
             knockbackVec = scalMult(collisionCheck, self.contactKnockback/magnitude(collisionCheck))
@@ -413,6 +428,8 @@ class DasherEnemy:
                                 coinDrop = round(random.randint(2,10) * player.lootMultiplier)
                                 coinManager.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,coinDrop)
                                 enemiesOnScreen.remove(self)
+                                for i in range(20):
+                                    particlesOnScreen.append(Blood(self.rect[0],self.rect[1]))
                                 break
                 case "sword": 
                     for i in player.sword.swordsegments:
@@ -431,6 +448,8 @@ class DasherEnemy:
                             if self.health <= 0:
                                 coinManager.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,random.randint(2,10))
                                 enemiesOnScreen.remove(self)
+                                for i in range(20):
+                                    particlesOnScreen.append(Blood(self.rect[0],self.rect[1]))
                                 break
 
         player.sword.swordsegments = []
@@ -445,7 +464,7 @@ class DasherEnemy:
                 self.forces = add(self.forces, scalMult(distVec, repulsionForce/mag))
 
     def physics(self, dt):
-        fric = 0.98
+        fric = 0.9
         accel = [self.forces[0]*self.invMass,self.forces[1]*self.invMass]
         self.vel[0] += accel[0]*dt
         self.vel[1] += accel[1]*dt

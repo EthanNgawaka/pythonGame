@@ -3,6 +3,7 @@ from enemies import *
 from coinManager import *
 from shopManager import *
 from player import *
+from particles import *
 
 W = 1920
 H = 1080
@@ -234,8 +235,6 @@ class WaveManager:
                 enemiesOnScreen.append(enemyType(random.randint(0,W-player.rect[3]), -player.rect[3]))
             case 3: # down
                 enemiesOnScreen.append(enemyType(random.randint(0,W-player.rect[3]), H+player.rect[3]))
-    def spawnParticle(self, particlesOnScreen):
-        particlesOnScreen.append()
 
     def update(self, dt, enemiesOnScreen, shopManager, mouse, coinManager, player):
         if player.spawnMultiplyer >= 1:
@@ -306,11 +305,13 @@ def update(window, dt):
         waveManager.update(dt, enemiesOnScreen, shopManager, mouse, coinManager, player)
         
         
-        for particle in particle.particles:
-            particle.update()
-
+        for part in particlesOnScreen:
+            part.update(particlesOnScreen,dt)
         for enemy in enemiesOnScreen:
-            enemy.update(window,player,dt,enemiesOnScreen,coinManager);
+            enemy.update(window,player,dt,enemiesOnScreen,coinManager,particlesOnScreen);
+        #if mouse.pressed[0]:
+        #    for i in range(20):
+        #        particlesOnScreen.append(Blue(mouse.x,mouse.y))
 
 
     
@@ -376,6 +377,8 @@ def draw(window, dt):
             drawText(window, f"{round(player.actives["Q"][1], 1)}", (0,0,0),(390, H - 50), 30, drawAsUI=True)
     player.choiceDesc(window)
     player.statShow(window, W)
+    for part in particlesOnScreen:
+        part.draw(window)
     global NGARU, pause
     if pause:
         menu.draw(window)

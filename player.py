@@ -24,11 +24,11 @@ class Bullet:
                 self.rect[1] += self.vel[1] * dt
                 if AABBCollision((-30, -30, 1980, 30),self.rect):
                     player.bullets.remove(self)
-                if AABBCollision((-30, 1080, 1980, 300),self.rect):
+                elif AABBCollision((-30, 1080, 1980, 300),self.rect):
                     player.bullets.remove(self)
-                if AABBCollision((-30, -30, 30, 1080),self.rect):
+                elif AABBCollision((-30, -30, 30, 1080),self.rect):
                     player.bullets.remove(self)
-                if AABBCollision((1920, -30, 30, 1080),self.rect):
+                elif AABBCollision((1920, -30, 30, 1080),self.rect):
                     player.bullets.remove(self)
 
             case "haloBullet": # using vel[0] for index of bullet
