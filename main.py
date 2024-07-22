@@ -19,6 +19,7 @@ keys = [0] * 512  #init keys to avoid index error (pygame has 512 keycodes)
 
 player = Player(W/2, H/2)
 enemiesOnScreen = []
+particlesOnScreen = []
 coinManager = CoinManager()
 shopManager = shopManager(W, H)
 
@@ -219,7 +220,11 @@ class WaveManager:
 
     def spawnEnemy(self, enemiesOnScreen):
         spawnLoc = random.randint(0,3)
-        enemyType = BasicEnemy # edit this at some point when we add new enemies
+        ran = random.randint(1,100)
+        enemyType = BasicEnemy
+        if ran >= 1 and ran <= 25:
+            enemyType = DasherEnemy # edit this at some point when we add new enemies
+        print(ran)
         match spawnLoc:
             case 0: # left
                 enemiesOnScreen.append(enemyType(-player.rect[2],random.randint(0,H-player.rect[3])))
@@ -229,6 +234,8 @@ class WaveManager:
                 enemiesOnScreen.append(enemyType(random.randint(0,W-player.rect[3]), -player.rect[3]))
             case 3: # down
                 enemiesOnScreen.append(enemyType(random.randint(0,W-player.rect[3]), H+player.rect[3]))
+    def spawnParticle(self, particlesOnScreen):
+        particlesOnScreen.append()
 
     def update(self, dt, enemiesOnScreen, shopManager, mouse, coinManager, player):
         if player.spawnMultiplyer >= 1:
@@ -283,8 +290,9 @@ class WaveManager:
 
 waveManager = WaveManager()
 
+
 def update(window, dt):
-    global keys, enemiesOnScreen, mouse, boostResetCap, pause
+    global keys, enemiesOnScreen, particlesOnScreen, mouse, boostResetCap, pause
     if pause == False:
         if waveManager.swapVal == 1: # if not in store or transitioning from store
             if boostResetCap == 1 and player.boostState == True:
@@ -296,6 +304,11 @@ def update(window, dt):
             player.update(window, dt, keys, player, W, H)
         coinManager.update(dt, player)
         waveManager.update(dt, enemiesOnScreen, shopManager, mouse, coinManager, player)
+        
+        
+        for particle in particle.particles:
+            particle.update()
+
         for enemy in enemiesOnScreen:
             enemy.update(window,player,dt,enemiesOnScreen,coinManager);
 

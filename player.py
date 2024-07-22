@@ -22,13 +22,13 @@ class Bullet:
             case "standardBullet":
                 self.rect[0] += self.vel[0] * dt
                 self.rect[1] += self.vel[1] * dt
-                if AABBCollision((-50, -50, 2020, 5),self.rect) and self.vel[1] < 0:
+                if AABBCollision((-30, -30, 1980, 30),self.rect):
                     player.bullets.remove(self)
-                elif AABBCollision((-50, 1080+45, 2020, 5),self.rect) and self.vel[1] > 0:
+                if AABBCollision((-30, 1080, 1980, 300),self.rect):
                     player.bullets.remove(self)
-                elif AABBCollision((-50, -50, 5, 1180),self.rect) and self.vel[0] < 0:
+                if AABBCollision((-30, -30, 30, 1080),self.rect):
                     player.bullets.remove(self)
-                elif AABBCollision((1920+45, -50, 5, 1180),self.rect) and self.vel[0] > 0:
+                if AABBCollision((1920, -30, 30, 1080),self.rect):
                     player.bullets.remove(self)
 
             case "haloBullet": # using vel[0] for index of bullet
@@ -376,14 +376,14 @@ class Player:
             
 
     def physics(self, dt, W, H):
-        if AABBCollision((0, 0, W, 5),self.rect) and self.vel[1] < 0:
-            self.vel[1] *= -0.25
-        if AABBCollision((0, H-5, W, 5),self.rect) and self.vel[1] > 0:
-            self.vel[1] *= -0.25
-        if AABBCollision((0, 0, 5, H),self.rect) and self.vel[0] < 0:
-            self.vel[0] *= -0.25
-        if AABBCollision((W-5, 0, 5, H),self.rect) and self.vel[0] > 0:
-            self.vel[0] *= -0.25
+        if AABBCollision((-30, -30, 1980, 30),self.rect) and self.vel[1] < 0:
+            self.vel[1] *= -1
+        if AABBCollision((-30, 1080, 1980, 30),self.rect) and self.vel[1] > 0:
+            self.vel[1] *= -1
+        if AABBCollision((-30, -30, 30, 1080),self.rect) and self.vel[0] < 0:
+            self.vel[0] *= -1
+        if AABBCollision((1920, -30, 30, 1080),self.rect) and self.vel[0] > 0:
+            self.vel[0] *= -1
         self.rect[0] += self.vel[0]*dt
         self.rect[1] += self.vel[1]*dt
         self.center = [self.rect[0]+self.rect[2]/2,self.rect[1]+self.rect[3]/2]
@@ -527,7 +527,7 @@ class Player:
             drawText(window, self.choicehovering, (0,0,0),(mx + 10,my), 30, drawAsUI=True)
             drawText(window, desc1, (0,0,0),(mx + 10,my + 50), 30, drawAsUI=True)
             drawText(window, desc2, (0,0,0),(mx + 10,my + 75), 30, drawAsUI=True)
-            drawText(window, desc3, (0,0,0),(mx + 10,my + 50), 30, drawAsUI=True)
+            drawText(window, desc3, (0,0,0),(mx + 10,my + 100), 30, drawAsUI=True)
             
         
 

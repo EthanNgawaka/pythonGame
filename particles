@@ -1,0 +1,26 @@
+from library import *
+class Particle:
+    def __init__(self):
+        w,h = 40,40
+        self.x = 0
+        self.y = 0
+        self.rect = (self.x,self.y,w,h)
+        self.vel = [1,1]
+
+    def update(self,particlesOnScreen):
+        self.x += self.vel[0] #X pos + vel
+        self.y += self.vel[1] #Y pos + vel
+        self.vel[0] *= 0.98 #X friction
+        self.vel[1] *= 0.98 #Y friction
+        if self.vel[0] > 0 and self.vel <= 0.1:
+            particlesOnScreen.remove(self)
+        if self.vel[0] < 0 and self.vel >= 0.1:
+            particlesOnScreen.remove(self)
+        if self.vel[1] > 0 and self.vel <= 0.1:
+            particlesOnScreen.remove(self)
+        if self.vel[1] < 0 and self.vel >= 0.1:
+            particlesOnScreen.remove(self)
+            
+
+    def draw(self,window):
+            drawRect(window,self.rect,(255,255,255))
