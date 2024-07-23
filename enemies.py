@@ -39,6 +39,8 @@ class BasicEnemy:
             if self.tickCount > 0:
                 if self.tDTimer < 0:
                     self.health -= player.hotShotDmg
+                    for i in range(10):
+                        particlesOnScreen.append(Fire(self.rect[0]+(self.rect[2]/2),self.rect[1]+(self.rect[3]/2)))
                     self.colchan = 0.1
                     self.tickCount -= 1
                     self.tDTimer = self.tDTimerMax
@@ -200,6 +202,8 @@ class InvisEnemy:
             if self.tickCount > 0:
                 if self.tDTimer < 0:
                     self.health -= player.hotShotDmg
+                    for i in range(10):
+                        particlesOnScreen.append(Fire(self.rect[0]+(self.rect[2]/2),self.rect[1]+(self.rect[3]/2)))
                     self.colchan = 0.1
                     self.tickCount -= 1
                     self.tDTimer = self.tDTimerMax
@@ -369,6 +373,8 @@ class DasherEnemy:
             if self.tickCount > 0:
                 if self.tDTimer < 0:
                     self.health -= player.hotShotDmg
+                    for i in range(10):
+                        particlesOnScreen.append(Fire(self.rect[0]+(self.rect[2]/2),self.rect[1]+(self.rect[3]/2)))
                     self.colchan = 0.1
                     self.tickCount -= 1
                     self.tDTimer = self.tDTimerMax

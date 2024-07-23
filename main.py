@@ -67,20 +67,21 @@ class Dev:
         self.giveStat(window,0,2,"atkSpd",player.atkSpeedUp,(150,150,150))
         self.giveStat(window,0,3,"dmgUp",player.dmgUp,(150,150,150))
         self.giveStat(window,0,4,"BSpd",player.bulletSpeedUp,(150,150,150))
-        self.giveStat(window,0,5,"actvCool",player.activeCooldown,(150,150,150))
+        self.giveStat(window,0,5,"acc",player.accuracyUp,(150,150,150))
+        self.giveStat(window,0,6,"actvCool",player.activeCooldown,(150,150,150))
         #rare
         self.giveStat(window,1,1,"shotgun",player.shotgun,(0,255,255))
-        self.giveStat(window,1,2,"lifeSteal",player.lifeStealUp,(0,255,255))
-        self.giveStat(window,1,3,"hotShots",player.hotShot,(0,255,255))
+        self.giveStat(window,1,2,"lifesteal",player.lifeStealUp,(0,255,255))
+        self.giveStat(window,1,3,"hotShot",player.hotShot,(0,255,255))
         self.giveStat(window,1,4,"shield",player.shield,(0,255,255))
         self.giveStat(window,1,5,"pheonix",player.lifeUp,(0,255,255))
-        self.giveStat(window,1,6,"forager",player.forager,(0,255,255))
-        self.giveStat(window,1,7,"fighter",player.fighter,(0,255,255))
-        self.giveStat(window,1,8,"peircing",player.piercing,(0,255,255))
+        self.giveStat(window,1,6,"forag",player.forager,(0,255,255))
+        self.giveStat(window,1,7,"fight",player.fighter,(0,255,255))
+        self.giveStat(window,1,8,"peirce",player.piercing,(0,255,255))
         #legendary
         self.giveStat(window,2,1,"minigun",player.minigun,(255,255,0))
         self.giveStat(window,2,2,"homing",player.homingSpeed,(255,255,0))
-        self.giveStat(window,2,3,"doubleShot",player.doubleShot,(255,255,0))
+        self.giveStat(window,2,3,"2xshot",player.doubleShot,(255,255,0))
         #abilities
         self.giveStat(window,3,1,"dash",player.buyDash,(255,0,0))
         self.giveStat(window,3,2,"boost",player.buyBoost,(255,0,0))
@@ -309,9 +310,6 @@ def update(window, dt):
             part.update(particlesOnScreen,dt)
         for enemy in enemiesOnScreen:
             enemy.update(window,player,dt,enemiesOnScreen,coinManager,particlesOnScreen);
-        #if mouse.pressed[0]:
-        #    for i in range(20):
-        #        particlesOnScreen.append(Blue(mouse.x,mouse.y))
 
 
     

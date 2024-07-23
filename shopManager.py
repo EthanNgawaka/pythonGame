@@ -26,7 +26,7 @@ rareCards = [
         {"name": "pheonix", "basePrice": 300, "col": (0,255,255),"id": 18},
 ]
 legendaryCards = [
-        {"name": "homingSpeed", "basePrice": 0, "col": (255,255,0),"id": 19},
+        {"name": "homingSpeed", "basePrice": 300, "col": (255,255,0),"id": 19},
         {"name": "minigun", "basePrice": 200, "col": (0,255,255),"id": 20},
         {"name": "doubleShot", "basePrice": 250, "col": (0,255,255),"id": 21}
         #{"name": "sword", "basePrice": 250, "col": (255,255,255)}, thought this was gonna be its own player? is ok if not just confused i was just adding it here to see it in game :D
