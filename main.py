@@ -226,7 +226,6 @@ class WaveManager:
         enemyType = BasicEnemy
         if ran >= 1 and ran <= 25:
             enemyType = DasherEnemy # edit this at some point when we add new enemies
-        print(ran)
         match spawnLoc:
             case 0: # left
                 enemiesOnScreen.append(enemyType(-player.rect[2],random.randint(0,H-player.rect[3])))
@@ -309,7 +308,7 @@ def update(window, dt):
         for part in particlesOnScreen:
             part.update(particlesOnScreen,dt)
         for enemy in enemiesOnScreen:
-            enemy.update(window,player,dt,enemiesOnScreen,coinManager,particlesOnScreen);
+            enemy.update(window,player,dt,enemiesOnScreen,coinManager,particlesOnScreen)
 
 
     
@@ -394,7 +393,6 @@ def main():
         dt = clock.tick(maxFPS) / 1000.0
         update(window, dt)
         draw(window, dt)
-        running = player.running
         menu.pause()
         running = menu.quit
             

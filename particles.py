@@ -65,7 +65,7 @@ class Fire:
             self.size -= 40 * dt
             self.y += 20 * dt
             self.x += 20 * dt
-        if self.col[1] <= 200:
+        if self.col[1] <= 180:
             self.col[1] += 600 * dt
         self.w = self.size
         self.h = self.size

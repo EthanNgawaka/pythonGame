@@ -212,7 +212,7 @@ class Player:
 
     # passive items
     def doubleShot(self):
-        self.bulletCount *= 2
+        self.bulletCount += 1
         self.accuracyUp()
         self.chipList.append("doubleShot")
 
@@ -371,6 +371,7 @@ class Player:
             if self.health <= 0 and self.revives > 0:
                 self.health = self.maxHealth
                 self.invinceTimer = 3
+                self.revives -= 1
             elif self.health <= 0:
                 self.running = False
             
