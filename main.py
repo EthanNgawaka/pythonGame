@@ -81,8 +81,8 @@ class WaveManager:
 
     def draw(self, dt, window, shopManager):
         
-        drawText(window, f"Time left: {math.ceil(self.waveTimer)}", (255,255,255),(W-200, 50), 30, drawAsUI=True) # hard coded pos shd change this
-        drawText(window, f"Wave {self.wave}", (255,255,255),(W-200, 20), 30, drawAsUI=True) # hard coded pos shd change this
+        drawText(window, f"Time left: {math.ceil(self.waveTimer)}", (255,255,255),(W-200, 50), 30) # hard coded pos shd change this
+        drawText(window, f"Wave {self.wave}", (255,255,255),(W-200, 20), 30) # hard coded pos shd change this
         if shopManager.store and len(enemiesOnScreen) == 0:
             shopManager.draw(window)
         elif self.swapVal > 1:
@@ -126,12 +126,6 @@ def update(window, dt):
         for enemy in enemiesOnScreen:
             enemy.update(window,player,dt,enemiesOnScreen,coinManager,particlesOnScreen)
 
-
-    
-    
-
-        
-
     #input stuff
     mouse.update()
     keys = pygame.key.get_pressed()
@@ -145,8 +139,14 @@ def draw(window, dt):
         enemy.draw(window);
     waveManager.draw(dt, window, shopManager)
     
-    drawText(window, f"FPS: {1/dt}", (255,255,255),(W-150, 150), 30, drawAsUI=True)
+    drawText(window, f"FPS: {1/dt}", (255,255,255),(W-150, 150), 30)
 
+    # ew this is gross need to fix this WHY IS AMOGUS A VARIABLE WTF DOES THAT MEAN
+    # pls pls pls name ur variables smth meaningful a terrible example of this is the dev class
+    # in menu it checks if self.dev.dev is true???? like what does this mean
+    # not everything has to be super descriptive but when in doubt jut describe exactly what it does
+    # ie self.dev.isOpen or open or devMenuIsOpen anything that could give me any info so i dont spend 20 mins
+    # trying to figure out what it means
     if player.actives["Space"]:
             cool = player.actives["Space"][1]
             perc = cool/player.actives["Space"][0]
@@ -158,8 +158,8 @@ def draw(window, dt):
                 col = (150,150,150)
             drawRect(window,(50,H - 200,100,200),(100,100,100))
             drawRect(window,(50,H - 200 + perc*200,100,200),col)
-            drawText(window, name, (0,0,0),(50 + amogus, H - 100), 30, drawAsUI=True)
-            drawText(window, f"{round(player.actives["Space"][1], 1)}", (0,0,0),(90, H - 50), 30, drawAsUI=True)
+            drawText(window, name, (0,0,0),(50 + amogus, H - 100), 30)
+            drawText(window, f"{round(player.actives["Space"][1], 1)}", (0,0,0),(90, H - 50), 30)
 
     if player.actives["E"]:
             cool = player.actives["E"][1]
@@ -172,8 +172,8 @@ def draw(window, dt):
                 col = (150,150,150)
             drawRect(window,(200,H - 200,100,200),(100,100,100))
             drawRect(window,(200,H - 200 + perc*200,100,200),col)
-            drawText(window, name, (0,0,0),(200 + amogus, H - 100), 30, drawAsUI=True)
-            drawText(window, f"{round(player.actives["E"][1], 1)}", (0,0,0),(240, H - 50), 30, drawAsUI=True)
+            drawText(window, name, (0,0,0),(200 + amogus, H - 100), 30)
+            drawText(window, f"{round(player.actives["E"][1], 1)}", (0,0,0),(240, H - 50), 30)
 
     if player.actives["Q"]:
             cool = player.actives["Q"][1]
@@ -186,8 +186,8 @@ def draw(window, dt):
                 col = (150,150,150)
             drawRect(window,(350,H - 200,100,200),(100,100,100))
             drawRect(window,(350,H - 200 + perc*200,100,200),col)
-            drawText(window, name, (0,0,0),(350 + amogus, H - 100), 30, drawAsUI=True)
-            drawText(window, f"{round(player.actives["Q"][1], 1)}", (0,0,0),(390, H - 50), 30, drawAsUI=True)
+            drawText(window, name, (0,0,0),(350 + amogus, H - 100), 30)
+            drawText(window, f"{round(player.actives["Q"][1], 1)}", (0,0,0),(390, H - 50), 30)
     player.choiceDesc(window)
     player.statShow(window, W)
     for part in particlesOnScreen:

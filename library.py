@@ -12,6 +12,8 @@ keys = [0] * 512  #init keys to avoid index error (pygame has 512 keycodes)
 # eg) if keys[pygame.KEY_a]:
 #         print("a down")
 
+
+
 class Mouse:
     def __init__(self):
         self.pressed = [False,False]

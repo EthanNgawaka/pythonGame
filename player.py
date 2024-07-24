@@ -145,12 +145,12 @@ class Player:
 
     
     def statShow(self, window, W):
-        drawText(window, f"Speed: {round(self.speed/500,3)}", (255,255,255),(10, 150), 30, drawAsUI=True)
-        drawText(window, f"Dmg: {round(self.dmg,3)}", (255,255,255),(10, 200), 30, drawAsUI=True)
-        drawText(window, f"Acc: {round(self.inaccuracy,3)}", (255,255,255),(10, 250), 30, drawAsUI=True)
-        drawText(window, f"BSpeed: {round(self.bulletSpeed/10,1)}", (255,255,255),(10, 300), 30, drawAsUI=True)
-        drawText(window, f"AtkSpeed: {round(self.attackRate,3)}", (255,255,255,1),(10, 350), 30, drawAsUI=True)
-        drawText(window, f"AtkSpeedMult: {round(self.atkRateMultiplier,3)}", (255,255,255),(10, 400), 30, drawAsUI=True)
+        drawText(window, f"Speed: {round(self.speed/500,3)}", (255,255,255),(10, 150), 30)
+        drawText(window, f"Dmg: {round(self.dmg,3)}", (255,255,255),(10, 200), 30)
+        drawText(window, f"Acc: {round(self.inaccuracy,3)}", (255,255,255),(10, 250), 30)
+        drawText(window, f"BSpeed: {round(self.bulletSpeed/10,1)}", (255,255,255),(10, 300), 30)
+        drawText(window, f"AtkSpeed: {round(self.attackRate,3)}", (255,255,255,1),(10, 350), 30)
+        drawText(window, f"AtkSpeedMult: {round(self.atkRateMultiplier,3)}", (255,255,255),(10, 400), 30)
         
         #drawText(window, self.choicehovering, (255,255,255),(10, 450), 30, drawAsUI=True)
         
@@ -366,6 +366,8 @@ class Player:
                 self.health -= dmgAmount
             else:
                 self.shieldCur -= 1
+
+            camera.shake()
             self.vel = add(self.vel, dmgKnockback)
             self.dmgTimer = 2
             if self.health <= 0 and self.revives > 0:
@@ -559,8 +561,8 @@ class Player:
 
             
     def draw(self, window, player, dt):
-        drawText(window, f"Coins: {self.coins}", (255,255,0), (10,50), 40, drawAsUI=True)
-        drawText(window, f"HP: {self.health}", (0,255,0), (10,10), 40, drawAsUI=True)
+        drawText(window, f"Coins: {self.coins}", (255,255,0), (10,50), 40)
+        drawText(window, f"HP: {self.health}", (0,255,0), (10,10), 40)
         if self.dmgTimer > 0:
             if math.floor(self.dmgTimer*10) % 2 != 0:
                 drawCircle(window, (self.center, self.r), self.col)
@@ -568,11 +570,14 @@ class Player:
             drawCircle(window, (self.center, self.r), self.col)
             
         ratio = self.health / self.maxHealth
-        healthBarPos = [160, 18.5]
-        pygame.draw.rect(window, (255, 0, 0), (*healthBarPos, 200, 20))
-        pygame.draw.rect(window, (0, 255, 0), (*healthBarPos, 200 * ratio, 20))
+        healthBarRect = [160, 18.5, 200, 20]
+
+        drawRect(window, healthBarRect, (255,0,0))
+        healthBarRect[2] *= ratio
+        drawRect(window, healthBarRect, (0,255,0))
+
         if self.invinceTimer > 0:
-            drawText(window, f"{round(self.invinceTimer)}", (100,100,100),(self.rect[0] + 12.5, self.rect[1]), 30, drawAsUI=True)
+            drawText(window, f"{round(self.invinceTimer)}", (100,100,100),(self.rect[0] + 12.5, self.rect[1]), 30)
 
         # Weapons
         for bullet in self.bullets:

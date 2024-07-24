@@ -31,7 +31,7 @@ class BasicEnemy:
                 mlep = 8
             else:
                 mlep = 0
-            drawText(window, f"{round(self.health)}", (255,255,255),(self.rect[0] + mlep, self.rect[1] - 5), 30, drawAsUI=True)
+            drawText(window, f"{round(self.health)}", (255,255,255),(self.rect[0] + mlep, self.rect[1] - 5), 30)
 
     def update(self, window, player, dt, enemiesOnScreen, coinManager, particlesOnScreen):
         self.dmgKnockback = player.knockback
@@ -194,7 +194,7 @@ class InvisEnemy:
                 mlep = 8
             else:
                 mlep = 0
-            drawText(window, f"{round(self.health)}", (255,255,255),(self.rect[0] + mlep, self.rect[1] - 5), 30, drawAsUI=True)
+            drawText(window, f"{round(self.health)}", (255,255,255),(self.rect[0] + mlep, self.rect[1] - 5), 30)
 
     def update(self, window, player, dt, enemiesOnScreen, coinManager, particlesOnScreen):
         self.dmgKnockback = player.knockback
@@ -365,7 +365,7 @@ class DasherEnemy:
                 mlep = 8
             else:
                 mlep = 0
-            drawText(window, f"{round(self.health)}", (255,255,255),(self.rect[0] + mlep, self.rect[1] - 5), 30, drawAsUI=True)
+            drawText(window, f"{round(self.health)}", (255,255,255),(self.rect[0] + mlep, self.rect[1] - 5), 30)
 
     def update(self, window, player, dt, enemiesOnScreen, coinManager, particlesOnScreen):
         self.dmgKnockback = player.knockback
