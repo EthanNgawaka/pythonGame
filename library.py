@@ -4,6 +4,39 @@ import random
 import math
 import time
 
+class Mouse:
+    def __init__(self):
+        self.pressed = [False,False]
+        self.down = [False,False]
+        self.x = 0
+        self.y = 0
+    
+    def update(self):
+        self.pressed = [False,False]
+        mousePos = pygame.mouse.get_pos()
+        self.x = mousePos[0]
+        self.y = mousePos[1]
+        pressed = pygame.mouse.get_pressed(num_buttons=3)
+        if pressed[0]:
+            if self.down[0]:
+                self.pressed[0] = False
+            else:
+                self.pressed[0] = True
+            self.down[0] = True
+        else:
+            self.down[0] = False
+
+        if pressed[1]:
+            if self.down[1]:
+                self.pressed[1] = False
+
+            else:
+                self.pressed[1] = True
+            self.down[1] = True
+        else:
+            self.down[1] = False
+
+mouse = Mouse()
 class Camera:
     def __init__(self, trackingEasing=0.1):
         self.pos = [0,0]
@@ -59,6 +92,7 @@ def subtractRects(a,b):
 
 def subtract(a, b):
     return [a[0]-b[0], a[1]-b[1]]
+
 
 def magnitude(a):
     return math.sqrt(a[0]**2 + a[1]**2)
@@ -121,3 +155,31 @@ def drawRect(window, rect, col, width=0): # col = (R, G, B)
 def drawCircle(window, circle, col): # circle = (center, radius)
     pygame.draw.circle(window, col, subtract(circle[0], camera.pos), circle[1])
 
+def enlargeRect(inputRect, a, b, preserveBottomVerticesY=False):
+    rect = inputRect
+    transVec = [0,0]
+    if preserveBottomVerticesY:
+        transVec = [-(rect[0]+rect[2]/2),-(rect[1]+rect[3])]
+    else:
+        transVec = [-(rect[0]+rect[2]/2),-(rect[1]+rect[3]/2)]
+
+    vertices = [
+        [rect[0],rect[1]],
+        [rect[0]+rect[2],rect[1]],
+        [rect[0]+rect[2],rect[1]+rect[3]],
+        [rect[0], rect[1]+rect[3]]
+    ]
+
+    for i in range(len(vertices)):
+        vertices[i] = add(vertices[i], transVec)
+
+    L = [[a,0],[0,b]];
+
+    for i in range(len(vertices)):
+        vertices[i] = [a*vertices[i][0], b*vertices[i][1]]
+    
+    for i in range(len(vertices)):
+        vertices[i] = subtract(vertices[i], transVec);
+
+    rect = [vertices[0][0],vertices[0][1],vertices[1][0]-vertices[0][0],vertices[2][1]-vertices[0][1]]
+    return rect;

@@ -4,6 +4,7 @@ from coinManager import *
 from shopManager import *
 from player import *
 from particles import *
+from ui import *
 
 W = 1920
 H = 1080
@@ -33,7 +34,6 @@ class Dev:
         self.god = 0
         self.skip = 0
         
-
     def button(self, window, X,Y,name, var):
         col1 = (255,0,0)
         if var == 1:
@@ -117,92 +117,90 @@ class Menu:
         self.quit = True
         self.escC = False
         self.dev = Dev()
-        
+        self.devTrigger = True
 
-    def button(self,window,text,y,of,col,txtcol):
-        buttrect = [self.x + (self.w/20),(y * (self.h/9.6 + self.h/(self.h/9.6))) + (self.y + self.h/50),self.w - (self.w/10),self.h/9.6]
-        drawRect(window,(buttrect), col)
-        drawText(window, text, txtcol,((buttrect[0]+(buttrect[2]/2)) - of,buttrect[1]+(buttrect[3] /5)), 30, drawAsUI=True)
-        if AABBCollision((buttrect),(mouse.x - 2.5,mouse.y - 2.5,5,5)) and mouse.pressed[0] == True:
-            return False
+
+        # BUTTON INIT --------------------------------------------- #
+        # open dev panel
+        def devFunc(parent):
+            if parent.devTrigger:
+                parent.devTrigger = False
+            else:
+                parent.devTrigger = True
+        devRect = [(self.w-250)/2,40,250,70]
+        self.devButton = Button(devRect, "DEV", [(150,150,150), (200, 200, 200), (255,255,255)], devFunc, self)
+
+        # resume
+        def resumeFunc(parent):
+            parent.unpause()
+        resumeRect = [(self.w-250)/2,130,250,70]
+        self.resumeButton = Button(resumeRect, "RESUME", [(150,150,150), (200, 200, 200), (255,255,255)], resumeFunc, self)
+
+        # exit
+        def exitFunc(parent):
+            parent.quit = False
+        exitRect = [(self.w-250)/2,220,250,70]
+        self.exitButton = Button(exitRect, "EXIT", [(255,0,0), (255, 100, 100), (255,255,255)], exitFunc, self)
+        # -------------------------------------------------------- #
+
+    def unpause(self):
+        global pause
+        self.dev.dev = False
+        if self.escC:
+            esc = False
         else:
-            return True
+            esc = True
+            if pause == True:
+                pause = False
+            elif pause == False:
+                pause = True
+        self.escC = True
         
     def pause(self):
         global pause
         esc = keys[pygame.K_ESCAPE]
         if esc:
-            self.dev.dev = False
-            if self.escC:
-                esc = False
-            else:
-                esc = True
-                if pause == True:
-                    pause = False
-                elif pause == False:
-                    pause = True
-            self.escC = True
+            self.unpause()
         else:
             self.escC = False
 
     def draw(self, window):
 
+        # draw menu
         drawRect(window,self.rect,(100,100,100))
-        self.quit = self.button(window,"QUIT",7,30,(200,0,0),(255,255,255))
-        devButton = self.button(window,"DEV",0,20,(200,200,200),(0,0,0))
+
+        # draw Buttons
+        self.exitButton.update(mouse)
+        self.exitButton.draw(window)
+
+        self.devButton.update(mouse)
+        self.devButton.draw(window)
+
+        self.resumeButton.update(mouse)
+        self.resumeButton.draw(window)
+
+        # draw chips
         index = 0
         for i in player.chipList:
             drawRect(window,(1500,(50* index),200,40),(255,255,255))
             drawText(window, player.chipList[index], (0,0,0),(5 + (1500),50 * index), 30, drawAsUI=True)
             index += 1
-        if devButton == False:
+
+        # handling dev menu
+        if self.devTrigger == False:
+            self.devTrigger = True
             if self.dev.dev == True:
                 self.dev.dev = False
             else:
                 self.dev.dev = True
         if self.dev.dev == True:
             self.dev.update(window)
-            
-
 
         #drawRect(window,((W/2)-1,0,2,H),(255,255,255)) testing for center
         
 
         
 
-class Mouse:
-    def __init__(self):
-        self.pressed = [False,False]
-        self.down = [False,False]
-        self.x = 0
-        self.y = 0
-    
-    def update(self):
-        self.pressed = [False,False]
-        mousePos = pygame.mouse.get_pos()
-        self.x = mousePos[0]
-        self.y = mousePos[1]
-        pressed = pygame.mouse.get_pressed(num_buttons=3)
-        if pressed[0]:
-            if self.down[0]:
-                self.pressed[0] = False
-            else:
-                self.pressed[0] = True
-            self.down[0] = True
-        else:
-            self.down[0] = False
-
-        if pressed[1]:
-            if self.down[1]:
-                self.pressed[1] = False
-
-            else:
-                self.pressed[1] = True
-            self.down[1] = True
-        else:
-            self.down[1] = False
-
-mouse = Mouse()
 boostResetCap = 0
 menu = Menu()
 class WaveManager:
