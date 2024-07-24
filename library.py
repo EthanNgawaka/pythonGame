@@ -4,6 +4,14 @@ import random
 import math
 import time
 
+W = 1920
+H = 1080
+
+keys = [0] * 512  #init keys to avoid index error (pygame has 512 keycodes)
+# to access the state of a key (true for down false for up) use "keys[pygame.KEYCODE]"
+# eg) if keys[pygame.KEY_a]:
+#         print("a down")
+
 class Mouse:
     def __init__(self):
         self.pressed = [False,False]

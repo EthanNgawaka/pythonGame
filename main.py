@@ -6,199 +6,15 @@ from player import *
 from particles import *
 from ui import *
 
-W = 1920
-H = 1080
 NGARU = True
-pause = False
 escC = False
 esc = False
-
-keys = [0] * 512  #init keys to avoid index error (pygame has 512 keycodes)
-# to access the state of a key (true for down false for up) use "keys[pygame.KEYCODE]"
-# eg) if keys[pygame.KEY_a]:
-#         print("a down")
-
 
 player = Player(W/2, H/2)
 enemiesOnScreen = []
 particlesOnScreen = []
 coinManager = CoinManager()
 shopManager = shopManager(W, H)
-
-
-class Dev:
-    def __init__(self):
-        self.dev = False
-        self.col = (255,255,255)
-        self.pause = 0
-        self.god = 0
-        self.skip = 0
-        
-    def button(self, window, X,Y,name, var):
-        col1 = (255,0,0)
-        if var == 1:
-            col1 = (0,255,0)
-        posX = W - 450 + 50 + (100 * X)
-        posY = 50 + (100 * Y)
-        drawRect(window, (posX, posY, 50, 50), col1)
-        drawText(window, name, (255,255,255),(posX, posY + 50), 30, drawAsUI=True)
-        if AABBCollision((posX, posY, 50, 50), (mouse.x, mouse.y, 5, 5)) and mouse.pressed[0]:
-            var += 1
-        return var
-    
-    def giveStat(self, window, X,Y,name, func, col):
-        posX = W - 450 + 50 + (100 * X)
-        posY = 50 + (100 * Y)
-        drawRect(window, (posX, posY, 50, 50), col)
-        drawText(window, name, (255,255,255),(posX, posY + 50), 30, drawAsUI=True)
-        if AABBCollision((posX, posY, 50, 50), (mouse.x, mouse.y, 5, 5)) and mouse.pressed[0]:
-            func()
-
-
-    def update(self, window):
-        drawRect(window, (W - 500, 0, 500, H), (100,100,100))
-        drawRect(window, (W - 500, 0, 32, 32), (255,0,0))
-
-        self.pause = self.button(window,0,0,"Pause",self.pause)
-        self.god = self.button(window,1,0,"God",self.god)
-        self.skip = self.button(window,2,0,"Skip Wave",self.skip)
-        #commons
-        self.giveStat(window,0,1,"spdUp",player.speedUp,(150,150,150))
-        self.giveStat(window,0,2,"atkSpd",player.atkSpeedUp,(150,150,150))
-        self.giveStat(window,0,3,"dmgUp",player.dmgUp,(150,150,150))
-        self.giveStat(window,0,4,"BSpd",player.bulletSpeedUp,(150,150,150))
-        self.giveStat(window,0,5,"acc",player.accuracyUp,(150,150,150))
-        self.giveStat(window,0,6,"actvCool",player.activeCooldown,(150,150,150))
-        #rare
-        self.giveStat(window,1,1,"shotgun",player.shotgun,(0,255,255))
-        self.giveStat(window,1,2,"lifesteal",player.lifeStealUp,(0,255,255))
-        self.giveStat(window,1,3,"hotShot",player.hotShot,(0,255,255))
-        self.giveStat(window,1,4,"shield",player.shield,(0,255,255))
-        self.giveStat(window,1,5,"pheonix",player.lifeUp,(0,255,255))
-        self.giveStat(window,1,6,"forag",player.forager,(0,255,255))
-        self.giveStat(window,1,7,"fight",player.fighter,(0,255,255))
-        self.giveStat(window,1,8,"peirce",player.piercing,(0,255,255))
-        #legendary
-        self.giveStat(window,2,1,"minigun",player.minigun,(255,255,0))
-        self.giveStat(window,2,2,"homing",player.homingSpeed,(255,255,0))
-        self.giveStat(window,2,3,"2xshot",player.doubleShot,(255,255,0))
-        #abilities
-        self.giveStat(window,3,1,"dash",player.buyDash,(255,0,0))
-        self.giveStat(window,3,2,"boost",player.buyBoost,(255,0,0))
-        self.giveStat(window,3,3,"halo",player.buyBulletHalo,(255,0,0))
-        self.giveStat(window,3,4,"sword",player.buySword,(255,0,0))
-
-        if AABBCollision((W - 500, 0, 32, 32), (mouse.x, mouse.y, 5, 5)) and mouse.pressed[0]:
-            self.dev = False
-
-        if self.god == 1:
-            player.health = 100
-        elif self.god == 2:
-            self.god = 0
-        if self.pause == 1:
-            waveManager.waveTimer = 1
-            waveManager.spawnTimer = 2
-        elif self.pause == 2:
-            self.pause = 0
-        if self.skip == 1:
-            waveManager.maxWaveTimer = 2
-            waveManager.waveTimer = 0
-            waveManager.spawnTimer = 2
-            enemiesOnScreen.clear()
-            self.skip = 0
-
-class Menu:
-    def __init__(self):
-        self.w = W/6
-        self.h = H/2
-        self.x = (W/2) - (self.w/2)
-        self.y = (H/2) - (self.h/2)
-        self.rect = (self.x,self.y,self.w,self.h)
-        self.quit = True
-        self.escC = False
-        self.dev = Dev()
-        self.devTrigger = True
-
-
-        # BUTTON INIT --------------------------------------------- #
-        # open dev panel
-        def devFunc(parent):
-            if parent.devTrigger:
-                parent.devTrigger = False
-            else:
-                parent.devTrigger = True
-        devRect = [(self.w-250)/2,40,250,70]
-        self.devButton = Button(devRect, "DEV", [(150,150,150), (200, 200, 200), (255,255,255)], devFunc, self)
-
-        # resume
-        def resumeFunc(parent):
-            parent.unpause()
-        resumeRect = [(self.w-250)/2,130,250,70]
-        self.resumeButton = Button(resumeRect, "RESUME", [(150,150,150), (200, 200, 200), (255,255,255)], resumeFunc, self)
-
-        # exit
-        def exitFunc(parent):
-            parent.quit = False
-        exitRect = [(self.w-250)/2,220,250,70]
-        self.exitButton = Button(exitRect, "EXIT", [(255,0,0), (255, 100, 100), (255,255,255)], exitFunc, self)
-        # -------------------------------------------------------- #
-
-    def unpause(self):
-        global pause
-        self.dev.dev = False
-        if self.escC:
-            esc = False
-        else:
-            esc = True
-            if pause == True:
-                pause = False
-            elif pause == False:
-                pause = True
-        self.escC = True
-        
-    def pause(self):
-        global pause
-        esc = keys[pygame.K_ESCAPE]
-        if esc:
-            self.unpause()
-        else:
-            self.escC = False
-
-    def draw(self, window):
-
-        # draw menu
-        drawRect(window,self.rect,(100,100,100))
-
-        # draw Buttons
-        self.exitButton.update(mouse)
-        self.exitButton.draw(window)
-
-        self.devButton.update(mouse)
-        self.devButton.draw(window)
-
-        self.resumeButton.update(mouse)
-        self.resumeButton.draw(window)
-
-        # draw chips
-        index = 0
-        for i in player.chipList:
-            drawRect(window,(1500,(50* index),200,40),(255,255,255))
-            drawText(window, player.chipList[index], (0,0,0),(5 + (1500),50 * index), 30, drawAsUI=True)
-            index += 1
-
-        # handling dev menu
-        if self.devTrigger == False:
-            self.devTrigger = True
-            if self.dev.dev == True:
-                self.dev.dev = False
-            else:
-                self.dev.dev = True
-        if self.dev.dev == True:
-            self.dev.update(window)
-
-        #drawRect(window,((W/2)-1,0,2,H),(255,255,255)) testing for center
-        
-
         
 
 boostResetCap = 0
@@ -289,8 +105,10 @@ waveManager = WaveManager()
 
 
 def update(window, dt):
-    global keys, enemiesOnScreen, particlesOnScreen, mouse, boostResetCap, pause
-    if pause == False:
+    global keys, enemiesOnScreen, particlesOnScreen, mouse, boostResetCap
+
+    menu.update(keys)
+    if menu.open == False:
         if waveManager.swapVal == 1: # if not in store or transitioning from store
             if boostResetCap == 1 and player.boostState == True:
                 player.dmghold = player.dmg
@@ -374,26 +192,21 @@ def draw(window, dt):
     player.statShow(window, W)
     for part in particlesOnScreen:
         part.draw(window)
-    global NGARU, pause
-    if pause:
-        menu.draw(window)
-    
-    
-        
+
+    if menu.open:
+        menu.draw(window, player)
 
 maxFPS = 60
 clock = pygame.time.Clock()
 def main():
-    window = init(W, H, "bingus 2.0")
+    window = init(W, H, "Untitled Roguelike")
     running = True
 
     while running:  # main game loop
         dt = clock.tick(maxFPS) / 1000.0
         update(window, dt)
         draw(window, dt)
-        menu.pause()
         running = menu.quit
-            
 
         pygame.display.flip()
         for event in pygame.event.get():
