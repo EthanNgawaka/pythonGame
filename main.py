@@ -198,6 +198,7 @@ def draw(window, dt):
 
 maxFPS = 60
 clock = pygame.time.Clock()
+
 def main():
     window = init(W, H, "Untitled Roguelike")
     running = True
@@ -206,6 +207,7 @@ def main():
         dt = clock.tick(maxFPS) / 1000.0
         update(window, dt)
         draw(window, dt)
+
         running = menu.quit
 
         pygame.display.flip()

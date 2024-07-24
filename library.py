@@ -13,7 +13,6 @@ keys = [0] * 512  #init keys to avoid index error (pygame has 512 keycodes)
 #         print("a down")
 
 
-
 class Mouse:
     def __init__(self):
         self.pressed = [False,False]
@@ -120,6 +119,60 @@ def init(windowW, windowH, caption):
     #pygame.display.toggle_fullscreen()
     pygame.display.set_caption(caption)
     return window
+
+class Image:
+    def __init__(self, src, x, y, w, h):
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+        self.img = pygame.image.load(src)
+        self.sprite = pygame.Surface((self.img.get_width(),self.img.get_height()))
+        self.sprite.set_colorkey((0,255,0))
+        self.sprite.blit(self.img, (0,0))
+
+    def draw(self, window):
+        window.blit(pygame.transform.scale(self.img, (self.w, self.h)), (self.x, self.y))
+
+class Spritesheet:
+    def __init__(self, rect, src, spriteSize, secsBetweenFrames): # ([x,y,w,h], filename, [spriteW, spriteH], fps)
+        self.src = src
+        self.rect = rect
+        self.sprite_sheet = pygame.image.load(src)
+        self.spriteW = spriteSize[0]
+        self.spriteH = spriteSize[1]
+
+        self.timer = 0
+        self.secsBetweenFrames = secsBetweenFrames
+        self.currFrame = 0
+
+        self.state = ""
+        self.states = {} #{"state_name":[frames, correspondingLine]}
+
+    def addState(self, state_name, correspondingLine, frames):
+        self.states[state_name] = [frames, correspondingLine]
+        self.state = state_name
+
+    def draw(self, window, dt):
+
+        window.blit(pygame.transform.scale(self.get_curr_sprite(), (self.rect[0], self.rect[1])), (self.rect[0], self.rect[1]))
+        
+        self.timer += dt
+        if self.timer >= self.secsBetweenFrames:
+            self.currFrame += 1
+            self.timer = 0
+            if self.currFrame >= self.states[self.state][0]:
+                self.currFrame = 0
+        
+    def get_sprite(self, x, y):
+        sprite = pygame.Surface((self.spriteW, self.spriteH))
+        sprite.set_colorkey((0,255,0))
+        sprite.blit(self.sprite_sheet, (0, 0), (x, y, self.spriteW, self.spriteH))
+        return sprite
+
+    def get_curr_sprite(self):
+        state = self.states[self.state]
+        return self.get_sprite(self.currFrame*self.spriteW, state[1]*self.spriteH)
 
 def AABBCollision(rect1, rect2): # rect = (x,y,w,h) returns min trans vec if true
     # actual aabb logic, never done it in a list b4 thought itd look neater
