@@ -135,7 +135,7 @@ class Image:
         window.blit(pygame.transform.scale(self.img, (self.w, self.h)), (self.x, self.y))
 
 class Spritesheet:
-    def __init__(self, rect, src, spriteSize, secsBetweenFrames): # ([x,y,w,h], filename, [spriteW, spriteH], fps)
+    def __init__(self, rect, src, spriteSize, secsBetweenFrames, bounce=False): # ([x,y,w,h], filename, [spriteW, spriteH], fps)
         self.src = src
         self.rect = rect
         self.sprite_sheet = pygame.image.load(src)
@@ -145,6 +145,8 @@ class Spritesheet:
         self.timer = 0
         self.secsBetweenFrames = secsBetweenFrames
         self.currFrame = 0
+        self.bounce = bounce
+        self.animationDir = 1
 
         self.state = ""
         self.states = {} #{"state_name":[frames, correspondingLine]}
@@ -157,6 +159,7 @@ class Spritesheet:
         if self.state != state_name:
             self.state = state_name
             self.currFrame = 0
+            self.animationDir = 1
 
     def draw(self, window, dt):
 
@@ -164,10 +167,15 @@ class Spritesheet:
         
         self.timer += dt
         if self.timer >= self.secsBetweenFrames:
-            self.currFrame += 1
+            self.currFrame += self.animationDir
             self.timer = 0
-            if self.currFrame >= self.states[self.state][0]:
-                self.currFrame = 0
+
+            if self.bounce:
+                if self.currFrame == 0 or self.currFrame >= self.states[self.state][0]-1:
+                    self.animationDir*=-1
+            else:
+                if self.currFrame >= self.states[self.state][0]:
+                    self.currFrame = 0
         
     def get_sprite(self, x, y):
         sprite = pygame.Surface((self.spriteW, self.spriteH))
