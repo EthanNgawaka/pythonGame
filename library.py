@@ -153,9 +153,14 @@ class Spritesheet:
         self.states[state_name] = [frames, correspondingLine]
         self.state = state_name
 
+    def setState(self, state_name, reset=True):
+        if self.state != state_name:
+            self.state = state_name
+            self.currFrame = 0
+
     def draw(self, window, dt):
 
-        window.blit(pygame.transform.scale(self.get_curr_sprite(), (self.rect[0], self.rect[1])), (self.rect[0], self.rect[1]))
+        window.blit(pygame.transform.scale(self.get_curr_sprite(), (self.rect[2], self.rect[3])), (self.rect[0], self.rect[1]))
         
         self.timer += dt
         if self.timer >= self.secsBetweenFrames:
