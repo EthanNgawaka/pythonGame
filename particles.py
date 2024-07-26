@@ -1,124 +1,110 @@
 from library import *
 
+class ParticleManager:
+    def __init__(self):
+        self.particles = []
+        self.toRemove = []
 
-class Blood:
-    def __init__(self, x, y):
-        self.size = 10
-        self.w = 10
-        self.h = 10
-        self.x = x
-        self.y = y
-        self.col = (random.randint(100,255),0,0)
-        theta = math.atan2(random.uniform(-1,1), random.uniform(-1,1))
-        self.velx = math.cos(theta)*random.uniform(500,1000)
-        self.vely = math.sin(theta)*random.uniform(500,1000)
+    def remove(self, particle):
+        self.toRemove.append(particle)
 
-    def update(self,particlesOnScreen,dt):
-        self.x += self.velx * dt #X pos + vel
-        self.y += self.vely * dt #Y pos + vel
-        self.velx *= 0.9 #X friction
-        self.vely *= 0.9 #Y friction
+    def spawnFire(self, x, y):
+        numOfParticles = 2
+        for i in range(numOfParticles):
+            theta = random.uniform(0, 1)*-math.pi
+            print(theta/math.pi)
+            vel = [math.cos(theta)*random.uniform(50,200), math.sin(theta)*random.uniform(50,300)]
+            size = random.randint(4,15)
 
-        if self.size <= 0:
-            particlesOnScreen.remove(self)
-        else:
-            self.size -= 40 * dt
-            self.x += 40 * dt
-            self.y += 40 * dt
-        self.w = self.size
-        self.h = self.size
+            randomMax = 255
+            randomHalf = 128
+            randomMin = 0
+            startingColor = (randomMax,randomMax,randomMax,255) # white -> yellow -> orange -> red -> smoke
+            lerpColors = [(randomMax,randomMax,randomMin,255), (randomMax,randomHalf,randomMin,255), (randomMax,randomMin,randomMin,255), (randomHalf,randomHalf,randomHalf,255)]
             
+            self.particles.append(Particle(self, [x, y, size, size], startingColor, vel, colorLerp=lerpColors, grav=-20, lifetime=0.5+random.uniform(0,1.4)))
 
-    def draw(self,window):
-            drawRect(window,(self.x,self.y,self.w,self.h),self.col)
+    def bloodExplosion(self, x, y):
+        for i in range(20):
+            col = (random.randint(100,255),0,0, 255) #(R, G, B, A)
+            theta = math.atan2(random.uniform(-1,1), random.uniform(-1,1))
+            velx = math.cos(theta)*random.uniform(100,1000)
+            vely = math.sin(theta)*random.uniform(100,1000)
+            size = random.randint(1,12)
 
-class Fire:
-    def __init__(self, x, y):
-        self.size = 20
-        self.w = self.size
-        self.h = self.size
-        self.x = x - 10
-        self.y = y - 10
-        self.col = [255,random.uniform(0,50),0]
-        theta = math.atan2(random.uniform(-1,-1),random.uniform(-0.3,0.3))
-        self.velx = math.cos(theta) *random.uniform(50,400)
-        self.vely = math.sin(theta) *random.uniform(50,300) #random.uniform(500,1000)
-        
+            self.particles.append(Particle(self, [x,y,size,size], col, [velx, vely], lifetime=10, fade=True, grav=0))
 
-    def update(self,particlesOnScreen,dt):
-        if AABBCollision((-30, -30, 1980, 30),(self.x,self.y,self.w,self.h)) and self.vely < 0:
-            self.vely *= -1
-        if AABBCollision((-30, 1080, 1980, 30),(self.x,self.y,self.w,self.h)) and self.vely > 0:
-            self.vely *= -1
-        if AABBCollision((-30, -30, 30, 1080),(self.x,self.y,self.w,self.h)) and self.velx < 0:
-            self.velx *= -1
-        if AABBCollision((1920, -30, 30, 1080),(self.x,self.y,self.w,self.h)) and self.velx > 0:
-            self.velx *= -1
-        self.x += self.velx * dt #X pos + vel
-        self.y += self.vely * dt #Y pos + vel
-        self.velx *= 0.98 #X friction
-        self.vely *= 0.98 #Y friction
+    def update(self, dt):
+        for particle in self.particles:
+            particle.update(dt)
 
-        if self.size <= 0:
-            particlesOnScreen.remove(self)
-        else:
-            self.size -= 40 * dt
-            self.y += 20 * dt
-            self.x += 20 * dt
-        if self.col[1] <= 180:
-            self.col[1] += 600 * dt
-        self.w = self.size
-        self.h = self.size
-        
-            
+        for particle in self.toRemove:
+            try:
+                self.particles.remove(particle)
+            except ValueError:
+                print("ValueError when removing particles!")
+        self.toRemove = []
 
-    def draw(self,window):
-            drawRect(window,(self.x,self.y,self.w,self.h),(self.col))
+    def draw(self, window, dt):
+        for particle in self.particles:
+            particle.draw(window, dt)
 
-class Splash:
-    def __init__(self, x, y):
-        self.size = 20
-        self.w = self.size
-        self.h = self.size
-        self.x = x - 10
-        self.y = y - 10
-        self.col = (0,0,255)
-        theta = math.atan2(random.uniform(-1,1), random.uniform(-1,1))
-        self.velx = math.cos(theta)*random.uniform(500,1000)
-        self.vely = math.sin(theta)*random.uniform(500,1000)
-        
+class Particle:
+    def __init__(self, manager, rect, col=(0,0,0,255), vel=[0,0], drag=0.9, grav=10, shrink=False, fade=True, colorLerp=False, lifetime=10): # col = (R, G, B, A)
+        self.rect = rect
+        self.color = col
+        self.vel = vel
+        self.drag = drag
+        self.gravity = grav
 
-    def update(self,particlesOnScreen,dt):
-        if AABBCollision((-30, -30, 1980, 30),(self.x,self.y,self.w,self.h)) and self.vely < 0:
-            self.vely *= -1
-        if AABBCollision((-30, 1080, 1980, 30),(self.x,self.y,self.w,self.h)) and self.vely > 0:
-            self.vely *= -1
-        if AABBCollision((-30, -30, 30, 1080),(self.x,self.y,self.w,self.h)) and self.velx < 0:
-            self.velx *= -1
-        if AABBCollision((1920, -30, 30, 1080),(self.x,self.y,self.w,self.h)) and self.velx > 0:
-            self.velx *= -1
-        self.x += self.velx * dt #X pos + vel
-        self.y += self.vely * dt #Y pos + vel
-        self.velx *= 0.98 #X friction
-        self.vely *= 0.98 #Y friction
+        self.lifetime = lifetime
+        self.shrink = shrink
+        self.fade = fade
+        self.colorLerp = colorLerp
 
-        if self.size <= 0:
-            particlesOnScreen.remove(self)
-        else:
-            self.size -= 40 * dt
-            self.x += 40 * dt
-            self.y += 40 * dt
-        self.w = self.size
-        self.h = self.size
-        
-    #if self.velx > 0 and self.velx <= 0.1:
-        #    particlesOnScreen.remove(self)
-        #elif self.velx < 0 and self.velx >= 0-.1:
-        #    particlesOnScreen.remove(self)
-        #elif self.vely > 0 and self.vely <= 0.1:
-        #    particlesOnScreen.remove(self)
-        #elif self.vely < 0 and self.vely >= -0.1:
-        #    particlesOnScreen.remove(self)
+        self.startingLifetime = lifetime
 
-    def draw(self,window):
-            drawRect(window,(self.x,self.y,self.w,self.h),self.col)
+        self.manager = manager
+
+        if self.colorLerp:
+            self.currentColor = self.color
+            self.numOfColors = 1+len(self.colorLerp)
+            self.colorThreshhold = 1/self.numOfColors
+            self.currentColorIndex = 1
+            self.subLerp = 1
+
+    def draw(self, window, dt):
+        displayRect = self.rect
+        scalingFactor = self.lifetime/self.startingLifetime
+
+        if self.shrink:
+            displayRect = [displayRect[0], displayRect[1], displayRect[2]*scalingFactor, displayRect[3]*scalingFactor]
+
+        if self.fade:
+            self.color = (self.color[0], self.color[1], self.color[2], 255*self.lifetime/self.startingLifetime)
+
+        if self.colorLerp:
+            if self.subLerp > 0:
+                self.subLerp -= dt/self.colorThreshhold
+                self.color = (lerp(self.color[0], self.colorLerp[self.currentColorIndex-1][0], 0.1), lerp(self.color[1], self.colorLerp[self.currentColorIndex-1][1], 0.1), lerp(self.color[2], self.colorLerp[self.currentColorIndex-1][2], 0.1), self.color[3])
+
+
+            else:
+                if self.currentColorIndex < self.numOfColors-1:
+                    self.currentColorIndex += 1
+                self.subLerp = 1
+
+        col = pygame.Color(self.color)
+        drawRect(window, displayRect, col)
+
+    def update(self, dt):
+        self.rect[0] += self.vel[0]*dt
+        self.rect[1] += self.vel[1]*dt
+
+        self.vel[1] += self.gravity
+
+        self.vel = scalMult(self.vel, self.drag)
+
+        self.lifetime -= dt
+        if self.lifetime <= 0:
+            self.manager.remove(self)

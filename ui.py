@@ -15,7 +15,7 @@ class Dev:
         posX = W - 450 + 50 + (100 * X)
         posY = 50 + (100 * Y)
         drawRect(window, (posX, posY, 50, 50), col1)
-        drawText(window, name, (255,255,255),(posX, posY + 50), 30, drawAsUI=True)
+        drawText(window, name, (255,255,255),(posX, posY + 50), 30)
         if AABBCollision((posX, posY, 50, 50), (mouse.x, mouse.y, 5, 5)) and mouse.pressed[0]:
             var += 1
         return var
@@ -24,7 +24,7 @@ class Dev:
         posX = W - 450 + 50 + (100 * X)
         posY = 50 + (100 * Y)
         drawRect(window, (posX, posY, 50, 50), col)
-        drawText(window, name, (255,255,255),(posX, posY + 50), 30, drawAsUI=True)
+        drawText(window, name, (255,255,255),(posX, posY + 50), 30)
         if AABBCollision((posX, posY, 50, 50), (mouse.x, mouse.y, 5, 5)) and mouse.pressed[0]:
             func()
 
@@ -111,7 +111,7 @@ class Button:
             drawCol = self.rectHovCol
 
         drawRect(window, drawingRect, drawCol)
-        drawText(window, self.text, self.textCol, [drawingRect[0]+drawingRect[2]/2, drawingRect[1]+drawingRect[3]/2], self.textSize, True, True)
+        drawText(window, self.text, self.textCol, [drawingRect[0]+drawingRect[2]/2, drawingRect[1]+drawingRect[3]/2], self.textSize, True)
 
 class Menu:
     def __init__(self):
@@ -185,7 +185,7 @@ class Menu:
         index = 0
         for i in player.chipList:
             drawRect(window,(1500,(50* index),200,40),(255,255,255))
-            drawText(window, player.chipList[index], (0,0,0),(5 + (1500),50 * index), 30, drawAsUI=True)
+            drawText(window, player.chipList[index], (0,0,0),(5 + (1500),50 * index), 30)
             index += 1
 
         # handling dev menu

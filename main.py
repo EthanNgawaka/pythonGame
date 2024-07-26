@@ -12,7 +12,7 @@ esc = False
 
 player = Player(W/2, H/2)
 enemiesOnScreen = []
-particlesOnScreen = []
+particleManager = ParticleManager()
 coinManager = CoinManager()
 shopManager = shopManager(W, H)
         
@@ -105,7 +105,7 @@ waveManager = WaveManager()
 
 
 def update(window, dt):
-    global keys, enemiesOnScreen, particlesOnScreen, mouse, boostResetCap
+    global keys, enemiesOnScreen, mouse, boostResetCap
 
     menu.update(keys)
     if menu.open == False:
@@ -120,11 +120,9 @@ def update(window, dt):
         coinManager.update(dt, player)
         waveManager.update(dt, enemiesOnScreen, shopManager, mouse, coinManager, player)
         
-        
-        for part in particlesOnScreen:
-            part.update(particlesOnScreen,dt)
+        particleManager.update(dt)
         for enemy in enemiesOnScreen:
-            enemy.update(window,player,dt,enemiesOnScreen,coinManager,particlesOnScreen)
+            enemy.update(window,player,dt,enemiesOnScreen,coinManager,particleManager)
 
     #input stuff
     mouse.update()
@@ -133,6 +131,7 @@ def update(window, dt):
 
 def draw(window, dt):
     drawRect(window, (camera.pos[0], camera.pos[1], W, H), (50, 50, 50))
+    particleManager.draw(window, dt)
     player.draw(window, player, dt)
     coinManager.draw(window)
     for enemy in enemiesOnScreen:
@@ -141,12 +140,8 @@ def draw(window, dt):
     
     drawText(window, f"FPS: {1/dt}", (255,255,255),(W-150, 150), 30)
 
-    # ew this is gross need to fix this WHY IS AMOGUS A VARIABLE WTF DOES THAT MEAN
-    # pls pls pls name ur variables smth meaningful a terrible example of this is the dev class
-    # in menu it checks if self.dev.dev is true???? like what does this mean
-    # not everything has to be super descriptive but when in doubt jut describe exactly what it does
-    # ie self.dev.isOpen or open or devMenuIsOpen anything that could give me any info so i dont spend 20 mins
-    # trying to figure out what it means
+
+    # still gross :sob:
     if player.actives["Space"]:
             cool = player.actives["Space"][1]
             perc = cool/player.actives["Space"][0]
@@ -184,14 +179,13 @@ def draw(window, dt):
                 col = (255,255,255)
             else:
                 col = (150,150,150)
+                particleManager.bloodExplosion(self.rect[0], self.rect[1])
             drawRect(window,(350,H - 200,100,200),(100,100,100))
             drawRect(window,(350,H - 200 + perc*200,100,200),col)
             drawText(window, name, (0,0,0),(350 + amogus, H - 100), 30)
             drawText(window, f"{round(player.actives["Q"][1], 1)}", (0,0,0),(390, H - 50), 30)
     player.choiceDesc(window)
     player.statShow(window, W)
-    for part in particlesOnScreen:
-        part.draw(window)
 
     if menu.open:
         menu.draw(window, player)
@@ -205,6 +199,8 @@ def main():
 
     while running:  # main game loop
         dt = clock.tick(maxFPS) / 1000.0
+        particleManager.spawnFire(W/2,H/2)
+
         update(window, dt)
         draw(window, dt)
 

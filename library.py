@@ -225,8 +225,17 @@ def drawText(window, string, col, pos, size, drawAtCenter=False, drawAsUI=False)
     else:
         window.blit(img, drawPos)
 
-def drawRect(window, rect, col, width=0): # col = (R, G, B)
-    pygame.draw.rect(window, col, pygame.Rect(*subtractRects(rect,camera.getRect())), width)
+def drawRect(window, rect, col, width=0): # col = (R, G, B, [A])
+    #pygame.draw.rect(window, col, pygame.Rect(*subtractRects(rect,camera.getRect())), width)
+
+    s = pygame.Surface((rect[2], rect[3]))
+    try:
+        s.set_alpha(col[3])
+    except IndexError: # No alpha given
+        pass
+    
+    s.fill((col[0],col[1],col[2]))
+    window.blit(s, (rect[0]-camera.pos[1], rect[1]-camera.pos[0]))
 
 def drawCircle(window, circle, col): # circle = (center, radius)
     pygame.draw.circle(window, col, subtract(circle[0], camera.pos), circle[1])
