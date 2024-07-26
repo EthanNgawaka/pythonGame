@@ -161,8 +161,9 @@ class Spritesheet:
             self.currFrame = 0
             self.animationDir = 1
 
-    def draw(self, window, dt):
+    def draw(self, rect, window, dt):
 
+        self.rect = rect
         window.blit(pygame.transform.scale(self.get_curr_sprite(), (self.rect[2], self.rect[3])), (self.rect[0], self.rect[1]))
         
         self.timer += dt
