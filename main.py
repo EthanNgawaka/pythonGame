@@ -11,101 +11,107 @@ escC = False
 esc = False
 
 player = Player(W/2, H/2)
-enemiesOnScreen = []
+
 particleManager = ParticleManager()
 coinManager = CoinManager()
 shopManager = shopManager(W, H)
-        
+enemyManager = EnemyManager(coinManager, player, particleManager)
 
 boostResetCap = 0
 menu = Menu()
 class WaveManager:
-    def __init__(self):
+    def __init__(self, enemyManager, coinManager, shopManager, player):
         self.spawnRate = 2
         self.spawnTimer = 0
         self.maxWaveTimer = 60
         self.waveTimer = self.maxWaveTimer
         self.swapVal = 1
         self.wave = 1
+        self.enemyManagerRef = enemyManager
+        self.coinManagerRef = coinManager
+        self.shopManagerRef = shopManager
+        self.playerRef = player
 
     def newWave(self):
-        player.shieldCur = player.shieldMax
+        self.playerRef.shieldCur = self.playerRef.shieldMax
         self.waveTimer = self.maxWaveTimer
         self.spawnTimer = 0
         self.wave += 1
 
-    def spawnEnemy(self, enemiesOnScreen):
+    def spawnEnemy(self):
         spawnLoc = random.randint(0,3)
-        ran = random.randint(1,100)
-        enemyType = BasicEnemy
-        if ran >= 1 and ran <= 25:
-            enemyType = DasherEnemy # edit this at some point when we add new enemies
+        enemyType = Fly
+        spawnOffset = 60 # max enemy H/W so no one spawns on screen
+
         match spawnLoc:
             case 0: # left
-                enemiesOnScreen.append(enemyType(-player.rect[2],random.randint(0,H-player.rect[3])))
+                self.enemyManagerRef.spawnEnemy(enemyType,[-spawnOffset,random.randint(0,H-spawnOffset)])
             case 1: # right
-                enemiesOnScreen.append(enemyType(W+player.rect[2],random.randint(0,H-player.rect[3])))
+                self.enemyManagerRef.spawnEnemy(enemyType,[W+spawnOffset,random.randint(0,H-spawnOffset)])
             case 2: # up
-                enemiesOnScreen.append(enemyType(random.randint(0,W-player.rect[3]), -player.rect[3]))
+                self.enemyManagerRef.spawnEnemy(enemyType,[random.randint(0,W-spawnOffset),-spawnOffset])
             case 3: # down
-                enemiesOnScreen.append(enemyType(random.randint(0,W-player.rect[3]), H+player.rect[3]))
+                self.enemyManagerRef.spawnEnemy(enemyType,[random.randint(0,W-spawnOffset),H+spawnOffset])
 
-    def update(self, dt, enemiesOnScreen, shopManager, mouse, coinManager, player):
-        if player.spawnMultiplyer >= 1:
-            if player.spawnMultiplyer* 0.2 >= 1:
+    def update(self, dt, mouse):
+        if self.playerRef.spawnMultiplyer >= 1:
+            if self.playerRef.spawnMultiplyer* 0.2 >= 1:
                 self.spawnRate = 1
             else:
-                self.spawnRate = 2 - player.spawnMultiplyer* 0.2
+                self.spawnRate = 2 - self.playerRef.spawnMultiplyer* 0.2
         if self.waveTimer > 0:
             self.waveTimer -= dt
             if self.spawnTimer > 0:
                 self.spawnTimer -= dt
             else:
                 self.spawnTimer = self.spawnRate
-                self.spawnEnemy(enemiesOnScreen)
-        elif self.swapVal == 1 and len(enemiesOnScreen) == 0 and len(coinManager.coins) == 0:
-            if player.boostState == True:
+                self.spawnEnemy()
+        elif self.swapVal == 1 and len(self.enemyManagerRef.enemies) == 0 and len(self.coinManagerRef.coins) == 0:
+
+            # Redo this player boost at some point
+            if self.playerRef.boostState == True:
                 global boostResetCap
-                player.boostTime = 0
+                self.playerRef.boostTime = 0
                 boostResetCap = 1
-                player.dmg = player.dmghold
-                player.attackRate = player.atshold
-                player.speed = player.spdhold
+                self.playerRef.dmg = self.playerRef.dmghold
+                self.playerRef.attackRate = self.playerRef.atshold
+                self.playerRef.speed = self.playerRef.spdhold
+
             self.swapVal = 0
-            shopManager.store = True
+            self.shopManagerRef.store = True
         
-        if shopManager.store:
-            shopManager.update(dt, mouse, player)
-            if not shopManager.store:
+        if self.shopManagerRef.store:
+            self.shopManagerRef.update(dt, mouse, self.playerRef)
+            if not self.shopManagerRef.store:
                 self.swapVal = 20
 
-    def draw(self, dt, window, shopManager):
+    def draw(self, dt, window):
         
         drawText(window, f"Time left: {math.ceil(self.waveTimer)}", (255,255,255),(W-200, 50), 30) # hard coded pos shd change this
         drawText(window, f"Wave {self.wave}", (255,255,255),(W-200, 20), 30) # hard coded pos shd change this
-        if shopManager.store and len(enemiesOnScreen) == 0:
-            shopManager.draw(window)
+        if self.shopManagerRef.store and len(self.enemyManagerRef.enemies) == 0:
+            self.shopManagerRef.draw(window)
         elif self.swapVal > 1:
             self.swapVal -= 1
-            shopManager.draw(window)
-            shopManager.update(dt, mouse)
+            self.shopManagerRef.draw(window)
+            self.shopManagerRef.update(dt, mouse)
             if self.swapVal == 1:
                 if self.wave == 3:
-                    shopManager.type = "rare"
+                    self.shopManagerRef.type = "rare"
                 elif self.wave == 7:
-                    shopManager.type = "legendary"
+                    self.shopManagerRef.type = "legendary"
                 else:
-                    shopManager.type = "shop"
-                shopManager.newCards()
+                    self.shopManagerRef.type = "shop"
+                self.shopManagerRef.newCards()
                 self.newWave()
                 
 
 
-waveManager = WaveManager()
+waveManager = WaveManager(enemyManager, coinManager, shopManager, player)
 
 
 def update(window, dt):
-    global keys, enemiesOnScreen, mouse, boostResetCap
+    global keys, mouse, boostResetCap
 
     menu.update(keys)
     if menu.open == False:
@@ -118,11 +124,10 @@ def update(window, dt):
             
             player.update(window, dt, keys, player, W, H)
         coinManager.update(dt, player)
-        waveManager.update(dt, enemiesOnScreen, shopManager, mouse, coinManager, player)
+        waveManager.update(dt, mouse)
         
         particleManager.update(dt)
-        for enemy in enemiesOnScreen:
-            enemy.update(window,player,dt,enemiesOnScreen,coinManager,particleManager)
+        enemyManager.update(dt)
 
     #input stuff
     mouse.update()
@@ -134,9 +139,8 @@ def draw(window, dt):
     particleManager.draw(window, dt)
     player.draw(window, player, dt)
     coinManager.draw(window)
-    for enemy in enemiesOnScreen:
-        enemy.draw(window);
-    waveManager.draw(dt, window, shopManager)
+    enemyManager.draw(window)
+    waveManager.draw(dt, window)
     
     drawText(window, f"FPS: {1/dt}", (255,255,255),(W-150, 150), 30)
 

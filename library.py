@@ -126,19 +126,25 @@ class Image:
         self.y = y
         self.w = w
         self.h = h
-        self.img = pygame.image.load(src)
+        self.img = pygame.image.load(src).convert()
+        self.img.set_colorkey((0,255,0))
         self.sprite = pygame.Surface((self.img.get_width(),self.img.get_height()))
-        self.sprite.set_colorkey((0,255,0))
         self.sprite.blit(self.img, (0,0))
 
+    def setRect(self, newRect):
+        self.x = newRect[0]
+        self.y = newRect[1]
+        self.w = newRect[2]
+        self.h = newRect[3]
+
     def draw(self, window):
-        window.blit(pygame.transform.scale(self.img, (self.w, self.h)), (self.x, self.y))
+        window.blit(pygame.transform.scale(self.img, (self.w, self.h)), (self.x-camera.pos[0], self.y-camera.pos[1]))
 
 class Spritesheet:
     def __init__(self, rect, src, spriteSize, secsBetweenFrames, bounce=False): # ([x,y,w,h], filename, [spriteW, spriteH], fps)
         self.src = src
         self.rect = rect
-        self.sprite_sheet = pygame.image.load(src)
+        self.sprite_sheet = pygame.image.load(src).convert_alpha()
         self.spriteW = spriteSize[0]
         self.spriteH = spriteSize[1]
 
@@ -161,11 +167,11 @@ class Spritesheet:
             self.currFrame = 0
             self.animationDir = 1
 
-    def draw(self, rect, window, dt):
-
+    def draw(self, rect, window):
         self.rect = rect
         window.blit(pygame.transform.scale(self.get_curr_sprite(), (self.rect[2], self.rect[3])), (self.rect[0], self.rect[1]))
         
+    def update(self, dt):
         self.timer += dt
         if self.timer >= self.secsBetweenFrames:
             self.currFrame += self.animationDir
@@ -177,7 +183,7 @@ class Spritesheet:
             else:
                 if self.currFrame >= self.states[self.state][0]:
                     self.currFrame = 0
-        
+
     def get_sprite(self, x, y):
         sprite = pygame.Surface((self.spriteW, self.spriteH))
         sprite.set_colorkey((0,255,0))

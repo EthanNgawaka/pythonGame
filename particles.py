@@ -12,7 +12,6 @@ class ParticleManager:
         numOfParticles = 2
         for i in range(numOfParticles):
             theta = random.uniform(0, 1)*-math.pi
-            print(theta/math.pi)
             vel = [math.cos(theta)*random.uniform(50,200), math.sin(theta)*random.uniform(50,300)]
             size = random.randint(4,15)
 

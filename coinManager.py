@@ -20,10 +20,11 @@ class CoinManager:
 
 class Coin:
     def __init__(self, x, y, vel):
-        self.rect = [x, y, 10, 10]
+        self.rect = [x, y, 40, 40]
         self.vel = vel
-        self.col = (255, 255, 0)
         self.distThreshold = 150
+
+        self.img = Image("assets/coin.png", x,y, 16,16)
 
     def update(self, dt, player, coinManager):
         attractionSpeed = 60
@@ -51,4 +52,5 @@ class Coin:
             coinManager.coins.remove(self)
 
     def draw(self, window):
-        drawRect(window, self.rect, self.col)
+        self.img.setRect(self.rect)
+        self.img.draw(window)
