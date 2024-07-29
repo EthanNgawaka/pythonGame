@@ -51,6 +51,8 @@ class Coin:
             player.coins+=1
             coinManager.coins.remove(self)
 
+        shadowManager.addShadowToRender(add(getRectCenter(self.rect), [-self.rect[2]/6,self.rect[3]/8]), self.rect[3]*0.36, (59,52,7,128))
+
     def draw(self, window):
         self.img.setRect(self.rect)
         self.img.draw(window)

@@ -134,8 +134,11 @@ def update(window, dt):
     keys = pygame.key.get_pressed()
     camera.update(dt)
 
+bgCol = (80,80,80)
+
 def draw(window, dt):
-    drawRect(window, (camera.pos[0], camera.pos[1], W, H), (50, 50, 50))
+    drawRect(window, (-W/2, -H/2, W*2, H*2), bgCol)
+    shadowManager.draw(window)
     particleManager.draw(window, dt)
     player.draw(window, player, dt)
     coinManager.draw(window)
@@ -203,7 +206,7 @@ def main():
 
     while running:  # main game loop
         dt = clock.tick(maxFPS) / 1000.0
-        particleManager.spawnFire(W/2,H/2)
+        #particleManager.spawnFire(W/2,H/2) I LOOOOOVE fire
 
         update(window, dt)
         draw(window, dt)

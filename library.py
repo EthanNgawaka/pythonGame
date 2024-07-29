@@ -12,6 +12,29 @@ keys = [0] * 512  #init keys to avoid index error (pygame has 512 keycodes)
 # eg) if keys[pygame.KEY_a]:
 #         print("a down")
 
+def getRectCenter(rect):
+    return [rect[0]+rect[2]/2, rect[1]+rect[3]/2]
+
+class ShadowManager:
+    def __init__(self):
+        self.shadows = [] # a shadow has a pos, radius, and col [[x,y],r,(r,g,b,a)]
+        self.surface = pygame.Surface((W, H), pygame.SRCALPHA)
+
+    def renderShadows(self):
+        for shadow in self.shadows:
+            pygame.draw.circle(self.surface, shadow[2], [shadow[0][0]-camera.pos[0], shadow[0][1]-camera.pos[1]], shadow[1])
+
+        self.shadows = []
+    
+    def addShadowToRender(self, pos, r, col):
+        self.shadows.append([pos, r, col])
+
+    def draw(self, window):
+        self.surface.fill((0,0,0,0))
+        self.renderShadows()
+        window.blit(self.surface, (0, 0))
+
+shadowManager = ShadowManager()
 
 class Mouse:
     def __init__(self):
