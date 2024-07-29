@@ -391,8 +391,7 @@ class Player:
         self.rect[1] += self.vel[1]*dt
         self.center = [self.rect[0]+self.rect[2]/2,self.rect[1]+self.rect[3]/2]
         self.vel[0] *= 0.9
-        self.vel[1] *= 0.9
-        
+        self.vel[1] *= 0.9    
 
     def input(self, dt, keys, window, player, W, H):
         # movement
@@ -559,8 +558,10 @@ class Player:
         if self.foragerval <= 1:
             self.lootMultiplier = 1.25 + (0.25 * self.foragerval)
 
+        shadowManager.addShadowToRender(add(getRectCenter(self.rect), [-self.rect[2]/20,self.rect[3]/8]), self.r, (50,0,50,128)) # shadow
             
     def draw(self, window, player, dt):
+
         drawText(window, f"Coins: {self.coins}", (255,255,0), (10,50), 40)
         drawText(window, f"HP: {self.health}", (0,255,0), (10,10), 40)
         if self.dmgTimer > 0:

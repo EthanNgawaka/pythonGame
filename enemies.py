@@ -70,10 +70,14 @@ class Enemy:
 
             return False
 
+    def shadow(self):
+        print("Child didnt override shadow()!")
+
     def update(self, dt):
         self.physics(dt)
         self.collisions(dt)
         self.sprite.update(dt)
+        self.shadow()
 
     def collisions(self, dt):
         collisionCheck = AABBCollision(self.rect, self.playerRef.rect)
@@ -153,6 +157,9 @@ class Fly(Enemy):
         self.manager = enemyManager
         self.sprite = Spritesheet(self.rect, "assets/fly_sprite_sheet.png", [32,32], 0)
         self.sprite.addState("idle", 0, 6)
+
+    def shadow(self):
+        shadowManager.addShadowToRender(add(getRectCenter(self.rect), [-self.rect[2]/20,self.rect[3]/4]), self.rect[3]/4, (50,0,50,128)) # shadow
 
     def die(self):
         coinDrop = round(random.randint(2,10) * self.playerRef.lootMultiplier)
