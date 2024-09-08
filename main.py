@@ -148,49 +148,8 @@ def draw(window, dt):
     drawText(window, f"FPS: {1/dt}", (255,255,255),(W-150, 150), 30)
 
 
-    # still gross :sob:
-    if player.actives["Space"]:
-            cool = player.actives["Space"][1]
-            perc = cool/player.actives["Space"][0]
-            name = player.actives["Space"][3]
-            amogus = player.actives["Space"][4]
-            if cool <= 0:
-                col = (255,255,255)
-            else:
-                col = (150,150,150)
-            drawRect(window,(50,H - 200,100,200),(100,100,100))
-            drawRect(window,(50,H - 200 + perc*200,100,200),col)
-            drawText(window, name, (0,0,0),(50 + amogus, H - 100), 30)
-            drawText(window, f"{round(player.actives["Space"][1], 1)}", (0,0,0),(90, H - 50), 30)
 
-    if player.actives["E"]:
-            cool = player.actives["E"][1]
-            perc = cool/player.actives["E"][0]
-            name = player.actives["E"][3]
-            amogus = player.actives["E"][4]
-            if cool <= 0:
-                col = (255,255,255)
-            else:
-                col = (150,150,150)
-            drawRect(window,(200,H - 200,100,200),(100,100,100))
-            drawRect(window,(200,H - 200 + perc*200,100,200),col)
-            drawText(window, name, (0,0,0),(200 + amogus, H - 100), 30)
-            drawText(window, f"{round(player.actives["E"][1], 1)}", (0,0,0),(240, H - 50), 30)
-
-    if player.actives["Q"]:
-            cool = player.actives["Q"][1]
-            perc = cool/player.actives["Q"][0]
-            name = player.actives["Q"][3]
-            amogus = player.actives["Q"][4]
-            if cool <= 0:
-                col = (255,255,255)
-            else:
-                col = (150,150,150)
-                particleManager.bloodExplosion(self.rect[0], self.rect[1])
-            drawRect(window,(350,H - 200,100,200),(100,100,100))
-            drawRect(window,(350,H - 200 + perc*200,100,200),col)
-            drawText(window, name, (0,0,0),(350 + amogus, H - 100), 30)
-            drawText(window, f"{round(player.actives["Q"][1], 1)}", (0,0,0),(390, H - 50), 30)
+    
     player.choiceDesc(window)
     player.statShow(window, W)
 

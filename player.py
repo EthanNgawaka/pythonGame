@@ -12,6 +12,7 @@ class Bullet:
         self.haloDist = 0
         self.theta = 0
         self.pierces = pierces
+        
 
     def update(self,dt, player):
         mag = magnitude(self.vel)
@@ -49,6 +50,98 @@ class Bullet:
             #self.rect[1] = player.center[1] + self.vel[1]
     def draw(self,window):
         drawCircle(window, ((self.rect[0]+self.r, self.rect[1]+self.r), self.r), (255,255,255))
+
+class MaceProto:
+    def __init__(self):
+        self.x = W/2
+        self.y = H/2
+        self.vel = [0, 0]
+        self.r = 15
+        self.col = (255,255,255)
+        self.frict = 0.8
+        self.theta = 0
+        self.teth = False
+        self.aimrect = [0,0,80,80]
+        self.speed = 5
+        self.retract = False
+        self.swinging = False
+        
+        
+    def physics(self, dt, W, H, px, py):
+        if AABBCollision((-30, -30, W, 30),(self.x, self.y, self.r * 2, self.r * 2)) and self.vel[1] < 0:
+            self.vel[1] *= -1
+        if AABBCollision((-30, H, W, 30),(self.x, self.y, self.r * 2, self.r * 2)) and self.vel[1] > 0:
+            self.vel[1] *= -1
+        if AABBCollision((-30, -30, 30, H),(self.x, self.y, self.r * 2, self.r * 2)) and self.vel[0] < 0:
+            self.vel[0] *= -1
+        if AABBCollision((W, -30, 30, H),(self.x, self.y, self.r * 2, self.r * 2)) and self.vel[0] > 0:
+            self.vel[0] *= -1
+        self.x += self.vel[0]*dt
+        self.y += self.vel[1]*dt
+        self.vel[0] *= 0.98
+        self.vel[1] *= 0.98
+        
+
+
+    def pteth(self, px, py, dt):
+        if self.swinging == False:
+            self.x = px
+            self.y = py
+        #if mouse.pressed[0] == True and AABBCollision((px,py,40,40),(self.x,self.y,40,40)):
+        #    self.teth = True
+        #    self.swinging = True
+        #    self.speed = 5
+         #   dx = mouse.x - px
+         #   dy = mouse.y - py
+        #    self.theta = math.atan2(dy,dx) + 3
+        
+        if self.teth == True:
+            self.x = (px + 40/2) + math.cos(self.theta)* 100
+            self.y = (py + 40/2) + math.sin(self.theta)* 100
+            self.theta += dt*self.speed
+            if self.speed < 25:
+                self.speed += dt*1.5
+            print(self.aimrect[0], self.aimrect[1], self.x, self.y)
+            if mouse.down[0] == False:
+                dx = mouse.x - px
+                dy = mouse.y - py
+                theta = math.atan2(dy,dx)
+                self.aimrect[0] = ((px + 40/2) + math.cos(theta)* 100) -40
+                self.aimrect[1] = ((py + 40/2) + math.sin(theta)* 100) -40
+                if AABBCollision((self.aimrect), (self.x-40, self.y-40, 80, 80)):
+                    self.teth = False
+                    dx = mouse.x - px
+                    dy = mouse.y - py
+                    theta = math.atan2(dy,dx)
+                    self.vel[0] = math.cos(theta)* self.speed*50
+                    self.vel[1] = math.sin(theta)* self.speed*50
+        elif self.swinging == True:
+            if self.vel[0] < 250 and self.vel[0] > -250 and self.vel[1] < 250 and self.vel[1] > -250 and self.retract == False:
+                self.vel[0] = 0
+                self.vel[1] = 0
+                
+                self.retract = True
+            if self.retract == True and AABBCollision((px,py,40,40),(self.x,self.y,40,40)) == False:
+                dx = self.x - px
+                dy = self.y - py
+                theta = math.atan2(dy,dx)
+                self.vel[0] = math.cos(theta)* -2500
+                self.vel[1] = math.sin(theta)* -2500
+            if AABBCollision((px,py,20,20),(self.x,self.y,20,20)):
+                self.retract = False
+                self.swinging = False
+                
+
+            
+        
+
+    def update(self, dt, W, H, px, py):
+        self.physics(dt, W, H, px, py)
+        self.pteth(px, py, dt)
+
+    def draw(self, window):
+        if self.swinging == True:
+            drawCircle(window, ((self.x,self.y), self.r), self.col)
 
 class Sword:
     def __init__(self):
@@ -116,6 +209,7 @@ class Player:
         self.knockback = 100
     # misc
         self.sword = Sword()
+        self.mace = MaceProto()
         self.shieldMax = 0
         self.shieldCur = 0
         self.spawnMultiplyer = 0
@@ -376,16 +470,33 @@ class Player:
                 self.revives -= 1
             elif self.health <= 0:
                 self.running = False
+
+    def abilCoolDraw(self, window):
+        index = -1
+        for i in self.actives:
+            index += 1
+            if self.actives[i]:
+                    cool = self.actives[i][1]
+                    perc = cool/self.actives[i][0]
+                    name = self.actives[i][3]
+                    spacing = self.actives[i][4]
+                    if cool <= 0:
+                        col = (255,255,255)
+                    else:
+                        col = (150,150,150)
+                    drawRect(window,(50 + (150*index),H - 200,100,200),(100,100,100))
+                    drawRect(window,(50 + (150*index),H - 200 + perc*200,100,200),col)
+                    drawText(window, name, (0,0,0),(50 + (150*index) + spacing, H - 100), 30)
             
 
     def physics(self, dt, W, H):
-        if AABBCollision((-30, -30, 1980, 30),self.rect) and self.vel[1] < 0:
+        if AABBCollision((-30, -30, W, 30),self.rect) and self.vel[1] < 0:
             self.vel[1] *= -1
-        if AABBCollision((-30, 1080, 1980, 30),self.rect) and self.vel[1] > 0:
+        if AABBCollision((-30, H, W, 30),self.rect) and self.vel[1] > 0:
             self.vel[1] *= -1
-        if AABBCollision((-30, -30, 30, 1080),self.rect) and self.vel[0] < 0:
+        if AABBCollision((-30, -30, 30, H),self.rect) and self.vel[0] < 0:
             self.vel[0] *= -1
-        if AABBCollision((1920, -30, 30, 1080),self.rect) and self.vel[0] > 0:
+        if AABBCollision((W, -30, 30, H),self.rect) and self.vel[0] > 0:
             self.vel[0] *= -1
         self.rect[0] += self.vel[0]*dt
         self.rect[1] += self.vel[1]*dt
@@ -534,6 +645,7 @@ class Player:
         
 
     def update(self, window, dt, keys, player, W ,H):
+        self.mace.update(dt, W, H, self.rect[0],self.rect[1])
         self.input(dt, keys, window, player, W, H)
         self.physics(dt, W, H)
         if self.boostState == True:
@@ -591,9 +703,14 @@ class Player:
                     self.sword.swing = False
 
         # Actives
+        self.abilCoolDraw(window)
         # "Key": [Cooldown, Timer, ActiveFunc]
-        for i in range(len(self.actives)):
-            activeObj = self.actives[list(self.actives.keys())[i]]
+        #for i in range(len(self.actives)):
+        #    activeObj = self.actives[list(self.actives.keys())[i]]
             # draw card for active
+        self.mace.draw(window)
+
+
+
 
         

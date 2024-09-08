@@ -40,7 +40,29 @@ class Enemy:
         
         # if bulletHoming then make it home in
         if mag < self.playerRef.homing*150:
-            bullet.vel = add(bullet.vel, scalMult(distVec, player.bulletSpeed/(4*mag)))
+            bullet.vel = add(bullet.vel, scalMult(distVec, self.playerRef.bulletSpeed/(4*mag)))
+        if AABBCollision(self.rect,(self.playerRef.mace.x, self.playerRef.mace.y, 40, 40)):
+            self.iFrames = self.iFramesMax
+
+            if mag != 0:
+                self.vel = scalMult(distVec, self.playerRef.knockback/mag)
+                self.stunTimer = self.stunTime
+            
+            if self.playerRef.health < self.playerRef.maxHealth:
+                self.playerRef.health += self.playerRef.lifeSteal
+                if self.playerRef.health > self.playerRef.maxHealth:
+                    self.playerRef.health = self.playerRef.maxHealth
+
+            if bullet.pierces <= 0:
+                self.playerRef.bullets.remove(bullet)
+            else:
+                self.playerRef.pierces -= 1
+
+            if self.health <= 0:
+                self.die()
+                return True
+
+            return False
 
         check = AABBCollision(self.rect,bullet.rect)
         if check:
