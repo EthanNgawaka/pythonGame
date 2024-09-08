@@ -1,3 +1,9 @@
+import sys
+import os
+
+sys.path.append(os.path.abspath("lib"))
+sys.path.append(os.path.abspath("src"))
+
 from library import *
 from enemies import *
 from coinManager import *
@@ -138,7 +144,6 @@ bgCol = (80,80,80)
 
 def draw(window, dt):
     drawRect(window, (-W/2, -H/2, W*2, H*2), bgCol)
-    shadowManager.draw(window)
     particleManager.draw(window, dt)
     player.draw(window, player, dt)
     coinManager.draw(window)

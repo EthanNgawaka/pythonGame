@@ -1,3 +1,8 @@
+import sys
+import os
+
+sys.path.append(os.path.abspath("../lib"))
+
 from library import *
 from enemies import *
 
@@ -557,8 +562,6 @@ class Player:
             self.dmgTimer -= dt
         if self.foragerval <= 1:
             self.lootMultiplier = 1.25 + (0.25 * self.foragerval)
-
-        shadowManager.addShadowToRender(add(getRectCenter(self.rect), [-self.rect[2]/20,self.rect[3]/8]), self.r, (50,0,50,128)) # shadow
             
     def draw(self, window, player, dt):
 

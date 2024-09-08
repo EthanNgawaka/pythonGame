@@ -1,3 +1,8 @@
+import sys
+import os
+
+sys.path.append(os.path.abspath("../lib"))
+
 from library import *
 # idea here is to have a list of cards w/ properties like name, basePrice, and col
 # then in player class we have a func called triggerCardFunc(name), which takes name and finds the function of the same name in player class
