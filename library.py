@@ -4,10 +4,10 @@ import random
 import math
 import time
 
-W = 1920
-H = 1080
-#W = 1540
-#H = 870
+#W = 1920
+#H = 1080
+W = 1540
+H = 870
 
 keys = [0] * 512  #init keys to avoid index error (pygame has 512 keycodes)
 # to access the state of a key (true for down false for up) use "keys[pygame.KEYCODE]"
@@ -169,7 +169,7 @@ class Spritesheet:
     def __init__(self, rect, src, spriteSize, secsBetweenFrames, bounce=False): # ([x,y,w,h], filename, [spriteW, spriteH], fps)
         self.src = src
         self.rect = rect
-        self.sprite_sheet = pygame.image.load(src).convert_alpha()
+        self.sprite_sheet = pygame.image.load(src)
         self.spriteW = spriteSize[0]
         self.spriteH = spriteSize[1]
 
@@ -181,6 +181,10 @@ class Spritesheet:
 
         self.state = ""
         self.states = {} #{"state_name":[frames, correspondingLine]}
+        self.rotation = 0
+
+    def rotate(self, rotation):
+        self.rotation = rotation
 
     def addState(self, state_name, correspondingLine, frames):
         self.states[state_name] = [frames, correspondingLine]
@@ -192,9 +196,18 @@ class Spritesheet:
             self.currFrame = 0
             self.animationDir = 1
 
-    def draw(self, rect, window):
+    def draw(self, rect, window, rotateAround=[0,0]):
         self.rect = rect
-        window.blit(pygame.transform.scale(self.get_curr_sprite(), (self.rect[2], self.rect[3])), (self.rect[0], self.rect[1]))
+        scaledImage = pygame.transform.scale(self.get_curr_sprite(), (self.rect[2], self.rect[3]))
+        scaledAndRotatedImage = pygame.transform.rotate(scaledImage, self.rotation)
+
+        centerPos = (self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2)
+        if rotateAround[0] != 0 and rotateAround[1] != 0:
+            centerPos = (rotateAround[0], rotateAround[1])
+
+        newRect = scaledAndRotatedImage.get_rect(center=centerPos)
+
+        window.blit(scaledAndRotatedImage, newRect.topleft)
         
     def update(self, dt):
         self.timer += dt

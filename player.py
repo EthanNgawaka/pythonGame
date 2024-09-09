@@ -56,7 +56,7 @@ class MaceProto:
         self.x = W/2
         self.y = H/2
         self.vel = [0, 0]
-        self.r = 15
+        self.r = 25
         self.col = (255,255,255)
         self.frict = 0.8
         self.theta = 0
@@ -65,6 +65,8 @@ class MaceProto:
         self.speed = 5
         self.retract = False
         self.swinging = False
+        self.sprite = Spritesheet((self.x,self.y,30,30), "assets/mace.png", [32,32], 0)
+        
         
         
     def physics(self, dt, W, H, px, py):
@@ -78,29 +80,30 @@ class MaceProto:
             self.vel[0] *= -1
         self.x += self.vel[0]*dt
         self.y += self.vel[1]*dt
-        self.vel[0] *= 0.98
-        self.vel[1] *= 0.98
+        self.vel[0] *= 0.95
+        self.vel[1] *= 0.95
         
 
+    def swing(self, px, py):
+        if AABBCollision((px,py,40,40),(self.x,self.y,40,40)):
+            self.teth = True
+            self.swinging = True
+            self.speed = 8
+            dx = mouse.x - px
+            dy = mouse.y - py
+            self.theta = math.atan2(dy,dx) + 3
 
     def pteth(self, px, py, dt):
         if self.swinging == False:
             self.x = px
             self.y = py
-        #if mouse.pressed[0] == True and AABBCollision((px,py,40,40),(self.x,self.y,40,40)):
-        #    self.teth = True
-        #    self.swinging = True
-        #    self.speed = 5
-         #   dx = mouse.x - px
-         #   dy = mouse.y - py
-        #    self.theta = math.atan2(dy,dx) + 3
         
         if self.teth == True:
-            self.x = (px + 40/2) + math.cos(self.theta)* 100
-            self.y = (py + 40/2) + math.sin(self.theta)* 100
+            self.x = (px -10) + math.cos(self.theta)* 100
+            self.y = (py -10) + math.sin(self.theta)* 100
             self.theta += dt*self.speed
             if self.speed < 25:
-                self.speed += dt*1.5
+                self.speed += dt*1.75
             print(self.aimrect[0], self.aimrect[1], self.x, self.y)
             if mouse.down[0] == False:
                 dx = mouse.x - px
@@ -110,18 +113,18 @@ class MaceProto:
                 self.aimrect[1] = ((py + 40/2) + math.sin(theta)* 100) -40
                 if AABBCollision((self.aimrect), (self.x-40, self.y-40, 80, 80)):
                     self.teth = False
-                    dx = mouse.x - px
-                    dy = mouse.y - py
+                    dx = mouse.x - (px -20)
+                    dy = mouse.y - (py +20)
                     theta = math.atan2(dy,dx)
                     self.vel[0] = math.cos(theta)* self.speed*50
                     self.vel[1] = math.sin(theta)* self.speed*50
         elif self.swinging == True:
-            if self.vel[0] < 250 and self.vel[0] > -250 and self.vel[1] < 250 and self.vel[1] > -250 and self.retract == False:
+            if self.vel[0] < 50 and self.vel[0] > -50 and self.vel[1] < 50 and self.vel[1] > -50 and self.retract == False:
                 self.vel[0] = 0
                 self.vel[1] = 0
                 
                 self.retract = True
-            if self.retract == True and AABBCollision((px,py,40,40),(self.x,self.y,40,40)) == False:
+            if AABBCollision((px,py,40,40),(self.x,self.y,40,40)) == False and self.swinging == True and mouse.down[0]:
                 dx = self.x - px
                 dy = self.y - py
                 theta = math.atan2(dy,dx)
@@ -138,10 +141,14 @@ class MaceProto:
     def update(self, dt, W, H, px, py):
         self.physics(dt, W, H, px, py)
         self.pteth(px, py, dt)
+        
 
     def draw(self, window):
         if self.swinging == True:
-            drawCircle(window, ((self.x,self.y), self.r), self.col)
+            self.sprite.addState("head", 0, 0)
+            self.sprite.rotate(-57.2958 * self.theta)
+            self.sprite.draw((self.x,self.y,60,60), window)
+            shadowManager.addShadowToRender(add(getRectCenter((self.x,self.y,50,50)), [-10, 10]), self.r, (50,0,50,128)) # shadow
 
 class Sword:
     def __init__(self):
@@ -179,7 +186,7 @@ class Player:
         self.col = (127, 35, 219)
         self.vel = [0, 0]
         self.dir = [0, 0]
-        self.weapon = "gun"
+        self.weapon = "mace"
 
         self.minBlltSize = 9
         self.atkTimer = 0 # attack timer
@@ -549,6 +556,11 @@ class Player:
                     if self.sword.swing == False:
                         self.sword.swing = True
                         self.atkTimer = self.attackRate/self.atkRateMultiplier
+
+
+                case "mace":
+                    self.mace.swing(self.rect[0], self.rect[1])
+                    self.atkTimer = self.attackRate/self.atkRateMultiplier
 
             # scraps of ngarus tiny planet implimentation
             #elif self.weapon == 3:
