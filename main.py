@@ -5,118 +5,62 @@ sys.path.append(os.path.abspath("lib"))
 sys.path.append(os.path.abspath("src"))
 
 from library import *
+from world import *
+from scene import *
+
 from enemies import *
 from coinManager import *
 from shopManager import *
 from player import *
 from particles import *
 from ui import *
+from waves import *
 
 NGARU = True
 escC = False
 esc = False
 
-player = Player(W/2, H/2)
-
-particleManager = ParticleManager()
-coinManager = CoinManager()
-shopManager = shopManager(W, H)
-enemyManager = EnemyManager(coinManager, player, particleManager)
-
 boostResetCap = 0
-menu = Menu()
-class WaveManager:
-    def __init__(self, enemyManager, coinManager, shopManager, player):
-        self.spawnRate = 2
-        self.spawnTimer = 0
-        self.maxWaveTimer = 60
-        self.waveTimer = self.maxWaveTimer
-        self.swapVal = 1
-        self.wave = 1
-        self.enemyManagerRef = enemyManager
-        self.coinManagerRef = coinManager
-        self.shopManagerRef = shopManager
-        self.playerRef = player
+menu = Menu() 
 
-    def newWave(self):
-        self.playerRef.shieldCur = self.playerRef.shieldMax
-        self.waveTimer = self.maxWaveTimer
-        self.spawnTimer = 0
-        self.wave += 1
+# def Game and Scenes #
+game = Game()
 
-    def spawnEnemy(self):
-        spawnLoc = random.randint(0,3)
-        enemyType = Fly
-        spawnOffset = 60 # max enemy H/W so no one spawns on screen
+# entities #
+player = Player(W/2, H/2, game)
 
-        match spawnLoc:
-            case 0: # left
-                self.enemyManagerRef.spawnEnemy(enemyType,[-spawnOffset,random.randint(0,H-spawnOffset)])
-            case 1: # right
-                self.enemyManagerRef.spawnEnemy(enemyType,[W+spawnOffset,random.randint(0,H-spawnOffset)])
-            case 2: # up
-                self.enemyManagerRef.spawnEnemy(enemyType,[random.randint(0,W-spawnOffset),-spawnOffset])
-            case 3: # down
-                self.enemyManagerRef.spawnEnemy(enemyType,[random.randint(0,W-spawnOffset),H+spawnOffset])
+particleManager = ParticleManager(game)
+coinManager = CoinManager(game)
+shopManager = shopManager(game)
+enemyManager = EnemyManager(game)
 
-    def update(self, dt, mouse):
-        if self.playerRef.spawnMultiplyer >= 1:
-            if self.playerRef.spawnMultiplyer* 0.2 >= 1:
-                self.spawnRate = 1
-            else:
-                self.spawnRate = 2 - self.playerRef.spawnMultiplyer* 0.2
-        if self.waveTimer > 0:
-            self.waveTimer -= dt
-            if self.spawnTimer > 0:
-                self.spawnTimer -= dt
-            else:
-                self.spawnTimer = self.spawnRate
-                self.spawnEnemy()
-        elif self.swapVal == 1 and len(self.enemyManagerRef.enemies) == 0 and len(self.coinManagerRef.coins) == 0:
+waveManager = WaveManager(game)
+# -------- #
 
-            # Redo this player boost at some point
-            if self.playerRef.boostState == True:
-                global boostResetCap
-                self.playerRef.boostTime = 0
-                boostResetCap = 1
-                self.playerRef.dmg = self.playerRef.dmghold
-                self.playerRef.attackRate = self.playerRef.atshold
-                self.playerRef.speed = self.playerRef.spdhold
+startingEntities = []
+startingEntities.append(player)
+startingEntities.append(particleManager)
+startingEntities.append(coinManager)
+startingEntities.append(shopManager)
+startingEntities.append(enemyManager)
 
-            self.swapVal = 0
-            self.shopManagerRef.store = True
-        
-        if self.shopManagerRef.store:
-            self.shopManagerRef.update(dt, mouse, self.playerRef)
-            if not self.shopManagerRef.store:
-                self.swapVal = 20
+startingEntities.append(waveManager)
 
-    def draw(self, dt, window):
-        
-        drawText(window, f"Time left: {math.ceil(self.waveTimer)}", (255,255,255),(W-200, 50), 30) # hard coded pos shd change this
-        drawText(window, f"Wave {self.wave}", (255,255,255),(W-200, 20), 30) # hard coded pos shd change this
-        if self.shopManagerRef.store and len(self.enemyManagerRef.enemies) == 0:
-            self.shopManagerRef.draw(window)
-        elif self.swapVal > 1:
-            self.swapVal -= 1
-            self.shopManagerRef.draw(window)
-            self.shopManagerRef.update(dt, mouse)
-            if self.swapVal == 1:
-                if self.wave == 3:
-                    self.shopManagerRef.type = "rare"
-                elif self.wave == 7:
-                    self.shopManagerRef.type = "legendary"
-                else:
-                    self.shopManagerRef.type = "shop"
-                self.shopManagerRef.newCards()
-                self.newWave()
-                
-
-
-waveManager = WaveManager(enemyManager, coinManager, shopManager, player)
-
-
+collisionRules = {
+    "Player": ["Enemy", "Coin"],
+    "Enemy": ["Player", "Bullet"],
+    "Bullet": ["Bullet"],
+    "Manager":[],
+    "Particle":[],
+    "Coin":["Player"]
+}
+print(startingEntities)
+mainScene = Scene("main", startingEntities, collisionRules, game)
+game.add_scene(mainScene)
+game.switch_scenes("main")
+# ------------------- #
 def update(window, dt):
+    '''
     global keys, mouse, boostResetCap
 
     menu.update(keys)
@@ -134,73 +78,32 @@ def update(window, dt):
         
         particleManager.update(dt)
         enemyManager.update(dt)
+    '''
+    game.update(dt)
 
     #input stuff
-    mouse.update()
-    keys = pygame.key.get_pressed()
-    camera.update(dt)
+    game.mouse.update()
+    game.keys = pygame.key.get_pressed()
+    game.camera.update(dt)
 
 bgCol = (80,80,80)
 
 def draw(window, dt):
     drawRect(window, (-W/2, -H/2, W*2, H*2), bgCol)
+    '''
     particleManager.draw(window, dt)
     player.draw(window, player, dt)
     coinManager.draw(window)
     enemyManager.draw(window)
     waveManager.draw(dt, window)
     
-    drawText(window, f"FPS: {1/dt}", (255,255,255),(W-150, 150), 30)
-
-
-    # still gross :sob:
-    if player.actives["Space"]:
-            cool = player.actives["Space"][1]
-            perc = cool/player.actives["Space"][0]
-            name = player.actives["Space"][3]
-            amogus = player.actives["Space"][4]
-            if cool <= 0:
-                col = (255,255,255)
-            else:
-                col = (150,150,150)
-            drawRect(window,(50,H - 200,100,200),(100,100,100))
-            drawRect(window,(50,H - 200 + perc*200,100,200),col)
-            drawText(window, name, (0,0,0),(50 + amogus, H - 100), 30)
-            drawText(window, f"{round(player.actives["Space"][1], 1)}", (0,0,0),(90, H - 50), 30)
-
-    if player.actives["E"]:
-            cool = player.actives["E"][1]
-            perc = cool/player.actives["E"][0]
-            name = player.actives["E"][3]
-            amogus = player.actives["E"][4]
-            if cool <= 0:
-                col = (255,255,255)
-            else:
-                col = (150,150,150)
-            drawRect(window,(200,H - 200,100,200),(100,100,100))
-            drawRect(window,(200,H - 200 + perc*200,100,200),col)
-            drawText(window, name, (0,0,0),(200 + amogus, H - 100), 30)
-            drawText(window, f"{round(player.actives["E"][1], 1)}", (0,0,0),(240, H - 50), 30)
-
-    if player.actives["Q"]:
-            cool = player.actives["Q"][1]
-            perc = cool/player.actives["Q"][0]
-            name = player.actives["Q"][3]
-            amogus = player.actives["Q"][4]
-            if cool <= 0:
-                col = (255,255,255)
-            else:
-                col = (150,150,150)
-                particleManager.bloodExplosion(self.rect[0], self.rect[1])
-            drawRect(window,(350,H - 200,100,200),(100,100,100))
-            drawRect(window,(350,H - 200 + perc*200,100,200),col)
-            drawText(window, name, (0,0,0),(350 + amogus, H - 100), 30)
-            drawText(window, f"{round(player.actives["Q"][1], 1)}", (0,0,0),(390, H - 50), 30)
     player.choiceDesc(window)
     player.statShow(window, W)
 
     if menu.open:
         menu.draw(window, player)
+    '''
+    game.draw(window)
 
 maxFPS = 60
 clock = pygame.time.Clock()
@@ -211,7 +114,6 @@ def main():
 
     while running:  # main game loop
         dt = clock.tick(maxFPS) / 1000.0
-        #particleManager.spawnFire(W/2,H/2) I LOOOOOVE fire
 
         update(window, dt)
         draw(window, dt)

@@ -5,93 +5,72 @@ sys.path.append(os.path.abspath("../lib"))
 
 from library import *
 from enemies import *
+from world import *
+from scene import *
 
-class Bullet:
-    def __init__(self,bx,by,v,dmg,pierces,bulletType="standardBullet"):
+class Bullet(RigidBody):
+    def __init__(self,x,y,vel,dmg,pierces,bulletType="standardBullet",playerRef=None):
+        ID = f"bullet#{random.randint(0,9999)}"
         w, h = dmg, dmg
         self.r = w / 2
-        self.rect = [bx,by,h,w]
-        self.vel = v
+        self.player = playerRef
+        super().__init__(ID, [x, y, w, h], "Bullet", self.player.game)
+
+        self.vel = vel
         self.type = bulletType
         self.haloDistMax = 150
         self.haloDist = 0
         self.theta = 0
         self.pierces = pierces
 
-    def update(self,dt, player):
+    def del_self(self):
+        print(self.player.bullets)
+        self.player.bullets.remove(self)
+        self.game.curr_world.delete_entity(self)
+
+    def update(self, dt):
         mag = magnitude(self.vel)
-        if mag > player.bulletSpeed:
-            self.vel = scalMult(self.vel, player.bulletSpeed/mag)
+        if mag > self.player.bulletSpeed:
+            self.vel = scalMult(self.vel, self.player.bulletSpeed/mag)
 
         match self.type:
             case "standardBullet":
                 self.rect[0] += self.vel[0] * dt
                 self.rect[1] += self.vel[1] * dt
-                if AABBCollision((-30, -30, 1980, 30),self.rect):
-                    player.bullets.remove(self)
-                elif AABBCollision((-30, 1080, 1980, 300),self.rect):
-                    player.bullets.remove(self)
-                elif AABBCollision((-30, -30, 30, 1080),self.rect):
-                    player.bullets.remove(self)
-                elif AABBCollision((1920, -30, 30, 1080),self.rect):
-                    player.bullets.remove(self)
+                if not onScreen(self.rect):
+                    self.del_self()
 
             case "haloBullet": # using vel[0] for index of bullet
                 if self.haloDist < self.haloDistMax:
                     self.haloDist += 200 * dt
                 
                 phi = self.vel[0]*math.pi/4 + self.theta
-                self.rect = [player.center[0]-self.r/2+self.haloDist*math.cos(phi), player.center[1]-self.r/2+self.haloDist*math.sin(phi),self.rect[2],self.rect[3]]
+                self.rect = [player.get_center()[0]-self.r/2+self.haloDist*math.cos(phi), player.get_center()[1]-self.r/2+self.haloDist*math.sin(phi),self.rect[2],self.rect[3]]
 
                 self.theta += dt * (math.pi)
 
             case "orbitBullet":
                 pass
 
-        # tiny planet scraps
-        #elif player.weapon == 3:
-            #self.rect[0] = player.center[0] + self.vel[0]
-            #self.rect[1] = player.center[1] + self.vel[1]
     def draw(self,window):
-        drawCircle(window, ((self.rect[0]+self.r, self.rect[1]+self.r), self.r), (255,255,255))
+        drawRect(window, self.rect, (255,0,0))
 
-class Sword:
-    def __init__(self):
-        self.swing = False
-        self.swlength = 60
-        self.swangle = 1.5
-        self.swcool = 20
-        self.swordrect = [0,0,10,10]
-        self.swc = 1
-        self.swordsegments = []
-
-    def draw(self,window,player):
-            center = player.center
-            mousePos = pygame.mouse.get_pos()
-            dx, dy = subtract(mousePos, center)
-            theta = math.atan2(dy, dx) + player.sword.swangle
-            sx, sy = 0,0
-            index = player.sword.swlength
-            for i in range(player.sword.swlength):
-                sx = center[0] + math.cos(theta) * (index)
-                sy = center[1] + math.sin(theta) * (index)
-                self.swordsegments.append((sx,sy,10,10))
-                index += 1
-                drawCircle(window, ((sx,sy), 5), (255,255,255))
+    def on_collision(self, otherEntity):
+        self.del_self()
 
 
-class Player:
-    def __init__(self, x, y):
+class Player(RigidBody):
+    def __init__(self, x, y, gameRef):
 
 # physics, consts, timers, and  rect stuff
         w, h = 40, 40
         self.r = w / 2
-        self.rect = [x, y, w, h]  # position = self.rect[0], self.rect[1]
-        self.center = [x+w/2,y+h/2] 
         self.col = (127, 35, 219)
-        self.vel = [0, 0]
         self.dir = [0, 0]
         self.weapon = "gun"
+
+        super().__init__("player", [x,y,w,h], "Player", gameRef, 0)
+        self.airFric = 0.9
 
         self.minBlltSize = 9
         self.atkTimer = 0 # attack timer
@@ -101,7 +80,7 @@ class Player:
 
 # player properties
     # movement and health
-        self.speed = 2500
+        self.speed = 1
         self.maxHealth = 100 #max health
         self.health = self.maxHealth
     # dmg and firerate stuff
@@ -120,11 +99,10 @@ class Player:
         self.bulletSpeed = 500
         self.knockback = 100
     # misc
-        self.sword = Sword()
         self.shieldMax = 0
         self.shieldCur = 0
         self.spawnMultiplyer = 0
-        self.coins = 0
+        self.coins = 1000
         self.foragerval = 0
         self.lootMultiplier = 1
         self.itemQty = {}
@@ -146,21 +124,6 @@ class Player:
         self.choicehoveringID = 0
         self.running = True
         self.chipList = []
-        
-
-    
-    def statShow(self, window, W):
-        drawText(window, f"Speed: {round(self.speed/500,3)}", (255,255,255),(10, 150), 30)
-        drawText(window, f"Dmg: {round(self.dmg,3)}", (255,255,255),(10, 200), 30)
-        drawText(window, f"Acc: {round(self.inaccuracy,3)}", (255,255,255),(10, 250), 30)
-        drawText(window, f"BSpeed: {round(self.bulletSpeed/10,1)}", (255,255,255),(10, 300), 30)
-        drawText(window, f"AtkSpeed: {round(self.attackRate,3)}", (255,255,255,1),(10, 350), 30)
-        drawText(window, f"AtkSpeedMult: {round(self.atkRateMultiplier,3)}", (255,255,255),(10, 400), 30)
-        
-        #drawText(window, self.choicehovering, (255,255,255),(10, 450), 30, drawAsUI=True)
-        
-        
-
 
     # active items
     def buyBulletHalo(self):
@@ -313,8 +276,8 @@ class Player:
         else:
             self.itemQty[name] = 1
         match name:
-
             #passives
+            # TODO: might look nicer if we use a dict: {"Key":Func}
             case "speedUp":
                 self.speedUp()
             case "atkSpeedUp":
@@ -362,63 +325,48 @@ class Player:
             case "sword":
                 self.buySword()
 
-    def takeDmg(self, dmgAmount, dmgKnockback = [0,0], enemy = False):
-        
+    def on_collision(self, otherEntity):
+        pass
+
+    def takeDmg(self, dmgAmount, dmgKnockback = [0,0]):
         if self.dmgTimer <= 0 and self.invinceTimer <= 0:
-            if enemy:
-                enemy.vel = scalMult(dmgKnockback, -1)
             if self.shieldCur <= 0:
                 self.health -= dmgAmount
             else:
                 self.shieldCur -= 1
 
             camera.shake()
-            self.vel = add(self.vel, dmgKnockback)
+            self.apply_impulse(dmgKnockback)
             self.dmgTimer = 2
             if self.health <= 0 and self.revives > 0:
                 self.health = self.maxHealth
                 self.invinceTimer = 3
                 self.revives -= 1
             elif self.health <= 0:
-                self.running = False
-            
+                pass
+                # GAMEOVER
 
-    def physics(self, dt, W, H):
-        if AABBCollision((-30, -30, 1980, 30),self.rect) and self.vel[1] < 0:
-            self.vel[1] *= -1
-        if AABBCollision((-30, 1080, 1980, 30),self.rect) and self.vel[1] > 0:
-            self.vel[1] *= -1
-        if AABBCollision((-30, -30, 30, 1080),self.rect) and self.vel[0] < 0:
-            self.vel[0] *= -1
-        if AABBCollision((1920, -30, 30, 1080),self.rect) and self.vel[0] > 0:
-            self.vel[0] *= -1
-        self.rect[0] += self.vel[0]*dt
-        self.rect[1] += self.vel[1]*dt
-        self.center = [self.rect[0]+self.rect[2]/2,self.rect[1]+self.rect[3]/2]
-        self.vel[0] *= 0.9
-        self.vel[1] *= 0.9    
-
-    def input(self, dt, keys, window, player, W, H):
+    def input(self, dt):
         # movement
-        self.dir = [0, 0]
-        if keys[pygame.K_w]:
+        self.dir = np.array([0, 0])
+        if self.game.keys[pygame.K_w]:
             self.dir[1] += -1
-        if keys[pygame.K_s]:
+        if self.game.keys[pygame.K_s]:
             self.dir[1] += 1
-        if keys[pygame.K_a]:
+        if self.game.keys[pygame.K_a]:
             self.dir[0] += -1
-        if keys[pygame.K_d]:
+        if self.game.keys[pygame.K_d]:
             self.dir[0] += 1
 
-        SF = magnitude(self.dir)
-        if SF != 0:
-            self.vel[0] += self.speed * dt * self.dir[0] / SF
-            self.vel[1] += self.speed * dt * self.dir[1] / SF
         
+        mag = magnitude(self.dir)
+        if mag != 0:
+            self.apply_impulse(np.multiply(self.speed/mag, self.dir))
+
         # shooting
         bulletRect = self.getBulletSize()
         mousePos = pygame.mouse.get_pos()
-        dis = subtract(mousePos, self.center)
+        dis = subtract(mousePos, self.get_center())
         dx = dis[0]
         dy = dis[1]
         
@@ -436,15 +384,121 @@ class Player:
                         bv[0] = math.cos(theta)*self.bulletSpeed + random.uniform(self.speedinac,-self.speedinac)
                         bv[1] = math.sin(theta)*self.bulletSpeed + random.uniform(self.speedinac,-self.speedinac)
                         
-                        self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, bv, self.getBulletSize()[0],self.pierces))
+                        self.bullets.append(Bullet(self.rect[0]+self.rect[2]/4, self.rect[1]+self.rect[3]/4, bv, self.getBulletSize()[0],self.pierces, playerRef=self))
                         self.atkTimer = self.attackRate/self.atkRateMultiplier
-                
-                case "sword":
-                    if self.sword.swing == False:
-                        self.sword.swing = True
-                        self.atkTimer = self.attackRate/self.atkRateMultiplier
+                        self.game.curr_world.add_entity(self.bullets[len(self.bullets)-1])
 
-            # scraps of ngarus tiny planet implimentation
+        for i in range(len(self.actives)):
+            activeObj = self.actives[list(self.actives.keys())[i]]
+            if activeObj != None:
+                if activeObj[1] >= 0:
+                    activeObj[1] -= dt
+                elif self.game.keys[self.activeKeys[i]]:
+                    activeObj[2](dt)
+                    activeObj[1] = activeObj[0] * (1 - (self.cooldownReduct/100))
+    def boostReset(self, dt):
+        if self.boostTime > 0:
+            self.dmg = self.dmghold * 1.5
+            self.attackRate = self.atshold /3
+            self.speed = self.spdhold* 3
+            self.boostTime -= dt
+            self.col = (255,0,0)
+        else:
+            self.dmg = self.dmghold
+            self.attackRate = self.atshold
+            self.speed = self.spdhold
+            self.col = (127, 35, 219)
+    
+    def getDescription(self): # TODO: Make this a json file
+        desc1 = ["ERROR","increases how fast the player moves", "Increases bullet damage", "Increases the players firerate", "Increases how much health the player has", "Increases how fast a bullet traves", "Reduces active cooldowns", "Increases accuracy","Lots of bullets but not much damage", "gain the ability to dash", "Shoot a ring of bullets", "Increases gold gain", "Increases enemy spawnrate", "Increases shield level", "Increases firerate, damage and speed", "Bullets pierce through enemies", "When you hit an enemy gain health", "Set our enemy on fire", "Come back from the dead","Your bullets home in","Spray and pray","Twice the bullets, Twice the fun"]
+        desc2 = ["ERROR","+1 speed","+2 damage","+10% attack rate","+20 max health","+1 bullet speed","-5% active cooldowns","-0.02 innacuracy","+3 bullets", "+1 dash ability", "+1 halo ability", "1.5x gold (+0.25 every level)", "-0.2s enemy spawn time", "+1 shield", "+boost ability", "+1 pierces", "+1 lifeSteal", "+1 burn damage", "+1 revive","+1 homing speed","damage way down","2x bullets"]
+        desc3 = ["ERROR","","","","","","","","half damage","","","","","","","","","","","attackrate way up","",""]
+        return desc1[self.choicehoveringID], desc2[self.choicehoveringID], desc3[self.choicehoveringID]
+
+    def choiceDesc(self,window):
+        if self.choicehovering != "none":
+            desc1, desc2, desc3 = self.getDescription()
+            mx, my = pygame.mouse.get_pos()
+            drawRect(window,(mx,my,500,250),(150,150,150))
+            drawText(window, self.choicehovering, (0,0,0),(mx + 10,my), 30, drawAsUI=True)
+            drawText(window, desc1, (0,0,0),(mx + 10,my + 50), 30, drawAsUI=True)
+            drawText(window, desc2, (0,0,0),(mx + 10,my + 75), 30, drawAsUI=True)
+            drawText(window, desc3, (0,0,0),(mx + 10,my + 100), 30, drawAsUI=True)
+            
+        
+
+    def update(self, dt):
+        self.input(dt)
+        super().update(dt)
+
+        # TODO: This can be written cleaner
+        if self.boostState == True:
+            self.boostReset(dt)
+        if self.invinceTimer <= 0:
+            self.col = (127, 35, 219)
+            self.reCol = [255,255,255]
+            self.atkRateMultiplier = self.atkMSav
+        else:
+            self.invinceTimer -= dt
+            self.revCol[0] -= dt * ((255 - 127)/5)
+            self.revCol[1] -= dt * ((255 - 35)/5)
+            self.revCol[2] -= dt * ((255 - 219)/5)
+            self.col = (self.revCol)
+            self.atkRateMultiplier = self.atkMSav * 2
+
+        if self.dmgTimer > 0:
+            self.dmgTimer -= dt
+        if self.foragerval <= 1:
+            self.lootMultiplier = 1.25 + (0.25 * self.foragerval)
+            
+    def draw(self, window):
+
+        drawText(window, f"Coins: {self.coins}", (255,255,0), (10,50), 40)
+        drawText(window, f"HP: {self.health}", (0,255,0), (10,10), 40)
+        if self.dmgTimer > 0:
+            if math.floor(self.dmgTimer*10) % 2 != 0:
+                drawCircle(window, (self.get_center(), self.r), self.col)
+        else:
+            drawCircle(window, (self.get_center(), self.r), self.col)
+            
+        ratio = self.health / self.maxHealth
+        healthBarRect = [160, 18.5, 200, 20]
+
+        drawRect(window, healthBarRect, (255,0,0))
+        healthBarRect[2] *= ratio
+        drawRect(window, healthBarRect, (0,255,0))
+
+        if self.invinceTimer > 0:
+            drawText(window, f"{round(self.invinceTimer)}", (100,100,100),(self.rect[0] + 12.5, self.rect[1]), 30)
+
+
+        
+''' OBSOLETE STUFF
+class Sword:
+    def __init__(self):
+        self.swing = False
+        self.swlength = 60
+        self.swangle = 1.5
+        self.swcool = 20
+        self.swordrect = [0,0,10,10]
+        self.swc = 1
+        self.swordsegments = []
+
+    def draw(self,window,player):
+            center = player.center
+            mousePos = pygame.mouse.get_pos()
+            dx, dy = subtract(mousePos, center)
+            theta = math.atan2(dy, dx) + player.sword.swangle
+            sx, sy = 0,0
+            index = player.sword.swlength
+            for i in range(player.sword.swlength):
+                sx = center[0] + math.cos(theta) * (index)
+                sy = center[1] + math.sin(theta) * (index)
+                self.swordsegments.append((sx,sy,10,10))
+                index += 1
+                drawCircle(window, ((sx,sy), 5), (255,255,255))
+
+# scraps of ngarus tiny planet implimentation
             #elif self.weapon == 3:
                 #for i in range(self.bulletCount):
                     #theta = math.atan2(dy, dx)
@@ -499,104 +553,8 @@ class Player:
 
 
         # "Key": [Cooldown, Timer, ActiveFunc]
-        for i in range(len(self.actives)):
-            activeObj = self.actives[list(self.actives.keys())[i]]
-            if activeObj != None:
-                if activeObj[1] >= 0:
-                    activeObj[1] -= dt
-                elif keys[self.activeKeys[i]]:
-                    activeObj[2](dt)
-                    activeObj[1] = activeObj[0] * (1 - (self.cooldownReduct/100))
-    def boostReset(self, dt):
-        if self.boostTime > 0:
-            self.dmg = self.dmghold * 1.5
-            self.attackRate = self.atshold /3
-            self.speed = self.spdhold* 3
-            self.boostTime -= dt
-            self.col = (255,0,0)
-        else:
-            self.dmg = self.dmghold
-            self.attackRate = self.atshold
-            self.speed = self.spdhold
-            self.col = (127, 35, 219)
-    
-    def getDescription(self):
-        desc1 = ["ERROR","increases how fast the player moves", "Increases bullet damage", "Increases the players firerate", "Increases how much health the player has", "Increases how fast a bullet traves", "Reduces active cooldowns", "Increases accuracy","Lots of bullets but not much damage", "gain the ability to dash", "Shoot a ring of bullets", "Increases gold gain", "Increases enemy spawnrate", "Increases shield level", "Increases firerate, damage and speed", "Bullets pierce through enemies", "When you hit an enemy gain health", "Set our enemy on fire", "Come back from the dead","Your bullets home in","Spray and pray","Twice the bullets, Twice the fun"]
-        desc2 = ["ERROR","+1 speed","+2 damage","+10% attack rate","+20 max health","+1 bullet speed","-5% active cooldowns","-0.02 innacuracy","+3 bullets", "+1 dash ability", "+1 halo ability", "1.5x gold (+0.25 every level)", "-0.2s enemy spawn time", "+1 shield", "+boost ability", "+1 pierces", "+1 lifeSteal", "+1 burn damage", "+1 revive","+1 homing speed","damage way down","2x bullets"]
-        desc3 = ["ERROR","","","","","","","","half damage","","","","","","","","","","","attackrate way up","",""]
-        return desc1[self.choicehoveringID], desc2[self.choicehoveringID], desc3[self.choicehoveringID]
-
-    def choiceDesc(self,window):
-        if self.choicehovering != "none":
-            desc1, desc2, desc3 = self.getDescription()
-            mx, my = pygame.mouse.get_pos()
-            drawRect(window,(mx,my,500,250),(150,150,150))
-            drawText(window, self.choicehovering, (0,0,0),(mx + 10,my), 30, drawAsUI=True)
-            drawText(window, desc1, (0,0,0),(mx + 10,my + 50), 30, drawAsUI=True)
-            drawText(window, desc2, (0,0,0),(mx + 10,my + 75), 30, drawAsUI=True)
-            drawText(window, desc3, (0,0,0),(mx + 10,my + 100), 30, drawAsUI=True)
-            
-        
-
-    def update(self, window, dt, keys, player, W ,H):
-        self.input(dt, keys, window, player, W, H)
-        self.physics(dt, W, H)
-        if self.boostState == True:
-            self.boostReset(dt)
-        if self.invinceTimer <= 0:
-            self.col = (127, 35, 219)
-            self.reCol = [255,255,255]
-            self.atkRateMultiplier = self.atkMSav
-        else:
-            self.invinceTimer -= dt
-            self.revCol[0] -= dt * ((255 - 127)/5)
-            self.revCol[1] -= dt * ((255 - 35)/5)
-            self.revCol[2] -= dt * ((255 - 219)/5)
-            self.col = (self.revCol)
-            self.atkRateMultiplier = self.atkMSav * 2
-
-        for bullet in self.bullets:
-            bullet.update(dt, self)
-
-        if self.dmgTimer > 0:
-            self.dmgTimer -= dt
-        if self.foragerval <= 1:
-            self.lootMultiplier = 1.25 + (0.25 * self.foragerval)
-            
-    def draw(self, window, player, dt):
-
-        drawText(window, f"Coins: {self.coins}", (255,255,0), (10,50), 40)
-        drawText(window, f"HP: {self.health}", (0,255,0), (10,10), 40)
-        if self.dmgTimer > 0:
-            if math.floor(self.dmgTimer*10) % 2 != 0:
-                drawCircle(window, (self.center, self.r), self.col)
-        else:
-            drawCircle(window, (self.center, self.r), self.col)
-            
-        ratio = self.health / self.maxHealth
-        healthBarRect = [160, 18.5, 200, 20]
-
-        drawRect(window, healthBarRect, (255,0,0))
-        healthBarRect[2] *= ratio
-        drawRect(window, healthBarRect, (0,255,0))
-
-        if self.invinceTimer > 0:
-            drawText(window, f"{round(self.invinceTimer)}", (100,100,100),(self.rect[0] + 12.5, self.rect[1]), 30)
-
-        # Weapons
-        for bullet in self.bullets:
-            bullet.draw(window)
-        if self.sword.swing == True and self.sword.swangle >= -1.5:
-                self.sword.draw(window,player)
-                self.sword.swangle -= 0.2
-                if self.sword.swangle <= -1.5:
-                    self.sword.swangle = 1.5
-                    self.sword.swing = False
-
-        # Actives
-        # "Key": [Cooldown, Timer, ActiveFunc]
-        for i in range(len(self.actives)):
-            activeObj = self.actives[list(self.actives.keys())[i]]
-            # draw card for active
-
-        
+case "sword":
+    if self.sword.swing == False:
+        self.sword.swing = True
+        self.atkTimer = self.attackRate/self.atkRateMultiplier
+'''

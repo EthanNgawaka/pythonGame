@@ -1,7 +1,12 @@
+from world import *
+import traceback
+
 class Game:
     def __init__(self):
         self.currScene = None
         self.scenes = {}
+
+        self.curr_world = None
 
         self.switchingTo = None
 
@@ -11,6 +16,11 @@ class Game:
         self.pause = 0
         self.loadingPauseLength = 0.3 # seconds
 
+        #input
+        self.keys = [0] * 512
+        self.mouse = Mouse()
+        self.camera = Camera()
+
     def add_scene(self, scene):
         self.scenes[scene.name] = scene
 
@@ -18,15 +28,16 @@ class Game:
         try:
             self.scenes[self.currScene].exit()
         except Exception as e: # this is fine, just means currScene is null
-            print(e)
+            print("no scene to call exit()")
 
         self.currScene = name
 
         try:
             self.scenes[self.currScene].enter()
         except Exception as e:
-            print(e)
+            traceback.print_exc()
 
+        self.curr_world = self.scenes[self.currScene].world
         self.switchingTo = None
 
     def switch_scenes(self, nameOfNewScene):
@@ -43,34 +54,53 @@ class Game:
             try:
                 self.scenes[self.currScene].update(dt) # update if exists
             except Exception as e:
-                print(e)
+                print(f"scene with name: {self.currScene} does not exist!")
+                traceback.print_exc()
+
         elif self.pause <= 0:
             self.transitionTimer -= dt
         else:
             self.pause -= dt
 
-    def draw(self):
+    def draw(self, window):
         #draw transition
 
-        try:
-            self.scenes[self.currScene].draw() # draw if exists
-        except Exception as e:
-            print(e)
+        if self.transitionTimer <= self.transitionTimerMax*0.5:
+            try:
+                self.scenes[self.currScene].draw(window) # draw if exists
+            except Exception as e:
+                print(f"scene with name: {self.currScene} does not exist!")
+                traceback.print_exc()
 
 class Scene:
-    def __init__(self, name, startingEntities, collisionRules):
+    def __init__(self, name, startingEntities, collisionRules, gameRef):
         self.startingEntities = startingEntities
+        self.collisionRules = collisionRules
         self.name = name
         self.world = None
+        self.game = gameRef
 
     def enter(self):
-        self.world = World(collisionRules, startingEntities)
+        try:
+            self.world = World(self.game, self.collisionRules, self.startingEntities)
+        except Exception as e:
+            print(f"world is None for scene with name: {self.name} @ enter")
+            traceback.print_exc()
     
     def update(self, dt):
-        self.world.update(dt)
+        try:
+            self.world.update(dt)
+        except Exception as e:
+            print(f"world is None for scene with name: {self.name} @ update")
+            traceback.print_exc()
 
-    def draw(self):
-        self.world.draw()
+
+    def draw(self, window):
+        try:
+            self.world.draw(window)
+        except Exception as e:
+            print(f"world is None for scene with name: {self.name} @ draw")
+            traceback.print_exc()
 
     def exit():
         print("exiting scene: " + self.name)

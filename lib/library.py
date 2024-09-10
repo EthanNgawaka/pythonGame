@@ -1,4 +1,5 @@
 import pygame
+import numpy as np
 import pygame._sdl2 as pg_sdl2
 import random
 import math
@@ -7,13 +8,15 @@ import time
 W = 1920
 H = 1080
 
-keys = [0] * 512  #init keys to avoid index error (pygame has 512 keycodes)
-# to access the state of a key (true for down false for up) use "keys[pygame.KEYCODE]"
-# eg) if keys[pygame.KEY_a]:
-#         print("a down")
+def onScreen(rect):
+    screenRect = [0,0,W,H]
+    return AABBCollision(rect, screenRect)
 
 def getRectCenter(rect):
     return [rect[0]+rect[2]/2, rect[1]+rect[3]/2]
+
+def normalize(vec):
+    return np.multiply(np.array(vec), 1/magnitude(vec))
 
 class Mouse:
     def __init__(self):
@@ -46,8 +49,6 @@ class Mouse:
             self.down[1] = True
         else:
             self.down[1] = False
-
-mouse = Mouse()
 
 class Camera:
     def __init__(self, trackingEasing=0.1):
@@ -120,6 +121,18 @@ def init(windowW, windowH, caption):
     #nativeWindow.show()
 
     #pygame.display.toggle_fullscreen()
+
+    # have an idea for this, basically it would be borderless fullscreen
+    # so you could maybe get the actual resolution of the screen and calc
+    # the ratio btwn that and the drawing ratio (1920x1080 i think?) and
+    # then blit everything to a surface (window) before scaling it b
+    # by said amount and THEN drawing that surface
+
+    # the code all commented above still works for me on ubuntu
+    # but not for ngaru on windows i still dont know why
+    # os differences? 
+    # graphics drivers? (vulkan vs opengl?)
+
     pygame.display.set_caption(caption)
     return window
 
@@ -159,6 +172,10 @@ class Spritesheet:
 
         self.state = ""
         self.states = {} #{"state_name":[frames, correspondingLine]}
+        self.rotation = 0
+
+    def rotate(self, rotation):
+        self.rotation = rotation
 
     def addState(self, state_name, correspondingLine, frames):
         self.states[state_name] = [frames, correspondingLine]
@@ -170,9 +187,18 @@ class Spritesheet:
             self.currFrame = 0
             self.animationDir = 1
 
-    def draw(self, rect, window):
+    def draw(self, rect, window, rotateAround=[0,0]):
         self.rect = rect
-        window.blit(pygame.transform.scale(self.get_curr_sprite(), (self.rect[2], self.rect[3])), (self.rect[0], self.rect[1]))
+        scaledImage = pygame.transform.scale(self.get_curr_sprite(), (self.rect[2], self.rect[3]))
+        scaledAndRotatedImage = pygame.transform.rotate(scaledImage, self.rotation)
+
+        centerPos = (self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2)
+        if rotateAround[0] != 0 and rotateAround[1] != 0:
+            centerPos = (rotateAround[0], rotateAround[1])
+
+        newRect = scaledAndRotatedImage.get_rect(center=centerPos)
+
+        window.blit(scaledAndRotatedImage, newRect.topleft)
         
     def update(self, dt):
         self.timer += dt

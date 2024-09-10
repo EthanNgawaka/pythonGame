@@ -5,6 +5,8 @@ sys.path.append(os.path.abspath("../lib"))
 
 from library import *
 
+# i think i just redo the menu system, should be a lot easier now w/ game framework
+
 class Dev:
     def __init__(self):
         self.dev = False

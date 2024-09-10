@@ -4,9 +4,12 @@ import os
 sys.path.append(os.path.abspath("../lib"))
 
 from library import *
+from world import *
+from scene import *
 
-class ParticleManager:
-    def __init__(self):
+class ParticleManager(Entity):
+    def __init__(self, gameRef):
+        super().__init__("ParticleManager", [0,0,0,0], "Manager", gameRef)
         self.particles = []
         self.toRemove = []
 
@@ -26,17 +29,17 @@ class ParticleManager:
             startingColor = (randomMax,randomMax,randomMax,255) # white -> yellow -> orange -> red -> smoke
             lerpColors = [(randomMax,randomMax,randomMin,255), (randomMax,randomHalf,randomMin,255), (randomMax,randomMin,randomMin,255), (randomHalf,randomHalf,randomHalf,255)]
             
-            self.particles.append(Particle(self, [x, y, size, size], startingColor, vel, colorLerp=lerpColors, grav=-20, lifetime=0.5+random.uniform(0,1.4)))
+            self.particles.append(Particle(self, self.game, [x, y, size, size], startingColor, vel, colorLerp=lerpColors, grav=-20, lifetime=0.5+random.uniform(0,1.4)))
 
     def bloodExplosion(self, x, y):
         for i in range(20):
             col = (random.randint(100,255),0,0, 255) #(R, G, B, A)
             theta = math.atan2(random.uniform(-1,1), random.uniform(-1,1))
-            velx = math.cos(theta)*random.uniform(100,1000)
-            vely = math.sin(theta)*random.uniform(100,1000)
+            velx = math.cos(theta)*random.uniform(1,10)
+            vely = math.sin(theta)*random.uniform(1,10)
             size = random.randint(1,12)
 
-            self.particles.append(Particle(self, [x,y,size,size], col, [velx, vely], lifetime=10, fade=True, grav=0))
+            self.particles.append(Particle(self, self.game, [x,y,size,size], col, [velx, vely], lifetime=10, fade=True, grav=0))
 
     def update(self, dt):
         for particle in self.particles:
@@ -49,16 +52,18 @@ class ParticleManager:
                 print("ValueError when removing particles!")
         self.toRemove = []
 
-    def draw(self, window, dt):
+    def draw(self, window):
         for particle in self.particles:
-            particle.draw(window, dt)
+            particle.draw(window)
 
-class Particle:
-    def __init__(self, manager, rect, col=(0,0,0,255), vel=[0,0], drag=0.9, grav=10, shrink=False, fade=True, colorLerp=False, lifetime=10): # col = (R, G, B, A)
-        self.rect = rect
+class Particle(RigidBody):
+    def __init__(self, manager, gameRef, rect, col=(0,0,0,255), vel=[0,0], drag=0.9, grav=10, shrink=False, fade=True, colorLerp=False, lifetime=10): # col = (R, G, B, A)
+        ID = f"particle#{random.randint(0,9999)}"
+        super().__init__(ID, rect, "Particle", gameRef)
+
         self.color = col
         self.vel = vel
-        self.drag = drag
+        self.airFric = drag
         self.gravity = grav
 
         self.lifetime = lifetime
@@ -77,13 +82,17 @@ class Particle:
             self.currentColorIndex = 1
             self.subLerp = 1
 
-    def draw(self, window, dt):
+    def draw(self, window):
         displayRect = self.rect
         scalingFactor = self.lifetime/self.startingLifetime
 
         if self.shrink:
             displayRect = [displayRect[0], displayRect[1], displayRect[2]*scalingFactor, displayRect[3]*scalingFactor]
 
+        col = pygame.Color(self.color)
+        drawRect(window, displayRect, col)
+
+    def update_colors(self, dt):
         if self.fade:
             self.color = (self.color[0], self.color[1], self.color[2], 255*self.lifetime/self.startingLifetime)
 
@@ -98,17 +107,11 @@ class Particle:
                     self.currentColorIndex += 1
                 self.subLerp = 1
 
-        col = pygame.Color(self.color)
-        drawRect(window, displayRect, col)
-
     def update(self, dt):
-        self.rect[0] += self.vel[0]*dt
-        self.rect[1] += self.vel[1]*dt
-
-        self.vel[1] += self.gravity
-
-        self.vel = scalMult(self.vel, self.drag)
+        super().update(dt)
 
         self.lifetime -= dt
         if self.lifetime <= 0:
             self.manager.remove(self)
+
+        self.update_colors(dt)

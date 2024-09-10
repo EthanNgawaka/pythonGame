@@ -4,10 +4,13 @@ import os
 sys.path.append(os.path.abspath("../lib"))
 
 from library import *
+from world import *
+from scene import *
 # idea here is to have a list of cards w/ properties like name, basePrice, and col
 # then in player class we have a func called triggerCardFunc(name), which takes name and finds the function of the same name in player class
 # ie we chose a speedUp card, the card calls player.triggerCardFunc("speedUp") which runs the necessary code to make the card func
 
+# TODO: Reorganize this cause its a mess, make it into a json file maybe?
 shopCards = [
         {"name": "speedUp", "basePrice": 50, "col": (0,255,255),"id": 1},
         {"name": "dmgUp", "basePrice": 150, "col": (200,0,0),"id": 2},
@@ -59,17 +62,20 @@ class Choice:
         else:
             self.cost = self.price
         self.cost = math.floor(self.cost)
-        if AABBCollision(pos, [mouse.x,mouse.y,0,0]) and parent.store:
+
+        if AABBCollision(pos, [parent.game.mouse.x,parent.game.mouse.y,0,0]) and parent.store:
             player.choicehovering = self.name
             player.choicehoveringID = self.id
-            if mouse.pressed[0] and player.coins >= self.cost:
+            if parent.game.mouse.pressed[0] and player.coins >= self.cost:
+                print("AH")
                 player.coins -= self.cost
                 player.triggerCardFunc(self.name)
                 parent.choices.remove(self)
         
 
-class shopManager:
-    def __init__(self, screenW, screenH):
+class shopManager(Entity):
+    def __init__(self, gameRef):
+        super().__init__("ShopManager", [0,0,0,0], "Manager", gameRef)
         self.type = "shop"
         self.choiceW = 150
         backgroundW = 900
@@ -79,12 +85,13 @@ class shopManager:
 
         self.newCards()
 
-        spacing = ((screenW-backgroundW)/2,(screenH-backgroundH)/2)
+        spacing = ((W-backgroundW)/2,(H-backgroundH)/2)
         self.backgroundRectTarget = [spacing[0], spacing[1], backgroundW, backgroundH]
-        self.backgroundRect = [spacing[0], screenH + backgroundH, backgroundW, backgroundH]
+        self.backgroundRect = [spacing[0], H + backgroundH, backgroundW, backgroundH]
         self.spawnPos = self.backgroundRect
         self.closeButtonRect = [backgroundW-50, 0, 50, 50]
         self.store = False
+        self.opening = False
         self.closing = False
 
     def newCards(self):
@@ -102,7 +109,15 @@ class shopManager:
                 case "legendary":
                     randomCardChoice = legendaryCards[random.randint(0,len(legendaryCards)-1)]
 
-            self.choices.append(Choice([choiceSpacing[0]*(i+1)+self.choiceW*i, choiceSpacing[1]], randomCardChoice["name"], randomCardChoice["basePrice"], randomCardChoice["col"], randomCardChoice["id"]))
+            self.choices.append(
+                    Choice(
+                        [choiceSpacing[0]*(i+1)+self.choiceW*i, choiceSpacing[1]],
+                        randomCardChoice["name"],
+                        randomCardChoice["basePrice"],
+                        randomCardChoice["col"],
+                        randomCardChoice["id"]
+                    )
+            )
 
     def getDrawRect(self,offsetRect):
         return [self.backgroundRect[0]+offsetRect[0], self.backgroundRect[1]+offsetRect[1], offsetRect[2], offsetRect[3]]
@@ -112,24 +127,39 @@ class shopManager:
             self.store = True
 
     def draw(self, window):
-        drawRect(window, self.backgroundRect, self.bgCol)
-        closeButtonDrawRect = self.getDrawRect(self.closeButtonRect)
-        drawRect(window, closeButtonDrawRect, (255,0,0))
-        for choice in self.choices:
-            choice.draw(window, self)
-
-    def update(self, dt, mouse, player=None):
-        if self.store:
-            player.choicehovering = "none"
+        if self.closing or self.store:
+            drawRect(window, self.backgroundRect, self.bgCol)
+            closeButtonDrawRect = self.getDrawRect(self.closeButtonRect)
+            drawRect(window, closeButtonDrawRect, (255,0,0))
             for choice in self.choices:
-                choice.update(mouse, self, player)
-            self.backgroundRect = rectLerp(self.backgroundRect,self.backgroundRectTarget,0.1)
-        else:
-            self.backgroundRect = rectLerp(self.backgroundRect,self.spawnPos,0.1)
+                choice.draw(window, self)
 
-        closeButtonDrawRect = self.getDrawRect(self.closeButtonRect)
-        if AABBCollision(closeButtonDrawRect, [mouse.x,mouse.y,0,0]):
-            if mouse.pressed[0]:
-                self.store = False
-                self.closing = True
+    def openShop(self):
+        if not (self.store or self.closing):
+            self.store = True
+            self.newCards()
+
+    def update(self, dt):
+        mouse = self.game.mouse
+        waveManager = self.game.curr_world.entities["Manager"]["WaveManager"]
+        if self.store or self.closing:
+            player = self.game.curr_world.entities["Player"]["player"]
+            if self.store:
+                player.choicehovering = "none"
+                for choice in self.choices:
+                    choice.update(self.game.mouse, self, player)
+                self.backgroundRect = rectLerp(self.backgroundRect,self.backgroundRectTarget,0.1)
+            else:
+                self.backgroundRect = rectLerp(self.backgroundRect,self.spawnPos,0.1)
+
+                if abs(self.backgroundRect[1] - self.spawnPos[1]) <= 1:
+                    self.closing = False
+                    waveManager.newWave()
+
+            # close button TODO: redo with new UI elements
+            closeButtonDrawRect = self.getDrawRect(self.closeButtonRect)
+            if AABBCollision(closeButtonDrawRect, [self.game.mouse.x,self.game.mouse.y,0,0]):
+                if mouse.pressed[0]:
+                    self.store = False
+                    self.closing = True
 
