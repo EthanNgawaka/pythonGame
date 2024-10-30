@@ -1,541 +1,123 @@
-from library import *
+from game import *
 from player import *
-from particles import *
+from copper import *
 
-class Enemy:
+# =================== Enemy Base =================== #
+class Enemy(Entity):
     def __init__(self):
-        pass
-        
-    def draw(self, window):
-        print("Draw was not overriden by child!")
-
-    def physics(self, dt):
-        self.movement(self.playerRef.rect, dt)
-
-        fric = 0.98
-        accel = [self.forces[0]*self.invMass,self.forces[1]*self.invMass]
-        self.vel[0] += accel[0]*dt
-        self.vel[1] += accel[1]*dt
-        self.rect[0] += self.vel[0]*dt
-        self.rect[1] += self.vel[1]*dt
-        self.vel = [self.vel[0]*fric,self.vel[1]*fric]
-        self.forces = [0,0]
-
-        self.boundEnemy()
-
-    def boundEnemy(self):
-        leftCheck = self.rect[0] < -self.rect[2] and self.vel[0] < 0
-        rightCheck = self.rect[0] > W+self.rect[2] and self.vel[0] > 0
-        if leftCheck or rightCheck:
-            self.vel[0] *= -1
-
-        upCheck = self.rect[1] < -self.rect[3] and self.vel[1] < 0
-        downCheck = self.rect[1] > H+self.rect[3] and self.vel[1] > 0
-        if upCheck or downCheck:
-            self.vel[1] *= -1    
-
-    def checkBulletCollision(self, bullet):
-        distVec = subtract(self.rect, bullet.rect)
-        mag = magnitude(distVec)
-        
-        # if bulletHoming then make it home in
-        if mag < self.playerRef.homing*150:
-            bullet.vel = add(bullet.vel, scalMult(distVec, self.playerRef.bulletSpeed/(4*mag)))
-        if AABBCollision(self.rect,(self.playerRef.mace.x, self.playerRef.mace.y, 40, 40)):
-            self.iFrames = self.iFramesMax
-
-            if mag != 0:
-                self.vel = scalMult(distVec, self.playerRef.knockback/mag)
-                self.stunTimer = self.stunTime
-            
-            if self.playerRef.health < self.playerRef.maxHealth:
-                self.playerRef.health += self.playerRef.lifeSteal
-                if self.playerRef.health > self.playerRef.maxHealth:
-                    self.playerRef.health = self.playerRef.maxHealth
-
-            if bullet.pierces <= 0:
-                self.playerRef.bullets.remove(bullet)
-            else:
-                self.playerRef.pierces -= 1
-
-            if self.health <= 0:
-                self.die()
-                return True
-
-            return False
-
-        check = AABBCollision(self.rect,bullet.rect)
-        if check:
-            if bullet.type == "haloBullet":
-                self.health -= self.playerRef.dmg*self.playerRef.dmgMultiplier*4
-            else:
-                self.health -= self.playerRef.dmg*self.playerRef.dmgMultiplier
-            self.iFrames = self.iFramesMax
-
-            if mag != 0:
-                self.vel = scalMult(distVec, self.playerRef.knockback/mag)
-                self.stunTimer = self.stunTime
-            
-            if self.playerRef.health < self.playerRef.maxHealth:
-                self.playerRef.health += self.playerRef.lifeSteal
-                if self.playerRef.health > self.playerRef.maxHealth:
-                    self.playerRef.health = self.playerRef.maxHealth
-
-            if bullet.pierces <= 0:
-                self.playerRef.bullets.remove(bullet)
-            else:
-                self.playerRef.pierces -= 1
-
-            if self.health <= 0:
-                self.die()
-                return True
-
-            return False
-
-    def update(self, dt):
-        self.physics(dt)
-        self.collisions(dt)
-        self.sprite.update(dt)
-
-    def collisions(self, dt):
-        collisionCheck = AABBCollision(self.rect, self.playerRef.rect)
-
-        # player contact dmg collisions
-        if collisionCheck:
-            knockbackVec = scalMult(collisionCheck, self.contactKnockback/magnitude(collisionCheck))
-            self.playerRef.takeDmg(self.contactDmg, scalMult(knockbackVec, -1), self)
-
-        if self.iFrames <= 0:
-            for bullet in self.playerRef.bullets:
-                if self.checkBulletCollision(bullet):
-                    break # if enemy dies
-        self.iFrames -= dt
-
-        # REPULSION
-        repulsionForce = 5000
-        distThreshold = self.rect[2]
-        for enemy in self.manager.enemies:
-            distVec = subtract(self.rect, enemy.rect)
-            mag = magnitude(distVec)
-            if mag < distThreshold and mag != 0:
-                self.forces = add(self.forces, scalMult(distVec, repulsionForce/mag))
-
-    def die(self):
-        print("Die was not overriden by child!")
-
-class EnemyManager:
-    def __init__(self, coinManager, player, particleManager):
-        self.enemies = []
-        self.toRemove = []
-
-        self.coinManagerRef = coinManager
-        self.playerRef = player
-        self.particleManagerRef = particleManager
-    
-    def spawnEnemy(self, enemyType, pos):
-        self.enemies.append(enemyType(pos, self.coinManagerRef, self.playerRef, self.particleManagerRef, self))
-
-    def remove(self, enemy):
-        self.toRemove.append(enemy)
-
-    def update(self, dt):
-        for enemy in self.enemies:
-            enemy.update(dt)
-        for enemy in self.toRemove:
-            self.enemies.remove(enemy)
-        self.toRemove = []
-
-    def draw(self, window):
-        for enemy in self.enemies:
-            enemy.draw(window)
-
-class Fly(Enemy):
-    def __init__(self, pos, coinManager, player, particleManager, enemyManager):
-        self.rect = [pos[0], pos[1], 60, 60]
-
-        self.vel = [0,0]
-        self.speed = 800
-        self.forces = [0,0]
+        self.rect = pygame.Rect(0,0,0,0)
+        self.vel = pygame.Vector2()
+        self.drag = 0.96
         self.invMass = 1
-
-        self.health = 20
-        self.contactDmg = 5
-        self.contactKnockback = 200
-
-        self.stunTimer = 0
-        self.stunTime = 0.1
-
-        self.iFrames = 0
-        self.iFramesMax = 0.1
+        self.forces = pygame.Vector2()
         self.value = 10
 
-        self.coinManagerRef = coinManager
-        self.playerRef = player
-        self.particleManagerRef = particleManager
-        self.manager = enemyManager
-        self.sprite = Spritesheet(self.rect, "assets/fly_sprite_sheet.png", [32,32], 0)
-        self.sprite.addState("idle", 0, 6)
+    def move(self, vec):
+        self.rect = self.rect.move(vec)
 
+    def add_force(self, vec):
+        self.forces += vec
 
-    def die(self):
-        coinDrop = round(random.randint(2,10) * self.playerRef.lootMultiplier)
-        self.coinManagerRef.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,coinDrop)
-        self.particleManagerRef.bloodExplosion(self.rect[0], self.rect[1])
-        self.manager.remove(self)
+    def bound_to_screen(self): # this is temp
+        bounds = [
+            pygame.Rect(-100,-100, 100, H+200), # left
+            pygame.Rect(W,-100, 100, H+200), # right
+            pygame.Rect(-100,-100, W+200, 100), # top
+            pygame.Rect(-100, H, W+200, 100), # bottom
+        ]
+        for b in bounds:
+            col = AABBCollision(b, self.rect)
+            if col:
+                if col[0] != 0:
+                    self.vel.x = 0
+                if col[1] != 0:
+                    self.vel.y = 0
+                self.move(-pygame.Vector2(col))
+    
+    def on_player_collision(self, player):
+        print("shd probably override this owo (player collision on enemy)")
 
-    def draw(self, window):
-        self.sprite.draw(self.rect, window)
+    def on_bullet_collision(self, bullet):
+        print("shd probably override this owo (bullet collision on enemy)")
 
-    def movement(self, playerRect, dt):
-        if self.stunTimer > 0:
-            self.stunTimer -= dt
-        else:
-            dir = [playerRect[0] - self.rect[0], playerRect[1] - self.rect[1]]
-            magnitude = math.sqrt(dir[0]**2 + dir[1]**2)
-            if magnitude != 0:
-                moveSpeed = self.speed/magnitude
-                self.forces[0] += moveSpeed * dir[0]
-                self.forces[1] += moveSpeed * dir[1]
+    def collision(self):
+        bullets = game.get_entities_by_type(Bullet)
+        player = game.get_entity_by_id("player")
 
-# VVVVVVVVVVV      REIMPLIMENT THESE TWO       VVVVVVVVVVVVV
+        if AABBCollision(player.rect, self.rect):
+            self.on_player_collision(player)
 
-class InvisEnemy:
-    def __init__(self, x, y):
-        self.rect = [x,y,30,30]
-        self.r = self.rect[2]/2
-        self.col = (0,0,255)
-        self.vel = [0,0]
-        self.speed = 400
-        self.health = 40
-        self.forces = [0,0]
-        self.invMass = 1
-        self.contactDmg = 5
-        self.contactKnockback = 200
-        self.stunTimer = 0
-        self.stunTime = 0.1
-        self.iFrames = 0
-        self.iFramesMax = 0.1
-        self.tDTimerMax = 1
-        self.tDTimer = 0
-        self.colchan = 0
-        self.tickCount = 0
-        self.vis = True
-        
-    def draw(self, window):
-        if self.health > 0 and self.vis == True:
-            drawCircle(window,((self.rect[0]+self.r,self.rect[1]+self.r),self.r),self.col)
-            if self.health < 10:
-                mlep = 8
-            else:
-                mlep = 0
-            drawText(window, f"{round(self.health)}", (255,255,255),(self.rect[0] + mlep, self.rect[1] - 5), 30)
+        for bullet in bullets:
+            if AABBCollision(bullet.rect, self.rect):
+                bullet.remove_self() # at some point handle this from the bullet
+                self.on_bullet_collision(bullet)
+    def get_copper_drop_qty(self):
+        # returns a random qty btwn the value and half the value of the enemy
+        # here you can add whatever modifiers like forager etc
+        return random.randint(round(self.value/2),self.value)
 
-    def update(self, window, player, dt, enemiesOnScreen, coinManager, particleManager):
-        self.dmgKnockback = player.knockback
-        if self.health > 0:
-            if self.tickCount > 0:
-                if self.tDTimer < 0:
-                    self.health -= player.hotShotDmg
-                    # FIRE
-                    self.colchan = 0.1
-                    self.tickCount -= 1
-                    self.tDTimer = self.tDTimerMax
-                    if self.health <= 0:
-                                coinDrop = round(random.randint(2,10) * player.lootMultiplier)
-                                coinManager.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,coinDrop)
-                                enemiesOnScreen.remove(self)
-                                # BLOOD
-                                particleManager.bloodExplosion(self.rect[0], self.rect[1])
-                else:
-                    self.tDTimer -= dt
-                    if self.colchan > 0:
-                        self.col = (255,69,0)
-                        self.colchan -= dt
-                    else:
-                        self.col = (255,0,0)
-            self.trackPlayer(player.rect, dt)
-            self.physics(dt)
-            self.collisions(player, enemiesOnScreen, coinManager, dt, particleManager)
-
-    def collisions(self, player, enemiesOnScreen, coinManager, dt, particleManager):
-        collisionCheck = AABBCollision(self.rect, player.rect)
-        if collisionCheck:
-            knockbackVec = scalMult(collisionCheck, self.contactKnockback/magnitude(collisionCheck))
-            player.takeDmg(self.contactDmg, scalMult(knockbackVec, -1), self)
-
-        if self.iFrames <= 0:
-            match player.weapon:
-                case "gun":
-                    for bullet in player.bullets:
-                        distVec = subtract(self.rect, bullet.rect)
-                        mag = magnitude(distVec)
-                        if mag < player.homing*150:
-                            bullet.vel = add(bullet.vel, scalMult(distVec, player.bulletSpeed/(4*mag)))
-                        check = AABBCollision(self.rect,bullet.rect)
-                        if check:
-                            if bullet.type == "haloBullet":
-                                self.health -= player.dmg*player.dmgMultiplier*4
-                            else:
-                                self.health -= player.dmg*player.dmgMultiplier
-                            self.iFrames = self.iFramesMax
-
-                            if mag != 0:
-                                self.vel = scalMult(distVec, self.dmgKnockback/mag)
-                                self.stunTimer = self.stunTime
-
-                            if player.hotShotDmg > 0:
-                                self.tickCount += 5
-                            
-                            if player.health < player.maxHealth:
-                                player.health += player.lifeSteal
-                            if bullet.pierces <= 0:
-                                player.bullets.remove(bullet)
-                            else:
-                                bullet.pierces -= 1
-                            if self.health <= 0:
-                                coinDrop = round(random.randint(2,10) * player.lootMultiplier)
-                                coinManager.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,coinDrop)
-                                enemiesOnScreen.remove(self)
-                                # BLOOD
-                                particleManager.bloodExplosion(self.rect[0], self.rect[1])
-                                break
-                case "sword": 
-                    for i in player.sword.swordsegments:
-                        distVec = subtract(self.rect, i)
-                        mag = magnitude(distVec)
-                        check = AABBCollision(self.rect,i)
-                        if check:
-                            self.health -= player.dmg*player.dmgMultiplier
-                            self.iFrames = self.iFramesMax
-                            
-
-                            if mag != 0:
-                                self.vel = scalMult(distVec, self.dmgKnockback/mag)
-                                self.stunTimer = self.stunTime
-
-                            if self.health <= 0:
-                                coinManager.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,random.randint(2,10))
-                                enemiesOnScreen.remove(self)
-                                # BLOOD
-                                particleManager.bloodExplosion(self.rect[0], self.rect[1])
-                                break
-
-        player.sword.swordsegments = []
-        self.iFrames -= dt
-
-        repulsionForce = 5000
-        distThreshold = self.rect[2]
-        for enemy in enemiesOnScreen:
-            distVec = subtract(self.rect, enemy.rect)
-            mag = magnitude(distVec)
-            if mag < distThreshold and mag != 0:
-                self.forces = add(self.forces, scalMult(distVec, repulsionForce/mag))
+    
+    def get_unit_vec_to_entity(self, player): # not only player just any entity
+        theta = vec_angle_to(pygame.Vector2(self.rect.center), pygame.Vector2(player.rect.center))
+        vec = pygame.Vector2(math.cos(theta), math.sin(theta))
+        return vec
 
     def physics(self, dt):
-        fric = 0.9
-        accel = [self.forces[0]*self.invMass,self.forces[1]*self.invMass]
-        self.vel[0] += accel[0]*dt
-        self.vel[1] += accel[1]*dt
-        self.rect[0] += self.vel[0]*dt
-        self.rect[1] += self.vel[1]*dt
-        self.vel = [self.vel[0]*fric,self.vel[1]*fric]
-        self.forces = [0,0]
-        if AABBCollision((-30, -30, 1980, 30),self.rect) and self.vel[1] < 0:
-            self.vel[1] *= -1
-        if AABBCollision((-30, 1080, 1980, 30),self.rect) and self.vel[1] > 0:
-            self.vel[1] *= -1
-        if AABBCollision((-30, -30, 30, 1080),self.rect) and self.vel[0] < 0:
-            self.vel[0] *= -1
-        if AABBCollision((1920, -30, 30, 1080),self.rect) and self.vel[0] > 0:
-            self.vel[0] *= -1
+        accel = self.forces*self.invMass
+        self.vel += accel*dt
 
-    def trackPlayer(self, playerRect, dt):
-        if self.stunTimer > 0:
-            self.stunTimer -= dt
-        else:
-            dir = [playerRect[0] - self.rect[0], playerRect[1] - self.rect[1]]
-            magnitude = math.sqrt(dir[0]**2 + dir[1]**2)
-            if magnitude < 200 and magnitude > 100:
-                self.vel = [0,0]
-            if magnitude < 100:
-                self.vis = True
-            else:
-                self.vis = False
-                
-            if magnitude != 0:
-                moveSpeed = self.speed/magnitude
-                self.forces[0] += moveSpeed * dir[0]
-                self.forces[1] += moveSpeed * dir[1]
+        self.move(self.vel*dt)
+        self.vel *= self.drag
 
-	
-class DasherEnemy:
-    def __init__(self, x, y):
-        self.rect = [x,y,30,30]
-        self.r = self.rect[2]/2
-        self.col = (0,0,255)
-        self.vel = [0,0]
-        self.speed = 800
-        self.health = 10
-        self.forces = [0,0]
-        self.invMass = 1
-        self.contactDmg = 5
-        self.contactKnockback = 200
-        self.stunTimer = 0
-        self.stunTime = 0.1
-        self.iFrames = 0
-        self.iFramesMax = 0.1
-        self.tDTimerMax = 1
-        self.tDTimer = 0
-        self.colchan = 0
-        self.tickCount = 0
-        self.vis = True
-        self.dashcool = 1
-        
+        self.forces = pygame.Vector2()
+
+        self.bound_to_screen()
+
+# ===================Enemy Types=================== #
+class Fly(Enemy):
+    def __init__(self, pos):
+        super().__init__()
+        self.rect = pygame.Rect(pos, (30,30))
+        self.col = (255,0,0)
+        self.speed = 1100
+        self.drag = 0.98
+        self.health = 15
+        self.repulsionThresh = 30
+        self.value = 10
+
+    def repulse(self):
+        enemies = game.get_entities_by_type(Fly)
+        for e in enemies:
+            vec = pygame.Vector2(e.rect.x-self.rect.x, e.rect.y-self.rect.y)
+            if vec.length() < self.repulsionThresh:
+                unitVec = self.get_unit_vec_to_entity(e)
+                e.add_force(unitVec*self.speed)
+                self.add_force(unitVec*-self.speed)
+
+    def movement(self):
+        player = game.get_entity_by_id("player")
+        self.add_force(self.get_unit_vec_to_entity(player)*self.speed)
+
+    def on_player_collision(self, player):
+        pass
+
+    def on_bullet_collision(self, bullet):
+        player = game.get_entity_by_id("player")
+        self.health -= player.dmg * player.dmgMultiplier
+
+        vec = bullet.vel.normalize()
+        self.vel = vec * player.kb
+        self.forces = pygame.Vector2()
+        if self.health <= 0:
+            self.remove_self()
+            spawn_copper(self.rect.center, self.get_copper_drop_qty())
+
+    def update(self, dt):
+        self.collision()
+        self.movement()
+        self.physics(dt)
+        self.bound_to_screen()
+        self.repulse()
+
     def draw(self, window):
-        if self.health > 0 and self.vis == True:
-            drawCircle(window,((self.rect[0]+self.r,self.rect[1]+self.r),self.r),self.col)
-            if self.health < 10:
-                mlep = 8
-            else:
-                mlep = 0
-            drawText(window, f"{round(self.health)}", (255,255,255),(self.rect[0] + mlep, self.rect[1] - 5), 30)
-
-    def update(self, window, player, dt, enemiesOnScreen, coinManager, particleManager):
-        self.dmgKnockback = player.knockback
-        if self.health > 0:
-            if self.tickCount > 0:
-                if self.tDTimer < 0:
-                    self.health -= player.hotShotDmg
-                    # FIRE PARTICLES
-
-                    self.colchan = 0.1
-                    self.tickCount -= 1
-                    self.tDTimer = self.tDTimerMax
-                    if self.health <= 0:
-                                coinDrop = round(random.randint(2,10) * player.lootMultiplier)
-                                coinManager.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,coinDrop)
-                                enemiesOnScreen.remove(self)
-                                for i in range(20):
-                                    # BLOOD PARTICLES
-                                    particleManager.bloodExplosion(self.rect[0], self.rect[1])
-                else:
-                    self.tDTimer -= dt
-                    if self.colchan > 0:
-                        self.col = (255,69,0)
-                        self.colchan -= dt
-                    else:
-                        self.col = (255,0,0)
-            self.trackPlayer(player.rect, dt)
-            self.physics(dt)
-            self.collisions(player, enemiesOnScreen, coinManager, dt, particleManager)
-
-    def collisions(self, player, enemiesOnScreen, coinManager, dt, particleManager):
-        collisionCheck = AABBCollision(self.rect, player.rect)
-        if collisionCheck:
-            knockbackVec = scalMult(collisionCheck, self.contactKnockback/magnitude(collisionCheck))
-            player.takeDmg(self.contactDmg, scalMult(knockbackVec, -1), self)
-
-        if self.iFrames <= 0:
-            match player.weapon:
-                case "gun":
-                    for bullet in player.bullets:
-                        distVec = subtract(self.rect, bullet.rect)
-                        mag = magnitude(distVec)
-                        if mag < player.homing*150:
-                            bullet.vel = add(bullet.vel, scalMult(distVec, player.bulletSpeed/(4*mag)))
-                        check = AABBCollision(self.rect,bullet.rect)
-                        if check:
-                            if bullet.type == "haloBullet":
-                                self.health -= player.dmg*player.dmgMultiplier*4
-                            else:
-                                self.health -= player.dmg*player.dmgMultiplier
-                            self.iFrames = self.iFramesMax
-
-                            if mag != 0:
-                                self.vel = scalMult(distVec, self.dmgKnockback/mag)
-                                self.stunTimer = self.stunTime
-
-                            if player.hotShotDmg > 0:
-                                self.tickCount += 5
-                            
-                            if player.health < player.maxHealth:
-                                player.health += player.lifeSteal
-                            if bullet.pierces <= 0:
-                                player.bullets.remove(bullet)
-                            else:
-                                bullet.pierces -= 1
-                            if self.health <= 0:
-                                coinDrop = round(random.randint(2,10) * player.lootMultiplier)
-                                coinManager.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,coinDrop)
-                                enemiesOnScreen.remove(self)
-                                # BLOOD
-                                particleManager.bloodExplosion(self.rect[0], self.rect[1])
-                                break
-                case "sword": 
-                    for i in player.sword.swordsegments:
-                        distVec = subtract(self.rect, i)
-                        mag = magnitude(distVec)
-                        check = AABBCollision(self.rect,i)
-                        if check:
-                            self.health -= player.dmg*player.dmgMultiplier
-                            self.iFrames = self.iFramesMax
-                            
-
-                            if mag != 0:
-                                self.vel = scalMult(distVec, self.dmgKnockback/mag)
-                                self.stunTimer = self.stunTime
-
-                            if self.health <= 0:
-                                coinManager.spawnCoin(self.rect[0]+self.rect[2]/2, self.rect[1]+self.rect[3]/2,random.randint(2,10))
-                                enemiesOnScreen.remove(self)
-                                # BLOOD
-                                particleManager.bloodExplosion(self.rect[0], self.rect[1])
-                                break
-
-        player.sword.swordsegments = []
-        self.iFrames -= dt
-
-        repulsionForce = 5000
-        distThreshold = self.rect[2]
-        for enemy in enemiesOnScreen:
-            distVec = subtract(self.rect, enemy.rect)
-            mag = magnitude(distVec)
-            if mag < distThreshold and mag != 0:
-                self.forces = add(self.forces, scalMult(distVec, repulsionForce/mag))
-
-    def physics(self, dt):
-        fric = 0.9
-        accel = [self.forces[0]*self.invMass,self.forces[1]*self.invMass]
-        self.vel[0] += accel[0]*dt
-        self.vel[1] += accel[1]*dt
-        self.rect[0] += self.vel[0]*dt
-        self.rect[1] += self.vel[1]*dt
-        self.vel = [self.vel[0]*fric,self.vel[1]*fric]
-        self.forces = [0,0]
-        if AABBCollision((-30, -30, 1980, 30),self.rect) and self.vel[1] < 0:
-            self.vel[1] *= -1
-        if AABBCollision((-30, 1080, 1980, 30),self.rect) and self.vel[1] > 0:
-            self.vel[1] *= -1
-        if AABBCollision((-30, -30, 30, 1080),self.rect) and self.vel[0] < 0:
-            self.vel[0] *= -1
-        if AABBCollision((1920, -30, 30, 1080),self.rect) and self.vel[0] > 0:
-            self.vel[0] *= -1
-    def trackPlayer(self, playerRect, dt):
-        if self.stunTimer > 0:
-            self.stunTimer -= dt
-        else:
-            if self.dashcool <= 0:
-                dirINX = (random.randint(0,100) -50)
-                dirINY = (random.randint(0,100) -50)
-                dir = [playerRect[0] - self.rect[0] + dirINX, playerRect[1] - self.rect[1] + dirINY]
-                self.speed = 20000
-                self.dashcool = random.randint(0,4) * 0.5
-            else:
-                self.speed = 800
-                dir = [playerRect[0] - self.rect[0], playerRect[1] - self.rect[1]]
-                self.dashcool -= dt
-            magnitude = math.sqrt(dir[0]**2 + dir[1]**2)
-            if magnitude != 0:
-                moveSpeed = self.speed/magnitude
-                self.forces[0] += moveSpeed * dir[0]
-                self.forces[1] += moveSpeed * dir[1]
+        drawCircle(window, (self.rect.center, self.rect.w/2), self.col)

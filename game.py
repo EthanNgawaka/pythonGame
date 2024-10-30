@@ -12,14 +12,18 @@ class Entity:
     # well maybe its not too bad that its not an interface
     # cause this is usefule
     def remove_self(self):
-        game.remove_entity(self)
+        if self.alive:
+            game.remove_entity(self)
+            self.alive = False
     def set_id(self, id):
         self.id = id
+        self.alive = True
 
 class Scene:
     def __init__(self):
         self.entities = {}
         self.drawPriorityLookup = {}
+        self.toAdd = []
         self.toRm = []
 
     def get_sorted_draw_indices(self):
@@ -30,10 +34,18 @@ class Scene:
     def get_top_draw_priority(self):
         limst = self.get_sorted_draw_indices()
         return limst[len(limst) - 1]
-
+    
     def add_entity(self, entity, id, drawPriority = None):
+        # queues the entity to be added next update call
+        self.toAdd.append((entity, id, drawPriority))
+
+    def actually_add_entity(self, entity, ent_id, drawPriority = None):
         # idk this seems a lil stupid but drawPriority dictates WHEN the
         # entity is drawn ie entity with 0 is drawn before 1 etc
+        id = ent_id
+        while id in self.entities:
+            id += str(random.randint(0,9))
+        print(id)
         entity.set_id(id)
         self.entities[id] = entity
         if drawPriority is not None:
@@ -45,18 +57,37 @@ class Scene:
 
     def remove_entity(self, entity):
         self.toRm.append(entity.id)
+
+    def handle_adding(self):
+        for params in self.toAdd:
+            self.actually_add_entity(params[0], params[1], params[2])
+        self.toAdd = []
+
+    def get_draw_priority_from_id(self, id):
+        id_to_priority = {v: k for k, v in self.drawPriorityLookup.items()}
+        return id_to_priority[id]
     
+    def handle_removing(self):
+        for id in self.toRm:
+            try:
+                del self.entities[id]
+                del self.drawPriorityLookup[self.get_draw_priority_from_id(id)]
+            except KeyError:
+                print(id + " doesnt exist")
+        self.toRm = []
+
     def update(self, dt):
+        self.handle_adding()
+
         for [key, entity] in self.entities.items():
             entity.update(dt)
+
+        self.handle_removing()
+
 
     def draw(self, window):
         for priority in self.get_sorted_draw_indices():
             self.entities[self.drawPriorityLookup[priority]].draw(window)
-
-        for id in self.toRm:
-            del self.entities[id]
-        self.toRm = []
 
     def cleanup(self):
         pass # idk if i even need this but called when scene is switching
