@@ -1,7 +1,93 @@
 from library import *
 from enemies import *
 
-class Bullet:
+from game import *
+
+class Player(Entity):
+    def __init__(self, x, y):
+        w, h = 40, 40
+        self.rect = pygame.Rect(x, y, w, h)
+        self.vel = pygame.Vector2() # [0,0]
+        self.curr_weapon = ""
+
+        self.col = (127, 35, 219)
+        
+        # physics consts #
+        self.drag = 0.9
+        # -------------- #
+
+        # attributes #
+        self.speed = 70
+        # ---------- #
+
+        self.controls = {
+                "up": pygame.K_w,
+                "left": pygame.K_a,
+                "down": pygame.K_s,
+                "right": pygame.K_d,
+        }
+
+    def move(self, vec):
+        self.rect = self.rect.move(vec)
+
+    def physics(self, dt):
+        self.move(self.vel*dt)
+        self.vel *= self.drag
+
+    def input(self):
+        self.movement()
+        self.shooting()
+
+    def shooting(self):
+        theta = vec_angle_to(self.rect.center, game.mouse.pos)
+
+        if game.mouse.pressed[0]:
+            print("SHOOT")
+
+    def movement(self):
+        movementDir = pygame.Vector2()
+        if game.key_down(self.controls["up"]):
+            movementDir.y -= 1
+        if game.key_down(self.controls["down"]):
+            movementDir.y += 1
+        if game.key_down(self.controls["left"]):
+            movementDir.x -= 1
+        if game.key_down(self.controls["right"]):
+            movementDir.x += 1
+
+        if movementDir.length() != 0:
+            # stuff like this works because of pygame.Vector2()
+            # super cool i dont have to implement this myself
+            self.vel += movementDir.normalize() * self.speed
+
+    # always keep update and draw at bottom
+    def update(self, dt):
+        self.input()
+        self.physics(dt)
+
+    def draw(self, window):
+        drawCircle(window, (self.rect.center, self.rect.w/2), self.col)
+
+class Bullet(Entity):
+    def __init__(self, pos, vel):
+        self.r = 50
+        self.rect = pygame.Rect(pos, (self.r*2, self.r*2))
+        self.vel = vel
+
+    def move(self, vec):
+        self.rect = self.rect.move(vec)
+
+    def update(self, dt):
+        self.move(vel)
+        if not AABBCollision(self.rect, [0,0,W,H]):
+            self.remove_self()
+
+    def draw(self, window):
+        drawCircle(window, (self.rect.center, self.r), (255,255,0))
+
+# ------------------------------------------------------------------- #
+
+class old_Bullet:
     def __init__(self,bx,by,v,dmg,pierces,bulletType="standardBullet"):
         w, h = dmg, dmg
         self.r = w / 2
@@ -66,8 +152,6 @@ class MaceProto:
         self.retract = False
         self.swinging = False
         self.sprite = Spritesheet((self.x,self.y,30,30), "assets/mace.png", [32,32], 0)
-        
-        
         
     def physics(self, dt, W, H, px, py):
         if AABBCollision((-30, -30, W, 30),(self.x, self.y, self.r * 2, self.r * 2)) and self.vel[1] < 0:
@@ -148,7 +232,6 @@ class MaceProto:
             self.sprite.addState("head", 0, 0)
             self.sprite.rotate(-57.2958 * self.theta)
             self.sprite.draw((self.x,self.y,60,60), window)
-            shadowManager.addShadowToRender(add(getRectCenter((self.x,self.y,50,50)), [-10, 10]), self.r, (50,0,50,128)) # shadow
 
 class Sword:
     def __init__(self):
@@ -175,7 +258,7 @@ class Sword:
                 drawCircle(window, ((sx,sy), 5), (255,255,255))
 
 
-class Player:
+class old_Player:
     def __init__(self, x, y):
 
 # physics, consts, timers, and  rect stuff
@@ -682,8 +765,6 @@ class Player:
         if self.foragerval <= 1:
             self.lootMultiplier = 1.25 + (0.25 * self.foragerval)
 
-        shadowManager.addShadowToRender(add(getRectCenter(self.rect), [-self.rect[2]/20,self.rect[3]/8]), self.r, (50,0,50,128)) # shadow
-            
     def draw(self, window, player, dt):
 
         drawText(window, f"Coins: {self.coins}", (255,255,0), (10,50), 40)
@@ -722,7 +803,3 @@ class Player:
             # draw card for active
         self.mace.draw(window)
 
-
-
-
-        

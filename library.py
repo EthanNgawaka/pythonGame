@@ -9,47 +9,18 @@ import time
 W = 1540
 H = 870
 
-keys = [0] * 512  #init keys to avoid index error (pygame has 512 keycodes)
-# to access the state of a key (true for down false for up) use "keys[pygame.KEYCODE]"
-# eg) if keys[pygame.KEY_a]:
-#         print("a down")
-
-def getRectCenter(rect):
-    return [rect[0]+rect[2]/2, rect[1]+rect[3]/2]
-
-class ShadowManager:
-    def __init__(self):
-        self.shadows = [] # a shadow has a pos, radius, and col [[x,y],r,(r,g,b,a)]
-        self.surface = pygame.Surface((W, H), pygame.SRCALPHA)
-
-    def renderShadows(self):
-        for shadow in self.shadows:
-            pygame.draw.circle(self.surface, shadow[2], [shadow[0][0]-camera.pos[0], shadow[0][1]-camera.pos[1]], shadow[1])
-
-        self.shadows = []
-    
-    def addShadowToRender(self, pos, r, col):
-        self.shadows.append([pos, r, col])
-
-    def draw(self, window):
-        self.surface.fill((0,0,0,0))
-        self.renderShadows()
-        window.blit(self.surface, (0, 0))
-
-shadowManager = ShadowManager()
-
+# classes TODO( need to seperate these out )
 class Mouse:
     def __init__(self):
         self.pressed = [False,False]
         self.down = [False,False]
-        self.x = 0
-        self.y = 0
+        self.pos = pygame.Vector2()
     
     def update(self):
         self.pressed = [False,False]
         mousePos = pygame.mouse.get_pos()
-        self.x = mousePos[0]
-        self.y = mousePos[1]
+        self.pos.x = mousePos[0]
+        self.pos.y = mousePos[1]
         pressed = pygame.mouse.get_pressed(num_buttons=3)
         if pressed[0]:
             if self.down[0]:
@@ -70,7 +41,7 @@ class Mouse:
         else:
             self.down[1] = False
 
-mouse = Mouse()
+# TODO( integrate with game class )
 class Camera:
     def __init__(self, trackingEasing=0.1):
         self.pos = [0,0]
@@ -98,52 +69,7 @@ class Camera:
             self.shakeTimer -= dt
             shakeVec = [random.uniform(-1,1)*self.shakeIntensity, random.uniform(-1,1)*self.shakeIntensity]
             self.pos = vecLerp(self.pos, add(self.pos,shakeVec), self.shakeEasing)
-
 camera = Camera()
-
-def lerp(i, j, t):
-    return i * (1-t) + j*t
-
-def rectLerp(rect1, rect2, t):
-    outputX = lerp(rect1[0], rect2[0], t)
-    outputY = lerp(rect1[1], rect2[1], t)
-    return [outputX, outputY, rect1[2], rect1[3]]
-
-def vecLerp(vec1, vec2, t):
-    return [lerp(vec1[0], vec2[0], t), lerp(vec1[1], vec2[1], t)] 
-
-def scalMult(vec, scal):
-    return [vec[0]*scal, vec[1]*scal]
-
-def addRects(a,b):
-    return [a[0]+b[0], a[1]+b[1], a[2]+b[2], a[3]+b[3]]
-
-def add(a, b):
-    return [a[0]+b[0], a[1]+b[1]]
-
-def subtractRects(a,b):
-    return [a[0]-b[0], a[1]-b[1], a[2]-b[2], a[3]-b[3]]
-
-def subtract(a, b):
-    return [a[0]-b[0], a[1]-b[1]]
-
-
-def magnitude(a):
-    return math.sqrt(a[0]**2 + a[1]**2)
-
-def init(windowW, windowH, caption):
-    pygame.init()
-    window = pygame.display.set_mode((windowW,windowH))#, flags=pygame.SCALED | pygame.HIDDEN)
-    #display_info = pygame.display.Info()
-    #SCALE = (display_info.current_w/windowW, display_info.current_h/windowH)
-    #nativeWindow = pg_sdl2.Window.from_display_module()
-    #nativeWindow.size = (windowW * SCALE[0], windowH * SCALE[1])
-    #nativeWindow.position = pg_sdl2.WINDOWPOS_CENTERED
-    #nativeWindow.show()
-
-    #pygame.display.toggle_fullscreen()
-    pygame.display.set_caption(caption)
-    return window
 
 class Image:
     def __init__(self, src, x, y, w, h):
@@ -163,7 +89,7 @@ class Image:
         self.h = newRect[3]
 
     def draw(self, window):
-        window.blit(pygame.transform.scale(self.img, (self.w, self.h)), (self.x-camera.pos[0], self.y-camera.pos[1]))
+        window.blit(pygame.transform.scale(self.img, (self.w, self.h)), (self.x, self.y))
 
 class Spritesheet:
     def __init__(self, rect, src, spriteSize, secsBetweenFrames, bounce=False): # ([x,y,w,h], filename, [spriteW, spriteH], fps)
@@ -232,6 +158,31 @@ class Spritesheet:
         state = self.states[self.state]
         return self.get_sprite(self.currFrame*self.spriteW, state[1]*self.spriteH)
 
+# init funcs
+def init(windowW, windowH, caption):
+    pygame.init()
+    window = pygame.display.set_mode((windowW,windowH))#, flags=pygame.SCALED | pygame.HIDDEN)
+    #display_info = pygame.display.Info()
+    #SCALE = (display_info.current_w/windowW, display_info.current_h/windowH)
+    #nativeWindow = pg_sdl2.Window.from_display_module()
+    #nativeWindow.size = (windowW * SCALE[0], windowH * SCALE[1])
+    #nativeWindow.position = pg_sdl2.WINDOWPOS_CENTERED
+    #nativeWindow.show()
+
+    #pygame.display.toggle_fullscreen()
+    pygame.display.set_caption(caption)
+    return window
+
+# misc math funcs
+def vec_angle_to(A, B):
+    AtoB = B - A
+    return math.atan2(AtoB.y, AtoB.x)
+def degs_to_rads(degs):
+    return math.pi*degs/180
+def rads_to_degs(rads):
+    return 180*rads/math.pi
+def lerp(i, j, t):
+    return i * (1-t) + j*t
 def AABBCollision(rect1, rect2): # rect = (x,y,w,h) returns min trans vec if true
     # actual aabb logic, never done it in a list b4 thought itd look neater
     checks = [
@@ -254,6 +205,7 @@ def AABBCollision(rect1, rect2): # rect = (x,y,w,h) returns min trans vec if tru
     mtv = (xtv,0) if abs(xtv) < abs(ytv) else (0,ytv)
     return mtv
 
+# drawing funcs
 def drawText(window, string, col, pos, size, drawAtCenter=False, drawAsUI=False):
     font = pygame.font.SysFont("Arial",size)
     img = font.render(string, True, col)
@@ -261,7 +213,7 @@ def drawText(window, string, col, pos, size, drawAtCenter=False, drawAsUI=False)
     if drawAsUI:
         drawPos = pos
     else:
-        drawPos = subtract(pos, camera.pos)
+        drawPos = pos
 
     if drawAtCenter:
         textRect = img.get_rect()
@@ -280,36 +232,8 @@ def drawRect(window, rect, col, width=0): # col = (R, G, B, [A])
         pass
     
     s.fill((col[0],col[1],col[2]))
-    window.blit(s, (rect[0]-camera.pos[1], rect[1]-camera.pos[0]))
+    window.blit(s, (rect[0], rect[1]))
 
 def drawCircle(window, circle, col): # circle = (center, radius)
-    pygame.draw.circle(window, col, subtract(circle[0], camera.pos), circle[1])
+    pygame.draw.circle(window, col, circle[0], circle[1])
 
-def enlargeRect(inputRect, a, b, preserveBottomVerticesY=False):
-    rect = inputRect
-    transVec = [0,0]
-    if preserveBottomVerticesY:
-        transVec = [-(rect[0]+rect[2]/2),-(rect[1]+rect[3])]
-    else:
-        transVec = [-(rect[0]+rect[2]/2),-(rect[1]+rect[3]/2)]
-
-    vertices = [
-        [rect[0],rect[1]],
-        [rect[0]+rect[2],rect[1]],
-        [rect[0]+rect[2],rect[1]+rect[3]],
-        [rect[0], rect[1]+rect[3]]
-    ]
-
-    for i in range(len(vertices)):
-        vertices[i] = add(vertices[i], transVec)
-
-    L = [[a,0],[0,b]];
-
-    for i in range(len(vertices)):
-        vertices[i] = [a*vertices[i][0], b*vertices[i][1]]
-    
-    for i in range(len(vertices)):
-        vertices[i] = subtract(vertices[i], transVec);
-
-    rect = [vertices[0][0],vertices[0][1],vertices[1][0]-vertices[0][0],vertices[2][1]-vertices[0][1]]
-    return rect;
