@@ -16,20 +16,19 @@ class Enemy(Entity):
         self.forces += vec
 
     def bound_to_screen(self): # this is temp
-        bounds = [
-            pygame.Rect(-100,-100, 100, H+200), # left
-            pygame.Rect(W,-100, 100, H+200), # right
-            pygame.Rect(-100,-100, W+200, 100), # top
-            pygame.Rect(-100, H, W+200, 100), # bottom
-        ]
-        for b in bounds:
-            col = AABBCollision(b, self.rect)
-            if col:
-                if col[0] != 0:
-                    self.vel.x = 0
-                if col[1] != 0:
-                    self.vel.y = 0
-                self.move(-pygame.Vector2(col))
+        if self.rect.x < 0 and self.vel.x < 0:
+            self.rect.x = 0
+            self.vel.x = 0
+        if self.rect.x+self.rect.w > W and self.vel.x > 0:
+            self.rect.x = W - self.rect.w
+            self.vel.x = 0
+
+        if self.rect.y < 0 and self.vel.y < 0:
+            self.rect.y = 0
+            self.vel.y = 0
+        if self.rect.y+self.rect.h > H and self.vel.y > 0:
+            self.rect.y = H - self.rect.h
+            self.vel.y = 0
     
     def on_player_collision(self, player):
         print("shd probably override this owo (player collision on enemy)")

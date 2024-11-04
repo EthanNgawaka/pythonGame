@@ -30,6 +30,7 @@ class Scene:
         self.drawPriorityLookup = {}
         self.toAdd = []
         self.toRm = []
+        self.UIPriority = []
 
     def get_sorted_draw_indices(self):
         sorted_list = list(self.drawPriorityLookup.keys()).copy()
@@ -105,6 +106,15 @@ class Scene:
         self.handle_adding()
 
         for [key, entity] in self.entities.items():
+            if len(self.UIPriority) > 0:
+                try:
+                    topTag = self.UIPriority[len(self.UIPriority)-1]
+                    if topTag == entity.uiTag:
+                        entity.update(dt)
+                except AttributeError:
+                    pass
+                continue
+
             entity.update(dt)
 
         self.handle_removing()

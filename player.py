@@ -165,7 +165,7 @@ class Bullet(Entity):
         self.vel = vel
 
     def get_size(self,x):
-        return max(x**1.3, 4)
+        return max(x*1.6, 4)
 
     def update(self, dt):
         self.move(self.vel)
