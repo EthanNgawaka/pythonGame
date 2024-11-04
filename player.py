@@ -1,4 +1,37 @@
 from game import *
+from deck import *
+
+class PlayerUI(Entity):
+    def __init__(self, player):
+        self.player = player
+        self.rect = pygame.Rect(100,100,player.maxHealth*3,30)
+
+    def draw_hp_bar(self, window):
+        drawRect(window, self.rect, (255,0,0))
+
+        hpDiff = self.player.maxHealth - self.player.health
+        if self.player.health > 0:
+            actualHp = self.rect.inflate(-hpDiff*3,0).move(-hpDiff*3/2,0)
+            # super hacky lol but its short sooooo
+            drawRect(window, actualHp, (0,255,0))
+
+    def draw_copper(self, window):
+        drawText(window, f"Copper: {self.player.copper}", (255, 153, 51), (100,150), 40)
+
+    def draw_stats(self, window):
+        i = 0
+        for stat_name, stat_val in self.player.get_stats().items():
+            drawText(window, f"{stat_name}: {stat_val}", (0,0,0), (50,250+40*i), 20)
+            i+=1
+
+    def draw(self, window):
+        self.draw_hp_bar(window)
+        self.draw_copper(window)
+        if DEBUG:
+            self.draw_stats(window)
+
+    def update(self, dt):
+        pass
 
 class Player(Entity):
     def __init__(self, x, y):
@@ -19,6 +52,10 @@ class Player(Entity):
         # -------------- #
 
         # attributes #
+        # (NOT implemented) #
+        self.lifesteal = 0
+        self.piercing = 0
+
         # (implemented) #
         self.speed = 50
         self.maxHealth = 100
@@ -45,9 +82,23 @@ class Player(Entity):
         # ------ #
 
         # Deck (Chips/Inventory) read deck.py for more info
+        self.deck = Deck(self)
 
-    def move(self, vec):
-        self.rect = self.rect.move(vec)
+    def get_stats(self):
+        return {
+            "atkRate":self.atkRate,
+            "speed":self.speed,
+            "dmg":self.dmg,
+            "maxHealth":self.maxHealth,
+            "atkRateMultiplier":self.atkRateMultiplier,
+            "kb":self.kb,
+            "bulletCount":self.bulletCount,
+            "speedInaccuracy":self.speedInaccuracy,
+            "inaccuracy":self.inaccuracy,
+            "bulletSpeed":self.bulletSpeed,
+            "lifesteal":self.lifesteal,
+            "piercing":self.piercing,
+        }
 
     def physics(self, dt):
         self.move(self.vel*dt)
@@ -114,12 +165,7 @@ class Bullet(Entity):
         self.vel = vel
 
     def get_size(self,x):
-        # idk yet i just fucked around in desmos with tanh(x)
-        # kinda assumes 30 is the highest dmg youll get
-        return 10*math.tanh(0.1*(x-15))+17
-
-    def move(self, vec):
-        self.rect = self.rect.move(vec)
+        return max(x**1.3, 4)
 
     def update(self, dt):
         self.move(self.vel)

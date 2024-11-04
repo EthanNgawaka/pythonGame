@@ -18,6 +18,11 @@ class Entity:
     def set_id(self, id):
         self.id = id
         self.alive = True
+    def move(self, vec):
+        try:
+            self.rect = self.rect.move(vec)
+        except Exception as e:
+            print("rect doesnt exist for this entity! id: " + self.id)
 
 class Scene:
     def __init__(self):
@@ -27,7 +32,7 @@ class Scene:
         self.toRm = []
 
     def get_sorted_draw_indices(self):
-        sorted_list= list(self.drawPriorityLookup.keys()).copy()
+        sorted_list = list(self.drawPriorityLookup.keys()).copy()
         sorted_list.sort()
         return sorted_list
     
@@ -39,21 +44,41 @@ class Scene:
         # queues the entity to be added next update call
         self.toAdd.append((entity, id, drawPriority))
 
+    def init_entity(self, entity, ent_id, drawPriority = None):
+        self.actually_add_entity(entity, ent_id, drawPriority)
+
+    def get_min_draw_priority(self):
+        sorted_dps = self.get_sorted_draw_indices()
+        last_dp = None
+        for i in sorted_dps:
+            if last_dp is not None:
+                if abs(i - last_dp) > 1:
+                    return last_dp + 1
+            last_dp = i
+
+        return self.get_top_draw_priority()+1
+
     def actually_add_entity(self, entity, ent_id, drawPriority = None):
         # idk this seems a lil stupid but drawPriority dictates WHEN the
         # entity is drawn ie entity with 0 is drawn before 1 etc
+        # PASS IN "UI" for ui elements that are not the root node
         id = ent_id
         while id in self.entities:
             id += str(random.randint(0,9))
-        print(id)
         entity.set_id(id)
         self.entities[id] = entity
         if drawPriority is not None:
-            self.drawPriorityLookup[drawPriority] = id
+            dp = drawPriority
+            if drawPriority == "UI":
+                dp = self.get_top_draw_priority() + 1
+                # so root node of UI will always be like 1000 or whatever so 
+                # for leaves just make it so its drawn on top
+
+            self.drawPriorityLookup[dp] = id
             return
 
-        # if no drawPriority provided just draw on top of everything
-        self.drawPriorityLookup[self.get_top_draw_priority() + 1] = id
+        # if no drawPriority provided just draw next smallest one
+        self.drawPriorityLookup[self.get_min_draw_priority()] = id
 
     def remove_entity(self, entity):
         self.toRm.append(entity.id)
@@ -110,7 +135,10 @@ class Game:
         # dif being that pressed only returns true on the first frame the key is pressed
     
     def get_entity_by_id(self, id):
-        return self.curr_scene.entities[id]
+        try:
+            return self.curr_scene.entities[id]
+        except KeyError as e:
+            print("no entity of id: " + id)
 
     def get_entities_by_type(self, class_type):
         out = []

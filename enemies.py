@@ -12,9 +12,6 @@ class Enemy(Entity):
         self.forces = pygame.Vector2()
         self.value = 10
 
-    def move(self, vec):
-        self.rect = self.rect.move(vec)
-
     def add_force(self, vec):
         self.forces += vec
 

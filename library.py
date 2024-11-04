@@ -9,18 +9,22 @@ import time
 W = 1540
 H = 870
 
+DEBUG = True
+
 # classes TODO( need to seperate these out )
 class Mouse:
     def __init__(self):
         self.pressed = [False,False]
         self.down = [False,False]
         self.pos = pygame.Vector2()
+        self.rect = pygame.Rect(0,0,0,0)
     
     def update(self):
         self.pressed = [False,False]
         mousePos = pygame.mouse.get_pos()
         self.pos.x = mousePos[0]
         self.pos.y = mousePos[1]
+        self.rect = pygame.Rect(self.pos.x,self.pos.y,0,0)
         pressed = pygame.mouse.get_pressed(num_buttons=3)
         if pressed[0]:
             if self.down[0]:

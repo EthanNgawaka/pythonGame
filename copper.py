@@ -41,9 +41,6 @@ class Copper(Entity):
                     self.vel.y = 0
                 self.move(-pygame.Vector2(col))
 
-    def move(self, vec):
-        self.rect = self.rect.move(vec)
-
     def collision(self, player):
         if AABBCollision(self.rect, player.rect):
             player.copper += 1

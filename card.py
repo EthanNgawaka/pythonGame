@@ -1,0 +1,20 @@
+from game import *
+
+class Card(Entity):
+    def __init__(self, name, basePrice):
+        self.name = name
+        self.basePrice = basePrice
+        self.rect = pygame.Rect(W,H,128,128)
+        self.player = game.get_entity_by_id("player")
+
+    def update(self, dt):
+        self.passive()
+
+    def draw(self, window):
+        pass
+
+    def on_pickup(self): # triggered on pickup
+        pass
+
+    def passive(self): # triggered every frame
+        pass
