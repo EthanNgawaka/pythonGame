@@ -109,7 +109,7 @@ class Scene:
             if len(self.UIPriority) > 0:
                 try:
                     topTag = self.UIPriority[len(self.UIPriority)-1]
-                    if topTag == entity.uiTag:
+                    if topTag == entity.uiTag or entity.isUI:
                         entity.update(dt)
                 except AttributeError:
                     pass

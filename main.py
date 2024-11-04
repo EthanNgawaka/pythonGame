@@ -33,12 +33,14 @@ def main():
     player = Player(W/2, H/2)
     playerUi = PlayerUI(player)
     shop = Shop()
+    wave = Wave()
+    wave.length = 1
     mainScene.init_entity(bg, "bg", -1)
     mainScene.init_entity(player, "player", 0)
     mainScene.init_entity(playerUi, "playerUI", 100)
     mainScene.init_entity(shop, "shop")
     mainScene.init_entity(MainMenu(), "mainmenu")
-    mainScene.init_entity(Wave(), "wave")
+    mainScene.init_entity(wave, "wave")
 
     game.add_scene(mainScene, "main")
     game.switch_to_scene("main")

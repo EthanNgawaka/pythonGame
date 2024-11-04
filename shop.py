@@ -25,6 +25,7 @@ class Shop(Entity):
         self.isOpen = False
         self.UIRoot = None
         self.uiTag = "shop"
+        self.isUI = True
 
     def gen_cards(self, rarity):
         for i in range(3):

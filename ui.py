@@ -50,6 +50,7 @@ class Text:
 
 class Label(UI_Element):
     def __init__(self, root_entity, relative_rect, text):
+        self.isUI = True
         # text is an obj:
         # {"string": string, "col": color, "size": size in pixels}
         self.rect = relative_rect
@@ -68,6 +69,7 @@ class Button(UI_Element):
     def __init__(self, root_entity, relative_rect, col, text, onAction):
         # text is an obj:
         # {"string": string, "col": color, "size": size in pixels}
+        self.isUI = True
         self.rect = relative_rect
         self.root = root_entity
         self.col = col
@@ -84,7 +86,10 @@ class Button(UI_Element):
         self.highlightCol = self.highlightCol.lerp(self.baseHighlightCol, 0.1)
         self.drawingInflation = self.drawingInflation.lerp(pygame.Vector2(), 0.1)
 
-        if AABBCollision(self.get_relative_rect(), game.mouse.rect):
+        queue = game.curr_scene.UIPriority
+        print(queue)
+        isTopOfQueue = queue[len(queue)-1] == self.uiTag if len(queue) > 0 else False
+        if AABBCollision(self.get_relative_rect(), game.mouse.rect) and isTopOfQueue:
             self.hovered = True
             if game.mouse.pressed[0]:
                 self.onAction(self)
@@ -101,6 +106,7 @@ class Button(UI_Element):
 
 class MainMenu(Entity):
     def __init__(self):
+        self.isUI = True
         w, h = W*0.6, H*0.7
         self.openRect = pygame.Rect((W-w)/2,(H-h)/2,w,h)
         self.closeRect = pygame.Rect((W-w)/2,H*1.2,w,h)
