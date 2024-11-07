@@ -5,15 +5,28 @@ class PlayerUI(Entity):
     def __init__(self, player):
         self.player = player
         self.rect = pygame.Rect(100,100,player.maxHealth*3,30)
+        self.isUI = True
+        self.greenBarW = self.rect.w
+        self.orangeBarW = self.rect.w
+        self.oldHpTimer = 0
+        self.orangeBarDelay = 1
 
     def draw_hp_bar(self, window):
-        drawRect(window, self.rect, (255,0,0))
+        diffFromMaxHealth = self.player.maxHealth - self.player.health
 
-        hpDiff = self.player.maxHealth - self.player.health
-        if self.player.health > 0:
-            actualHp = self.rect.inflate(-hpDiff*3,0).move(-hpDiff*3/2,0)
-            # super hacky lol but its short sooooo
-            drawRect(window, actualHp, (0,255,0))
+        greenRect = self.rect.copy()
+        greenRect.w = self.greenBarW
+        self.greenBarW = lerp(self.greenBarW, self.player.health*3, 0.02)
+
+        orangeRect = self.rect.copy()
+        orangeRect.w = self.orangeBarW
+        if self.oldHpTimer <= 0:
+            self.orangeBarW = lerp(self.orangeBarW , self.player.health*3, 0.1)
+
+        drawRect(window, self.rect, (255,0,0))
+        drawRect(window, orangeRect, (255,140,0))
+        drawRect(window, greenRect, (0,255,0))
+
 
     def draw_copper(self, window):
         drawText(window, f"Copper: {self.player.copper}", (255, 153, 51), (100,150), 40)
@@ -31,7 +44,9 @@ class PlayerUI(Entity):
             self.draw_stats(window)
 
     def update(self, dt):
-        pass
+        self.oldHpTimer -= dt
+        if self.player.invincibilityTimer > 0:
+            self.oldHpTimer = self.orangeBarDelay
 
 class Player(Entity):
     def __init__(self, x, y):
@@ -55,6 +70,7 @@ class Player(Entity):
         # (NOT implemented) #
         self.lifesteal = 0
         self.piercing = 0
+        self.iFrames = 1.5
 
         # (implemented) #
         self.speed = 50
@@ -73,36 +89,59 @@ class Player(Entity):
         # (NOT implemented) #
         # ---------- #
 
+        # random stuff #
         self.copper = 0 # coins
         self.health = self.maxHealth
 
+        self.flashFreq = 0.2
+        # ---------- #
+
         # timers #
         self.bulletCooldown = 0
-
+        self.invincibilityTimer = 0
         # ------ #
 
-        # Deck (Chips/Inventory) read deck.py for more info
+        # Deck (Chips/Inventory)
+        # the deck is an object that holds all the cards
+        # when a shop is opened the cards are shown and when bought
+        # a func called on_pickup is called
+        # (this is ur basic stat changes, ie on_pickup(): player.speed += 10)
+        # there is a passive func too which is updated every frame
+        # TODO actives arent implemented yet but im going there next
         self.deck = Deck(self)
 
     def get_stats(self):
-        return {
-            "atkRate":self.atkRate,
-            "speed":self.speed,
-            "dmg":self.dmg,
-            "maxHealth":self.maxHealth,
-            "atkRateMultiplier":self.atkRateMultiplier,
-            "kb":self.kb,
-            "bulletCount":self.bulletCount,
-            "speedInaccuracy":self.speedInaccuracy,
-            "inaccuracy":self.inaccuracy,
-            "bulletSpeed":self.bulletSpeed,
-            "lifesteal":self.lifesteal,
-            "piercing":self.piercing,
-        }
+        # TODO: would be cool to have a slider for each stat in debug
+        # for testing purposes
+
+        # this is awesome i didnt know this but you can
+        # use getattr(object, "name_of_attr")
+        # to get the attribute of an object from a string
+        # ie you know the player obj has an attr "health"
+        # you can do getattr(player, "health) and it returns player.health
+        # super neat for this so all you need to do for new player
+        # attributes is add it to the stat_names list below 
+        # (same for setattr)
+        stat_names = [
+            "atkRate", "speed", "dmg", "maxHealth",
+            "atkRateMultiplier", "kb", "bulletCount",
+            "speedInaccuracy", "inaccuracy", "bulletSpeed",
+            "lifesteal", "piercing"
+        ]
+        out_dict = {}
+        for stat_name in stat_names:
+            out_dict[stat_name] = getattr(self, stat_name)
+
+        return out_dict
 
     def physics(self, dt):
         self.move(self.vel*dt)
         self.vel *= self.drag
+
+    def hit(self, ent):
+        if self.invincibilityTimer <= 0:
+            self.health -= ent.dmg
+            self.invincibilityTimer = self.iFrames
 
     def input(self):
         self.movement()
@@ -125,7 +164,7 @@ class Player(Entity):
                         rand_angle = random.uniform(-self.inaccuracy, self.inaccuracy)
                         self.spawn_bullet(self.rect.center, theta + rand_angle)
 
-                    self.bulletCooldown = self.atkRate * self.atkRateMultiplier
+                    self.bulletCooldown = self.atkRate / self.atkRateMultiplier
 
     def movement(self):
         movementDir = pygame.Vector2()
@@ -150,8 +189,13 @@ class Player(Entity):
 
         # increment / decrement all timers
         self.bulletCooldown -= dt
+        self.invincibilityTimer -= dt
 
     def draw(self, window):
+        # flashing logic
+        if self.invincibilityTimer > 0 and round(self.invincibilityTimer/self.flashFreq) % 2 == 0:
+            return
+
         drawCircle(window, (self.rect.center, self.rect.w/2), self.col)
 
 # ======================================================================= #

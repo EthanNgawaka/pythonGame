@@ -14,12 +14,14 @@ class UI_Element(Entity):
         return self.rect.move(root_rel_rect.x, root_rel_rect.y)
 
 class UI_Root(Entity):
-    def __init__(self, root_entity, relative_rect, col):
+    def __init__(self, root_entity, relative_rect, fill_col, outline_col):
         self.rect = relative_rect
         self.root = root_entity
-        self.col = col
         self.elements = []
         self.isUI = True
+        self.outline_col = outline_col
+        self.fill_col = fill_col
+        self.col = (self.fill_col, self.outline_col)
 
     def add_element(self, elem):
         self.elements.append(elem)
@@ -40,7 +42,7 @@ class UI_Root(Entity):
                 el.remove_self()
 
     def draw(self, window):
-        drawRect(window, self.rect.move(self.root.rect.x, self.root.rect.y), self.col)
+        drawRect(window, self.rect.move(self.root.rect.x, self.root.rect.y), self.col, 10)
 
 class Text:
     def __init__(self, string, col, size):
@@ -60,6 +62,7 @@ class Label(UI_Element):
 
     def update(self, dt):
         pass
+
     def draw(self, window):
         drawingRect = self.get_relative_rect()
         drawText(window, self.text.string, self.text.col, drawingRect.center, self.text.size, True)
@@ -81,20 +84,34 @@ class Button(UI_Element):
         self.drawingInflation = pygame.Vector2()
         self.uiTag = self.root.uiTag
 
+        self.onActionDelay = 0.1;
+        self.onActionTimer = 0;
+
+        self.disabled = False;
+
+    def toggle(self):
+        self.disabled = not self.disabled;
+
     def update(self, dt):
-        self.hovered = False
+        self.hovered = AABBCollision(self.get_relative_rect(), game.mouse.rect)
         self.highlightCol = self.highlightCol.lerp(self.baseHighlightCol, 0.1)
         self.drawingInflation = self.drawingInflation.lerp(pygame.Vector2(), 0.1)
 
         queue = game.curr_scene.UIPriority
-        print(queue)
         isTopOfQueue = queue[len(queue)-1] == self.uiTag if len(queue) > 0 else False
-        if AABBCollision(self.get_relative_rect(), game.mouse.rect) and isTopOfQueue:
-            self.hovered = True
+        if self.hovered and isTopOfQueue and not self.disabled:
             if game.mouse.pressed[0]:
-                self.onAction(self)
+                self.onActionTimer = self.onActionDelay
                 self.highlightCol = pygame.Vector3(120,120,120)
                 self.drawingInflation = pygame.Vector2(-10,-10)
+        else:
+            self.hovered = False
+
+        if self.onActionTimer > 0:
+            self.onActionTimer -= dt
+
+            if self.onActionTimer <= 0:
+                self.onAction(self)
 
     def draw(self, window):
         drawingRect = self.get_relative_rect().inflate(self.drawingInflation.x, self.drawingInflation.y)
@@ -104,8 +121,12 @@ class Button(UI_Element):
         drawRect(window, drawingRect, self.col)
         drawText(window, self.text.string, self.text.col, drawingRect.center, round(self.text.size+self.drawingInflation.x/2), True)
 
-class MainMenu(Entity):
-    def __init__(self):
+# so basically u create a class extending Menu then
+# pass in a uiTag ie "mainmenu" and draw priority
+# then implement add_elements where you can yknow add
+# buttons and labels etc see a class in menus.py for examples
+class Menu(Entity):
+    def __init__(self, uiTag, priority, col_obj, do_instant_open = False):
         self.isUI = True
         w, h = W*0.6, H*0.7
         self.openRect = pygame.Rect((W-w)/2,(H-h)/2,w,h)
@@ -113,38 +134,28 @@ class MainMenu(Entity):
         self.rect = self.closeRect.copy()
         self.isOpen = False
         self.UIRoot = None
-        self.uiTag = "mainmenu"
+        self.uiTag = uiTag
+        self.priority = priority
+        self.do_instant_open = do_instant_open
+        self.close_on_esc = False
+
+        self.bgCol = col_obj[0]
+        self.outline_col = col_obj[1]
+
+    def create_centered_button(self, center, wh, bttnCol, txtObj, func):
+        # params( (x, y), (w, h), Text(), onAction )
+        rect = pygame.Rect((0,0),(wh))
+        rect.center = center
+        btn = Button(self.UIRoot, rect, bttnCol, txtObj, func)
+        self.UIRoot.add_element(btn)
+        return btn
 
     def add_elements(self):
-        # exit button
-        closeRect = pygame.Rect(0,0,self.rect.w/5,self.rect.h/5)
-        closeRect.center = (self.rect.w/2, 4*self.rect.h/5)
-        closeBtn = Button(
-            self.UIRoot, closeRect,
-            (255,0,0), Text("EXIT",(255,255,255),45),
-            lambda e : pygame.quit()
-        )
-        resumeRect = pygame.Rect(0,0,self.rect.w/5,self.rect.h/5)
-        resumeRect.center = (self.rect.w/2, self.rect.h/5)
-        resumeBtn = Button(
-            self.UIRoot, resumeRect,
-            (125,125,125), Text("RESUME",(255,255,255),45),
-            self.close
-        )
-        testRect = pygame.Rect(0,0,self.rect.w/3,self.rect.h/5)
-        testRect.center = (self.rect.w/2, self.rect.h/2)
-        testBtn = Button(
-            self.UIRoot, testRect,
-            (125,125,125), Text("Funny Button",(255,255,255),45),
-            lambda e : print("ahhaha poopy")
-        )
-        self.UIRoot.add_element(testBtn)
-        self.UIRoot.add_element(resumeBtn)
-        self.UIRoot.add_element(closeBtn)
+        pass # this is the only thing u need to implement
 
     def close(self, elem):
         self.isOpen = False
-        game.curr_scene.UIPriority.remove("mainmenu")
+        game.curr_scene.UIPriority.remove(self.uiTag)
 
     def lerp(self, targ_rect, t):
         vec1 = pygame.Vector2(self.rect.x, self.rect.y)
@@ -152,34 +163,49 @@ class MainMenu(Entity):
         vec3 = vec1.lerp(vec2, t)
         self.rect.x = vec3.x
         self.rect.y = vec3.y
+    
+    def change_rect_dimensions(self, w, h):
+        self.rect = self.rect.inflate(w,h)
+        self.openRect = self.openRect.inflate(w,h)
+        self.closeRect = self.closeRect.inflate(w,h)
 
     def open(self):
         if not self.isOpen:
-            game.curr_scene.UIPriority.append("mainmenu")
+            game.curr_scene.UIPriority.append(self.uiTag)
             self.isOpen = True
-            self.UIRoot = UI_Root(game.get_entity_by_id("bg"), self.rect, (255,0,255))
-            self.UIRoot.uiTag = "mainmenu"
-            game.curr_scene.add_entity(self.UIRoot, "main menu ui root", 100000)
+            self.UIRoot = UI_Root(
+                game.get_entity_by_id("bg"), self.rect,
+                self.bgCol, self.outline_col
+            )
+            self.UIRoot.uiTag = self.uiTag
+            game.curr_scene.add_entity(self.UIRoot, self.uiTag+"ui root", self.priority)
             self.add_elements()
+
+    def handle_close_on_esc(self):
+        queue = game.curr_scene.UIPriority
+        isTopOfQueue = queue[len(queue)-1] == self.uiTag if len(queue) > 0 else True
+        if game.key_pressed(pygame.K_ESCAPE) and isTopOfQueue:
+            if self.isOpen:
+                self.close(self)
+                return
+
+    def update(self, dt):
+        if self.close_on_esc:
+            self.handle_close_on_esc()
+
+        if self.isOpen:
+            t = 1 if self.do_instant_open else 0.1
+            self.lerp(self.openRect, t)
+        else:
+            if self.UIRoot is not None:
+                t = 1 if self.do_instant_open else 0.1
+                
+                dist = abs(self.rect.y - self.closeRect.y)
+                self.lerp(self.closeRect, t)
+                if dist < 80: # arbitrary seems to work fine tho
+                    self.UIRoot.remove_self()
+                    self.UIRoot = None
     
     def draw(self, window):
         pass
     
-    def update(self, dt):
-        if game.key_pressed(pygame.K_ESCAPE):
-            if self.isOpen:
-                self.close(self)
-                return
-            if self.UIRoot is None:
-                self.open()
-            return
-
-        if self.isOpen:
-            self.lerp(self.openRect, 0.1)
-        else:
-            if self.UIRoot is not None:
-                dist = abs(self.rect.y - self.closeRect.y)
-                self.lerp(self.closeRect, 0.1)
-                if dist < 80: # arbitrary seems to work fine tho
-                    self.UIRoot.remove_self()
-                    self.UIRoot = None

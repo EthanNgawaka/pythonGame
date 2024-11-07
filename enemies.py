@@ -11,6 +11,7 @@ class Enemy(Entity):
         self.invMass = 1
         self.forces = pygame.Vector2()
         self.value = 10
+        self.dmg = 1
 
     def add_force(self, vec):
         self.forces += vec
@@ -80,6 +81,8 @@ class Fly(Enemy):
         self.health = 15
         self.repulsionThresh = 30
         self.value = 10
+        self.stun = 0
+        self.dmg = 10
 
     def repulse(self):
         enemies = game.get_entities_by_type(Fly)
@@ -95,7 +98,14 @@ class Fly(Enemy):
         self.add_force(self.get_unit_vec_to_entity(player)*self.speed)
 
     def on_player_collision(self, player):
-        pass
+        player = game.get_entity_by_id("player")
+        vec = self.get_unit_vec_to_entity(player)
+        self.vel = vec * -player.kb
+        self.forces = pygame.Vector2()
+
+        player.vel += vec * player.kb
+        player.hit(self)
+        self.stun = 0.5
 
     def on_bullet_collision(self, bullet):
         player = game.get_entity_by_id("player")
@@ -107,11 +117,15 @@ class Fly(Enemy):
         if self.health <= 0:
             self.remove_self()
             spawn_copper(self.rect.center, self.get_copper_drop_qty())
+        self.stun = 0.1
 
     def update(self, dt):
+        self.physics(dt)
+        if self.stun > 0:
+            self.stun -= dt
+            return
         self.collision()
         self.movement()
-        self.physics(dt)
         self.bound_to_screen()
         self.repulse()
 

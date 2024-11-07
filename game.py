@@ -149,6 +149,7 @@ class Game:
             return self.curr_scene.entities[id]
         except KeyError as e:
             print("no entity of id: " + id)
+            return False
 
     def get_entities_by_type(self, class_type):
         out = []

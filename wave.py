@@ -58,3 +58,4 @@ class Wave(Entity):
 
     def draw(self, window):
         drawText(window, f"Wave Timer: {round(self.timer)}s", (0,0,0), (W-200, 200), 40, True)
+        drawText(window, f"Wave #{round(self.num)}", (0,0,0), (W-200, 250), 40, True)

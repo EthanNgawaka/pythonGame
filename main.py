@@ -4,9 +4,10 @@ from deck import *
 from ui import *
 from shop import *
 from wave import *
+from menus import *
 
 clock = pygame.time.Clock()
-maxFPS = 120
+maxFPS = 60
 
 def drawFPS(dt, window):
     drawText(window, f"fps: {1/dt:.2f}", (0,0,0), (W-100,100), 40, True)
@@ -34,13 +35,17 @@ def main():
     playerUi = PlayerUI(player)
     shop = Shop()
     wave = Wave()
-    wave.length = 1
+    wave.length = 15
     mainScene.init_entity(bg, "bg", -1)
     mainScene.init_entity(player, "player", 0)
     mainScene.init_entity(playerUi, "playerUI", 100)
+    mainScene.init_entity(wave, "wave")
+
+    # so currently u have to init all menus idk it works but its kinda scuffed but
+    # also sometimes scuffed is ok
     mainScene.init_entity(shop, "shop")
     mainScene.init_entity(MainMenu(), "mainmenu")
-    mainScene.init_entity(wave, "wave")
+    mainScene.init_entity(DebugMenu(), "debugmenu")
 
     game.add_scene(mainScene, "main")
     game.switch_to_scene("main")

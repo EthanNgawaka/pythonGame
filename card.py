@@ -1,9 +1,7 @@
 from game import *
 
 class Card(Entity):
-    def __init__(self, name, basePrice):
-        self.name = name
-        self.basePrice = basePrice
+    def __init__(self):
         self.rect = pygame.Rect(W,H,128,128)
         self.player = game.get_entity_by_id("player")
 

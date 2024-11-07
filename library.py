@@ -3,6 +3,7 @@ import pygame._sdl2 as pg_sdl2
 import random
 import math
 import time
+import cProfile, pstats, io
 
 #W = 1920
 #H = 1080
@@ -10,6 +11,24 @@ W = 1540
 H = 870
 
 DEBUG = True
+
+def profile(fnc):
+    """A decorator that uses cProfile to profile a function"""
+    def inner(*args, **kwargs):
+
+        pr = cProfile.Profile()
+        pr.enable()
+        retval = fnc(*args, **kwargs)
+        pr.disable()
+        s = io.StringIO()
+        sortby = 'cumulative'
+        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+        ps.print_stats()
+        print(s.getvalue())
+        return retval
+
+    return inner
+
 
 # classes TODO( need to seperate these out )
 class Mouse:
@@ -209,10 +228,20 @@ def AABBCollision(rect1, rect2): # rect = (x,y,w,h) returns min trans vec if tru
     mtv = (xtv,0) if abs(xtv) < abs(ytv) else (0,ytv)
     return mtv
 
+# so i didnt realise font drawing was SO FUCKING EXPENSIVE
+# create a new img to blit every frame is real bad but
+# improves by about 4x with caching
+# a font img is uniquely determined by its string, col and size
+# if exists use it if not create it and add it to cached fonts
+cached_fonts = {}
 # drawing funcs
 def drawText(window, string, col, pos, size, drawAtCenter=False, drawAsUI=False):
     font = pygame.font.SysFont("Arial",size)
-    img = font.render(string, True, col)
+    if (string, col, size) in cached_fonts:
+        img = cached_fonts[(string, col, size)]
+    else:
+        img = font.render(string, True, col)
+        cached_fonts[(string, col, size)] = img
 
     if drawAsUI:
         drawPos = pos
@@ -226,17 +255,38 @@ def drawText(window, string, col, pos, size, drawAtCenter=False, drawAsUI=False)
     else:
         window.blit(img, drawPos)
 
-def drawRect(window, rect, col, width=0): # col = (R, G, B, [A])
-    #pygame.draw.rect(window, col, pygame.Rect(*subtractRects(rect,camera.getRect())), width)
+def drawRect(window, rect, col_obj, outline_thickness=0):
+    # col = (R, G, B, [A])
+    # col_obj = (fill_col, outline_col)
+    # can just pass fill_col if outline_thickness is left as 0
+    # so it turns out creating a new surface a million times a frame is kinda ass soooo
+    # back to basics
 
-    s = pygame.Surface((rect[2], rect[3]))
-    try:
+    col = col_obj
+    out_col = None
+    if outline_thickness > 0:
+        col = col_obj[1]
+        out_col = col_obj[0]
+
+    if len(col) == 4 and col[3]/255 < 1: # alpha is provided
+        # while creating a new surface constantly is bad
+        # for an alpha it is still necessary so IF there is a transparent object then
+        # do the surface version
+        s = pygame.Surface((rect[2], rect[3]))
         s.set_alpha(col[3])
-    except IndexError: # No alpha given
-        pass
-    
-    s.fill((col[0],col[1],col[2]))
-    window.blit(s, (rect[0], rect[1]))
+        s.fill((col[0],col[1],col[2]))
+
+        if outline_thickness > 0:
+            s.fill((out_col[0],out_col[1],out_col[2]), s.get_rect().inflate(-outline_thickness, -outline_thickness))
+
+        window.blit(s, (rect[0], rect[1]))
+        return
+        
+    # just draw the goddamn rectangle
+    pygame.draw.rect(window, col, rect)
+    if outline_thickness > 0:
+        pygame.draw.rect(window, out_col, rect, outline_thickness)
+
 
 def drawCircle(window, circle, col): # circle = (center, radius)
     pygame.draw.circle(window, col, circle[0], circle[1])
