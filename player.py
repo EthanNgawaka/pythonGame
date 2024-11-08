@@ -276,3 +276,12 @@ class Bullet(Entity):
 
     def draw(self, window):
         drawCircle(window, (self.rect.center, self.r), (255,255,0))
+
+
+class ShotgunBullet(Bullet):
+
+    def draw(self, window):
+        pygame.draw.line(window, (255,255,0), [self.rect[0], self.rect[1]], [self.rect[0] - (self.vel[0]*10), self.rect[1] - (self.vel[1]*10)], 5)
+
+class Ricochet(Bullet):
+    pass
