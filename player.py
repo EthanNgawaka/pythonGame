@@ -208,8 +208,24 @@ class Bullet(Entity):
         self.rect.center = center
         self.vel = vel
 
+        self.piercesLeft = player.piercing
+        self.piercedEnemies = []
+
+    def has_not_pierced(self, enemy):
+        for e in self.piercedEnemies:
+            if e == enemy:
+                return False
+        return True
+
     def get_size(self,x):
         return max(x*1.6, 4)
+    
+    def on_enemy_collision(self, enemy):
+        self.piercesLeft -= 1
+        self.piercedEnemies.append(enemy)
+
+        if self.piercesLeft < 0:
+            self.remove_self()
 
     def update(self, dt):
         self.move(self.vel)

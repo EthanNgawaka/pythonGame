@@ -81,6 +81,7 @@ class Piercing(Card):
         super().__init__()
     def on_pickup(self):
         self.player.piercing += 1
+        self.player.kb /= 2 # half kb
 
 # Legendary
 class Minigun(Card):

@@ -45,8 +45,8 @@ class Enemy(Entity):
             self.on_player_collision(player)
 
         for bullet in bullets:
-            if AABBCollision(bullet.rect, self.rect):
-                bullet.remove_self() # at some point handle this from the bullet
+            if AABBCollision(bullet.rect, self.rect) and bullet.has_not_pierced(self):
+                bullet.on_enemy_collision(self)
                 self.on_bullet_collision(bullet)
     def get_copper_drop_qty(self):
         # returns a random qty btwn the value and half the value of the enemy

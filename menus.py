@@ -88,6 +88,17 @@ class DebugMenu(Menu):
             self.close # onAction
         )
 
+        def spawn_enemies(btn):
+            for i in range(10):
+                game.get_entity_by_id("wave").spawn_random_enemy()
+
+        self.create_centered_button(
+            (self.rect.w-w*3, self.rect.h-h), # center
+            (w*3,h), # dimensions
+            (255,0,0), Text("spawn 10 enemies",(255,255,255),25), # btnColor, TextObj
+            spawn_enemies
+        )
+
         i = 1
         player = game.get_entity_by_id("player")
         for rarity in self.cards:
