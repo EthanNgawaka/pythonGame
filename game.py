@@ -133,7 +133,9 @@ class Game:
         self.curr_scene = None
         self.mouse = Mouse()
         self.keys = [0] * 512
+        self.controller = Controller()
         self.oldKeys = self.keys
+        self.input_mode = "keyboard"
         # init keys to avoid index error (pygame has 512 keycodes)
         # im sure theres a better way to do this
         # eg) if game.keyDown(pygame.KEY_a):
@@ -195,8 +197,12 @@ class Game:
 
         # updating input stuff
         self.mouse.update()
+        self.controller.update()
         self.oldKeys = self.keys
         self.keys = pygame.key.get_pressed()
+
+        if self.key_pressed(pygame.K_SPACE):
+            self.input_mode = "controller" if self.input_mode == "keyboard" else "keyboard"
 
     def draw(self, window):
         try:

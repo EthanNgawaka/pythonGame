@@ -151,6 +151,7 @@ class Player(Entity):
         speed = self.bulletSpeed*(1+random.uniform(-self.speedInaccuracy, self.speedInaccuracy))
         vel = pygame.Vector2(math.cos(theta), math.sin(theta)) * (speed)
         id = "bullet"
+
         game.curr_scene.add_entity(Bullet(pos, vel), id)
 
     def shooting(self):
@@ -166,8 +167,19 @@ class Player(Entity):
 
                     self.bulletCooldown = self.atkRate / self.atkRateMultiplier
 
-    def movement(self):
+    def get_movement_dir_from_controller(self):
         movementDir = pygame.Vector2()
+        # get move dir from controller
+        movementDir.x = game.controller.LSTICK[0]
+        movementDir.y = game.controller.LSTICK[1]
+        # normalize if length > 0
+        if movementDir.length() > 1:
+            movementDir = movementDir.normalize()
+        return movementDir
+
+    def get_movement_dir_from_keyboard(self):
+        movementDir = pygame.Vector2()
+        # get move dir from keyboard
         if game.key_down(self.controls["up"]):
             movementDir.y -= 1
         if game.key_down(self.controls["down"]):
@@ -176,11 +188,17 @@ class Player(Entity):
             movementDir.x -= 1
         if game.key_down(self.controls["right"]):
             movementDir.x += 1
+        if movementDir.length() != 0:
+            movementDir = movementDir.normalize()
+        return movementDir
 
+    def movement(self):
+        movementDir = self.get_movement_dir_from_keyboard() if game.input_mode == "keyboard" else self.get_movement_dir_from_controller()
+        
         if movementDir.length() != 0:
             # stuff like this works because of pygame.Vector2()
             # super cool i dont have to implement this myself
-            self.vel += movementDir.normalize() * self.speed
+            self.vel += movementDir * self.speed
 
     # always keep update and draw at bottom
     def update(self, dt):
@@ -206,6 +224,7 @@ class Bullet(Entity):
         self.r = self.get_size(player.dmg*player.dmgMultiplier)
         self.rect = pygame.Rect((0,0), (self.r*2, self.r*2))
         self.rect.center = center
+
         self.vel = vel
 
         self.piercesLeft = player.piercing

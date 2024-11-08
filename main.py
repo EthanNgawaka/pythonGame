@@ -38,7 +38,7 @@ def main():
     wave.length = 15
     mainScene.init_entity(bg, "bg", -1)
     mainScene.init_entity(player, "player", 0)
-    mainScene.init_entity(playerUi, "playerUI", 100)
+    mainScene.init_entity(playerUi, "playerUI", 1000)
     mainScene.init_entity(wave, "wave")
 
     # so currently u have to init all menus idk it works but its kinda scuffed but

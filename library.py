@@ -94,6 +94,99 @@ class Camera:
             self.pos = vecLerp(self.pos, add(self.pos,shakeVec), self.shakeEasing)
 camera = Camera()
 
+# currently no support for multiple controllers it just uses the first one connected
+"""
+A Button        - Button 0
+B Button        - Button 1
+X Button        - Button 2
+Y Button        - Button 3
+Left Bumper     - Button 4
+Right Bumper    - Button 5
+Back Button     - Button 6
+Start Button    - Button 7
+L. Stick In     - Button 8
+R. Stick In     - Button 9
+Guide Button    - Button 10
+
+Left Stick:
+Left -> Right   - Axis 0
+Up   -> Down    - Axis 1
+
+Right Stick:
+Left -> Right   - Axis 3
+Up   -> Down    - Axis 4
+
+Left Trigger:
+Out -> In       - Axis 2
+
+Right Trigger:
+Out -> In       - Axis 5
+
+Eg)
+joystick.get_button(0) -> true if A button is down
+joystick.get_axis(0) -> returns -1 to 1 based on left stick input
+
+"""
+class Controller:
+    def __init__(self):
+        self.joysticks = []
+        self.LSTICK = [0,0]
+        self.RSTICK = [0,0]
+        self.A = 0
+        self.B = 0
+        self.X = 0
+        self.Y = 0
+        self.START = 0
+
+        self.buttons = {"a":0, "b":1, "x":2, "y":3, "start":7}
+        self.connected = False
+
+        self.deadzone_range = 0.1
+
+    def get_pressed(self, key):
+        return getattr(self, key.upper()) == 1
+
+    def get_down(self, key):
+        return getattr(self, key.upper()) > 0
+
+    def check_controllers_connected(self):
+        for event in pygame.event.get():
+            if event.type == pygame.JOYDEVICEADDED:
+                joy = pygame.joystick.Joystick(event.device_index)
+                self.joysticks.append(joy)
+
+    def update(self):
+        if not self.connected:
+            self.check_controllers_connected()
+            if len(self.joysticks) > 0:
+                self.connected = True
+            return
+
+        joy = self.joysticks[0]
+
+        for btn in self.buttons:
+            btn_num = self.buttons[btn]
+            if joy.get_button(btn_num):
+                setattr(self, btn.upper(), getattr(self,btn.upper())+1)
+                continue
+
+            setattr(self, btn.upper(), 0)
+
+        """ rounded to 1 decimal to stop drifting? idk what best practice is
+        self.LSTICK = [round(joy.get_axis(0), 1), round(joy.get_axis(1), 1)]
+        self.RSTICK = [round(joy.get_axis(2), 1), round(joy.get_axis(3), 1)]
+        """
+        self.LSTICK = [joy.get_axis(0),joy.get_axis(1)]
+        self.RSTICK = [joy.get_axis(2),joy.get_axis(3)]
+        if abs(self.LSTICK[0]) < self.deadzone_range:
+            self.LSTICK[0] = 0
+        if abs(self.LSTICK[1]) < self.deadzone_range:
+            self.LSTICK[1] = 0
+        if abs(self.RSTICK[0]) < self.deadzone_range:
+            self.RSTICK[0] = 0
+        if abs(self.RSTICK[1]) < self.deadzone_range:
+            self.RSTICK[1] = 0
+
 class Image:
     def __init__(self, src, x, y, w, h):
         self.x = x
@@ -184,6 +277,7 @@ class Spritesheet:
 # init funcs
 def init(windowW, windowH, caption):
     pygame.init()
+    pygame.joystick.init()
     window = pygame.display.set_mode((windowW,windowH))#, flags=pygame.SCALED | pygame.HIDDEN)
     #display_info = pygame.display.Info()
     #SCALE = (display_info.current_w/windowW, display_info.current_h/windowH)
