@@ -134,6 +134,21 @@ class Player(Entity):
 
         return out_dict
 
+    def bound_to_screen(self): # this is temp
+        if self.rect.x < 0 and self.vel.x < 0:
+            self.rect.x = 0
+            self.vel.x = 0
+        if self.rect.x+self.rect.w > W and self.vel.x > 0:
+            self.rect.x = W - self.rect.w
+            self.vel.x = 0
+
+        if self.rect.y < 0 and self.vel.y < 0:
+            self.rect.y = 0
+            self.vel.y = 0
+        if self.rect.y+self.rect.h > H and self.vel.y > 0:
+            self.rect.y = H - self.rect.h
+            self.vel.y = 0
+
     def physics(self, dt):
         self.move(self.vel*dt)
         self.vel *= self.drag
@@ -155,12 +170,19 @@ class Player(Entity):
         game.curr_scene.add_entity(Bullet(pos, vel), id)
 
     def shooting(self):
+        # mouse input 
+        firing = game.mouse.down[0]
         theta = vec_angle_to(self.rect.center, game.mouse.pos)
+
+        # controller input
+        if game.input_mode == "controller":
+            firing = game.controller.RSTICK.length() > 0
+            theta = math.atan2(game.controller.RSTICK.y, game.controller.RSTICK.x)
 
         if self.curr_weapon == "gun":
             # focus on this for now once really solid base game add more weapons
             if self.bulletCooldown <= 0:
-                if game.mouse.down[0]:
+                if firing:
                     for i in range(self.bulletCount):
                         rand_angle = random.uniform(-self.inaccuracy, self.inaccuracy)
                         self.spawn_bullet(self.rect.center, theta + rand_angle)
@@ -204,6 +226,7 @@ class Player(Entity):
     def update(self, dt):
         self.input()
         self.physics(dt)
+        self.bound_to_screen()
 
         # increment / decrement all timers
         self.bulletCooldown -= dt
@@ -211,7 +234,7 @@ class Player(Entity):
 
     def draw(self, window):
         # flashing logic
-        if self.invincibilityTimer > 0 and round(self.invincibilityTimer/self.flashFreq) % 2 == 0:
+        if self.invincibilityTimer > 0 and math.ceil(self.invincibilityTimer/self.flashFreq) % 2 == 0:
             return
 
         drawCircle(window, (self.rect.center, self.rect.w/2), self.col)

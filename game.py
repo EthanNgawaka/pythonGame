@@ -153,6 +153,14 @@ class Game:
             print("no entity of id: " + id)
             return False
 
+    def get_entities_by_id(self, string_contained_by_id):
+        # returns a list of entities that have an id that contains the provided string
+        out = []
+        for k, e in self.curr_scene.entities.items():
+            if string_contained_by_id in e.id:
+                out.append(e)
+        return out
+
     def get_entities_by_type(self, class_type):
         out = []
         for k, e in self.curr_scene.entities.items():
@@ -197,7 +205,7 @@ class Game:
 
         # updating input stuff
         self.mouse.update()
-        self.controller.update()
+        self.controller.update(self)
         self.oldKeys = self.keys
         self.keys = pygame.key.get_pressed()
 

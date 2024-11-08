@@ -13,9 +13,10 @@ class MainMenu(Menu):
         )
 
     def update(self, dt):
+        close_input = game.key_pressed(pygame.K_ESCAPE) if game.input_mode == "keyboard" else game.controller.get_pressed("start")
         queue = game.curr_scene.UIPriority
         isTopOfQueue = queue[len(queue)-1] == self.uiTag if len(queue) > 0 else True
-        if game.key_pressed(pygame.K_ESCAPE):
+        if close_input:
             if self.isOpen and isTopOfQueue:
                 self.close(self)
                 return

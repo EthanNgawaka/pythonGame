@@ -25,7 +25,7 @@ class UI_Root(Entity):
 
     def add_element(self, elem):
         self.elements.append(elem)
-        game.curr_scene.add_entity(elem, "button", "UI")
+        game.curr_scene.add_entity(elem, elem.__class__.__name__, "UI")
 
     def update(self, dt):
         pass
@@ -93,14 +93,17 @@ class Button(UI_Element):
         self.disabled = not self.disabled;
 
     def update(self, dt):
-        self.hovered = AABBCollision(self.get_relative_rect(), game.mouse.rect)
+        self.hovered = AABBCollision(self.get_relative_rect(), game.mouse.rect) if game.input_mode == "keyboard" else game.controller.get_selected_btn() == self
+
         self.highlightCol = self.highlightCol.lerp(self.baseHighlightCol, 0.1)
         self.drawingInflation = self.drawingInflation.lerp(pygame.Vector2(), 0.1)
+
+        clicked = game.mouse.pressed[0] if game.input_mode == "keyboard" else game.controller.get_pressed("a")
 
         queue = game.curr_scene.UIPriority
         isTopOfQueue = queue[len(queue)-1] == self.uiTag if len(queue) > 0 else False
         if self.hovered and isTopOfQueue and not self.disabled:
-            if game.mouse.pressed[0]:
+            if clicked:
                 self.onActionTimer = self.onActionDelay
                 self.highlightCol = pygame.Vector3(120,120,120)
                 self.drawingInflation = pygame.Vector2(-10,-10)
@@ -182,9 +185,10 @@ class Menu(Entity):
             self.add_elements()
 
     def handle_close_on_esc(self):
+        close_input = game.key_pressed(pygame.K_ESCAPE) if game.input_mode == "keyboard" else game.controller.get_pressed("start") or game.controller.get_pressed("b")
         queue = game.curr_scene.UIPriority
         isTopOfQueue = queue[len(queue)-1] == self.uiTag if len(queue) > 0 else True
-        if game.key_pressed(pygame.K_ESCAPE) and isTopOfQueue:
+        if close_input and isTopOfQueue:
             if self.isOpen:
                 self.close(self)
                 return

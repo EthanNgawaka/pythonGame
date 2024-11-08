@@ -130,18 +130,25 @@ joystick.get_axis(0) -> returns -1 to 1 based on left stick input
 class Controller:
     def __init__(self):
         self.joysticks = []
-        self.LSTICK = [0,0]
-        self.RSTICK = [0,0]
+        self.LSTICK = pygame.Vector2()
+        self.RSTICK = pygame.Vector2()
         self.A = 0
         self.B = 0
         self.X = 0
         self.Y = 0
         self.START = 0
 
-        self.buttons = {"a":0, "b":1, "x":2, "y":3, "start":7}
+        self.virtual_cursor = pygame.Rect((0,0),(0,0))
+        self.virtual_cursor_index = [0,0]
+        self.btn_matrix = []
+
+        self.buttons = {"a":0, "b":1, "x":2, "y":3, "start":11}
         self.connected = False
 
         self.deadzone_range = 0.1
+        self.prev_btns = None
+        self.prev_LSTICK = self.LSTICK.copy()
+        self.prev_last_in_queue = None
 
     def get_pressed(self, key):
         return getattr(self, key.upper()) == 1
@@ -155,7 +162,99 @@ class Controller:
                 joy = pygame.joystick.Joystick(event.device_index)
                 self.joysticks.append(joy)
 
-    def update(self):
+    def get_selected_btn(self):
+        try:
+            selected_btn = self.btn_matrix[self.virtual_cursor_index[0]][self.virtual_cursor_index[1]]
+            return selected_btn
+        except:
+            return None
+
+    def update_virtual_cursor(self):
+        if self.prev_LSTICK.length() <= 0.2 and self.LSTICK.length() > 0.2:
+            # if lstick was not moved last frame
+            if abs(self.LSTICK.x) > abs(self.LSTICK.y):
+                # moving vertically
+                dIndex = int(abs(self.LSTICK.x)/self.LSTICK.x)
+                self.virtual_cursor_index[0] += dIndex
+                if self.virtual_cursor_index[0] < 0:
+                    self.virtual_cursor_index[0] = len(self.btn_matrix)-1
+
+                if len(self.btn_matrix)-1 < self.virtual_cursor_index[0]:
+                   # loop around to top of col if needed
+                   self.virtual_cursor_index[0] = 0
+                   return
+
+                len_of_new_col = len(self.btn_matrix[self.virtual_cursor_index[0]]) 
+                if (len_of_new_col - 1) < self.virtual_cursor_index[1]:
+                   # goto bottom of col if yIndex is too high
+                   self.virtual_cursor_index[1] = len_of_new_col - 1
+            else:
+                # moving horizontally
+                dIndex = int(abs(self.LSTICK.y)/self.LSTICK.y)
+                self.virtual_cursor_index[1] += dIndex
+                print(self.btn_matrix)
+                print(self.virtual_cursor_index)
+                len_of_col = len(self.btn_matrix[self.virtual_cursor_index[0]]) 
+                if self.virtual_cursor_index[1] < 0:
+                    self.virtual_cursor_index[1] = len_of_col - 1
+                    return 
+                
+                if (len_of_col - 1) < self.virtual_cursor_index[1]:
+                   # loop around to top of col if needed
+                   self.virtual_cursor_index[1] = 0
+
+        print(self.virtual_cursor_index)
+
+
+
+    def update_button_matrix(self, bttns):
+        if self.prev_btns == bttns:
+            # just skip no need to update matrix
+            return
+
+        if len(bttns) <= 0:
+            self.virtual_cursor = pygame.Rect(-100,-100,0,0)
+            self.virtual_cursor_index = [0,0]
+            self.btn_matrix = []
+            return
+
+        if self.virtual_cursor_index is None:
+            self.virtual_cursor_index = [0, 0]
+
+        # create a matrix of button positions
+        btn_matrix = []
+        btn_x_map = {} # x: [buttons at x]
+        for btn in bttns:
+            x = btn.rect.center[0]
+            if x in btn_x_map:
+                btn_x_map[x].append(btn)
+            else:
+                btn_x_map[x] = [btn]
+
+        btn_x_positions = list(btn_x_map.keys()).copy()
+        btn_x_positions.sort()
+        for i in btn_x_positions:
+            btn_matrix.append(btn_x_map[i])
+
+        self.btn_matrix = []
+        for btn_list in btn_matrix:
+            col = []
+            btn_y_map = {} # no 2 buttons with the same x shd have the same y
+            for btn in btn_list:
+                y = btn.rect.center[1]
+                btn_y_map[y] = btn
+            sorted_y_positions = list(btn_y_map.keys()).copy()
+            sorted_y_positions.sort()
+            for j in sorted_y_positions:
+                col.append(btn_y_map[j])
+
+            self.btn_matrix.append(col)
+        # now they are sorted into columns 
+        # and each column is sorted by y position
+
+        self.prev_btns = bttns
+
+    def update(self, game):
         if not self.connected:
             self.check_controllers_connected()
             if len(self.joysticks) > 0:
@@ -176,16 +275,29 @@ class Controller:
         self.LSTICK = [round(joy.get_axis(0), 1), round(joy.get_axis(1), 1)]
         self.RSTICK = [round(joy.get_axis(2), 1), round(joy.get_axis(3), 1)]
         """
-        self.LSTICK = [joy.get_axis(0),joy.get_axis(1)]
-        self.RSTICK = [joy.get_axis(2),joy.get_axis(3)]
-        if abs(self.LSTICK[0]) < self.deadzone_range:
-            self.LSTICK[0] = 0
-        if abs(self.LSTICK[1]) < self.deadzone_range:
-            self.LSTICK[1] = 0
-        if abs(self.RSTICK[0]) < self.deadzone_range:
-            self.RSTICK[0] = 0
-        if abs(self.RSTICK[1]) < self.deadzone_range:
-            self.RSTICK[1] = 0
+        self.prev_LSTICK = self.LSTICK.copy()
+        self.LSTICK = pygame.Vector2(joy.get_axis(0),joy.get_axis(1))
+        self.RSTICK = pygame.Vector2(joy.get_axis(2),joy.get_axis(3))
+        if abs(self.LSTICK.x) < self.deadzone_range:
+            self.LSTICK.x = 0
+        if abs(self.LSTICK.y) < self.deadzone_range:
+            self.LSTICK.y = 0
+        if abs(self.RSTICK.x) < self.deadzone_range:
+            self.RSTICK.x = 0
+        if abs(self.RSTICK.y) < self.deadzone_range:
+            self.RSTICK.y = 0
+
+        queue = game.curr_scene.UIPriority
+        if len(queue) > 0:
+            last_in_queue = queue[len(queue)-1]
+            if last_in_queue != self.prev_last_in_queue:
+                self.virtual_cursor_index = [0,0]
+            all_buttons = game.get_entities_by_id("Button")
+            buttons = [btn for btn in all_buttons if btn.uiTag == last_in_queue]
+
+            self.update_button_matrix(buttons)
+            self.update_virtual_cursor()
+            self.prev_last_in_queue = last_in_queue
 
 class Image:
     def __init__(self, src, x, y, w, h):
