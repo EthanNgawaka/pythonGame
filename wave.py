@@ -3,8 +3,9 @@ from enemies import *
 
 class Wave(Entity):
     def __init__(self):
-        self.enemyTypes = [
-            Fly,
+        self.enemyTypes = [ # need to add a weighting system
+            Fly, Cockroach,
+            MotherCockroach
         ]
         self.timer = 0
         self.num = 1
