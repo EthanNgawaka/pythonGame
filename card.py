@@ -2,7 +2,7 @@ from game import *
 
 class Card(Entity):
     def __init__(self):
-        self.rect = pygame.Rect(W,H,128,128)
+        self.rect = Rect((W,H),(128,128))
         self.player = game.get_entity_by_id("player")
 
     def update(self, dt):

@@ -20,8 +20,10 @@ class Entity:
         self.alive = True
     def move(self, vec):
         try:
-            self.rect = self.rect.move(vec)
+            self.rect.move(vec)
         except Exception as e:
+            print(e)
+            print(self.rect.topleft)
             print("rect doesnt exist for this entity! id: " + self.id)
 
 class Scene:
@@ -39,6 +41,8 @@ class Scene:
     
     def get_top_draw_priority(self):
         limst = self.get_sorted_draw_indices()
+        if len(limst) == 0:
+            return 0
         return limst[len(limst) - 1]
     
     def add_entity(self, entity, id, drawPriority = None):
@@ -46,7 +50,7 @@ class Scene:
         self.toAdd.append((entity, id, drawPriority))
 
     def init_entity(self, entity, ent_id, drawPriority = None):
-        self.actually_add_entity(entity, ent_id, drawPriority)
+        return self.actually_add_entity(entity, ent_id, drawPriority)
 
     def get_min_draw_priority(self):
         sorted_dps = self.get_sorted_draw_indices()

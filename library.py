@@ -1,4 +1,5 @@
 import pygame
+import copy
 import pygame._sdl2 as pg_sdl2
 import random
 import math
@@ -29,6 +30,65 @@ def profile(fnc):
 
     return inner
 
+class Rect:
+    def __init__(self, pos, dim):
+        self.topleft = pygame.Vector2(pos)
+        self.dimensions = pygame.Vector2(dim)
+
+    def __getitem__(self, item):
+        return [*self.topleft, *self.dimensions][item]
+
+    @property
+    def center(self):
+        return self.topleft + self.dimensions/2
+    
+    @center.setter
+    def center(self, pos):
+        self.topleft = pos - self.dimensions/2
+
+    @property
+    def x(self):
+        return self.topleft.x
+
+    @x.setter
+    def x(self, x):
+        self.topleft.x = x
+
+    @property
+    def y(self):
+        return self.topleft.y
+
+    @y.setter
+    def y(self, y):
+        self.topleft.y = y
+
+    @property
+    def w(self):
+        return self.dimensions.x
+
+    @w.setter
+    def w(self, w):
+        self.dimensions.x = w
+
+    @property
+    def h(self):
+        return self.dimensions.y
+
+    @h.setter
+    def h(self, h):
+        self.dimensions.y = h
+    
+    def move(self, vec):
+        self.topleft += vec
+
+    def copy(self):
+        return copy.deepcopy(self)
+
+    def as_tuple(self):
+        return (self.x, self.y, self.w, self.h)
+    
+    def __iter__(self):
+        return iter((self.x, self.y, self.w, self.h))
 
 # classes TODO( need to seperate these out )
 class Mouse:
@@ -192,8 +252,6 @@ class Controller:
                 # moving horizontally
                 dIndex = int(abs(self.LSTICK.y)/self.LSTICK.y)
                 self.virtual_cursor_index[1] += dIndex
-                print(self.btn_matrix)
-                print(self.virtual_cursor_index)
                 len_of_col = len(self.btn_matrix[self.virtual_cursor_index[0]]) 
                 if self.virtual_cursor_index[1] < 0:
                     self.virtual_cursor_index[1] = len_of_col - 1
@@ -202,8 +260,6 @@ class Controller:
                 if (len_of_col - 1) < self.virtual_cursor_index[1]:
                    # loop around to top of col if needed
                    self.virtual_cursor_index[1] = 0
-
-        print(self.virtual_cursor_index)
 
 
 
@@ -489,9 +545,15 @@ def drawRect(window, rect, col_obj, outline_thickness=0):
         return
         
     # just draw the goddamn rectangle
-    pygame.draw.rect(window, col, rect)
-    if outline_thickness > 0:
-        pygame.draw.rect(window, out_col, rect, outline_thickness)
+    try:
+        pygame.draw.rect(window, col, rect)
+        if outline_thickness > 0:
+            pygame.draw.rect(window, out_col, rect, outline_thickness)
+    except TypeError:
+        pygame.draw.rect(window, col, rect.as_tuple())
+        if outline_thickness > 0:
+            pygame.draw.rect(window, out_col, rect.as_tuple(), outline_thickness)
+
 
 
 def drawCircle(window, circle, col): # circle = (center, radius)

@@ -30,25 +30,24 @@ def main():
     # ( this is to stop dict len changes when iterating blah blah blah )
 
     mainScene = Scene()
+    game.add_scene(mainScene, "main")
+    game.switch_to_scene("main")
+
     bg = Background()
     player = Player(W/2, H/2)
     playerUi = PlayerUI(player)
     shop = Shop()
     wave = Wave()
-    wave.length = 15
-    mainScene.init_entity(bg, "bg", -1)
-    mainScene.init_entity(player, "player", 0)
-    mainScene.init_entity(playerUi, "playerUI", 1000)
-    mainScene.init_entity(wave, "wave")
+    game.curr_scene.init_entity(bg, "bg", -100000)
+    game.curr_scene.init_entity(player, "player")
+    game.curr_scene.init_entity(playerUi, "playerUI", 1000)
+    game.curr_scene.init_entity(wave, "wave")
 
     # so currently u have to init all menus idk it works but its kinda scuffed but
     # also sometimes scuffed is ok
-    mainScene.init_entity(shop, "shop")
-    mainScene.init_entity(MainMenu(), "mainmenu")
-    mainScene.init_entity(DebugMenu(), "debugmenu")
-
-    game.add_scene(mainScene, "main")
-    game.switch_to_scene("main")
+    game.curr_scene.init_entity(shop, "shop")
+    game.curr_scene.init_entity(MainMenu(), "mainmenu")
+    game.curr_scene.init_entity(DebugMenu(), "debugmenu")
     # ----------------------------------------------------------------- #
 
     while running:

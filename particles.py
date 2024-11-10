@@ -1,0 +1,86 @@
+from game import *
+
+def scalMult(vec, scal):
+    return [vec[0]*scal, vec[1]*scal]
+# so i just ripped the old particle system and changed like 2 lines to work with the new engine lol
+# TODO rewrite it to use rects and shit eventually
+def spawn_fire(x, y):
+    numOfParticles = 2
+    for i in range(numOfParticles):
+        theta = random.uniform(0, 1)*-math.pi
+        vel = [math.cos(theta)*random.uniform(50,200), math.sin(theta)*random.uniform(50,300)]
+        size = random.randint(4,15)
+
+        randomMax = 255
+        randomHalf = 128
+        randomMin = 0
+        startingColor = (randomMax,randomMax,randomMax,255) # white -> yellow -> orange -> red -> smoke
+        lerpColors = [(randomMax,randomMax,randomMin,255), (randomMax,randomHalf,randomMin,255), (randomMax,randomMin,randomMin,255), (randomHalf,randomHalf,randomHalf,255)]
+        
+        game.curr_scene.add_entity(Particle([x-size/2, y-size/2, size, size], startingColor, vel, colorLerp=lerpColors, grav=-20, lifetime=0.5+random.uniform(0,1.4)), "particle_fire")
+
+# TODO redo this cause it wont work???
+def blood_explosion(x, y):
+    print("doesnt work yet lol")
+
+class Particle(Entity):
+    def __init__(self, rect, col=(0,0,0,255), vel=[0,0], drag=0.9, grav=10, shrink=False, fade=True, colorLerp=False, lifetime=10): # col = (R, G, B, A)
+        self.rect = rect
+        self.color = col
+        self.vel = vel
+        self.drag = drag
+        self.gravity = grav
+
+        self.lifetime = lifetime
+        self.shrink = shrink
+        self.fade = fade
+        self.colorLerp = colorLerp
+
+        self.startingLifetime = lifetime
+
+        if self.colorLerp:
+            self.currentColor = self.color
+            self.numOfColors = 1+len(self.colorLerp)
+            self.colorThreshhold = 1/self.numOfColors
+            self.currentColorIndex = 1
+            self.subLerp = 1
+
+    def draw(self, window):
+        displayRect = self.rect
+        scalingFactor = self.lifetime/self.startingLifetime
+
+        if self.shrink:
+            displayRect = [displayRect[0], displayRect[1], displayRect[2]*scalingFactor, displayRect[3]*scalingFactor]
+
+        if self.fade:
+            self.color = (self.color[0], self.color[1], self.color[2], 255*self.lifetime/self.startingLifetime)
+
+        if self.colorLerp:
+            if self.subLerp > 0:
+                self.color = (lerp(self.color[0], self.colorLerp[self.currentColorIndex-1][0], 0.1), lerp(self.color[1], self.colorLerp[self.currentColorIndex-1][1], 0.1), lerp(self.color[2], self.colorLerp[self.currentColorIndex-1][2], 0.1), self.color[3])
+
+
+            else:
+                if self.currentColorIndex < self.numOfColors-1:
+                    self.currentColorIndex += 1
+                self.subLerp = 1
+
+        col = pygame.Color(self.color)
+        drawRect(window, displayRect, col)
+
+    def update(self, dt):
+        if self.colorLerp:
+            if self.subLerp > 0:
+                self.subLerp -= dt/self.colorThreshhold
+
+        self.rect[0] += self.vel[0]*dt
+        self.rect[1] += self.vel[1]*dt
+
+        self.vel[1] += self.gravity
+
+        self.vel = scalMult(self.vel, self.drag)
+
+        self.lifetime -= dt
+        if self.lifetime <= 0:
+            self.remove_self()
+

@@ -8,7 +8,7 @@ def spawn_copper(pos, qty):
 
 class Copper(Entity):
     def __init__(self, pos, vel):
-        self.rect = pygame.Rect(pos, (12,12))
+        self.rect = Rect(pos, (12,12))
         self.vel = vel
         self.distThreshold = 250
         self.forces = pygame.Vector2()

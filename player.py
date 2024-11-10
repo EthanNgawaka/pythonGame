@@ -1,10 +1,11 @@
 from game import *
 from deck import *
+from particles import *
 
 class PlayerUI(Entity):
     def __init__(self, player):
         self.player = player
-        self.rect = pygame.Rect(100,100,player.maxHealth*3,30)
+        self.rect = Rect((100,100),(player.maxHealth*3,30))
         self.isUI = True
         self.greenBarW = self.rect.w
         self.orangeBarW = self.rect.w
@@ -48,10 +49,26 @@ class PlayerUI(Entity):
         if self.player.invincibilityTimer > 0:
             self.oldHpTimer = self.orangeBarDelay
 
+class Fire(Entity):
+    def __init__(self, player):
+        self.player = player
+        self.timer = 0
+
+    def update(self, dt):
+        if self.timer > 0:
+            self.timer -= dt
+            self.player.health -= dt*10 # 10 /sec
+            spawn_fire(*self.player.rect.center)
+            
+
+    def draw(self, window):
+        pass
+
 class Player(Entity):
     def __init__(self, x, y):
         w, h = 40, 40
-        self.rect = pygame.Rect(x, y, w, h)
+        self.rect = Rect((x, y), (w, h))
+        print(self.rect)
         self.vel = pygame.Vector2() # [0,0]
         self.curr_weapon = "gun"
         self.col = (127, 35, 219)
@@ -69,10 +86,10 @@ class Player(Entity):
         # attributes #
         # (NOT implemented) #
         self.lifesteal = 0
-        self.piercing = 0
         self.iFrames = 1.5
 
         # (implemented) #
+        self.piercing = 0
         self.speed = 50
         self.maxHealth = 100
 
@@ -92,6 +109,7 @@ class Player(Entity):
         # random stuff #
         self.copper = 0 # coins
         self.health = self.maxHealth
+        self.status_effects = []
 
         self.flashFreq = 0.2
         # ---------- #
@@ -110,6 +128,20 @@ class Player(Entity):
         # TODO actives arent implemented yet but im going there next
         self.deck = Deck(self)
 
+        # Status Effects
+        # so status effects are just entities that exist and
+        # you can call like add_fire_effect(secs) and thats it,
+        # everything else is handled in the Effects individual class
+        fire_ent = Fire(self)
+        game.curr_scene.init_entity(fire_ent, "fire_eff")
+        self.status_effects = {
+            "fire": fire_ent,
+        }
+
+
+    def add_fire_effect(self, secs):
+        self.status_effects["fire"].timer += secs
+
     def get_stats(self):
         # TODO: would be cool to have a slider for each stat in debug
         # for testing purposes
@@ -126,7 +158,7 @@ class Player(Entity):
             "atkRate", "speed", "dmg", "maxHealth",
             "atkRateMultiplier", "kb", "bulletCount",
             "speedInaccuracy", "inaccuracy", "bulletSpeed",
-            "lifesteal", "piercing"
+            "lifesteal", "piercing", "dmgMultiplier"
         ]
         out_dict = {}
         for stat_name in stat_names:
@@ -245,7 +277,7 @@ class Bullet(Entity):
         player = game.get_entity_by_id("player")
 
         self.r = self.get_size(player.dmg*player.dmgMultiplier)
-        self.rect = pygame.Rect((0,0), (self.r*2, self.r*2))
+        self.rect = Rect((0,0), (self.r*2, self.r*2))
         self.rect.center = center
 
         self.vel = vel
