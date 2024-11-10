@@ -6,7 +6,7 @@ from particles import *
 # =================== Enemy Base =================== #
 class Enemy(Entity):
     def __init__(self, pos):
-        self.rect = Rect(pos,(0,0))
+        self.rect = Rect(pos,(30,30))
         self.vel = pygame.Vector2()
         self.drag = 0.96
         self.invMass = 1
@@ -267,4 +267,111 @@ class Mosquito(Enemy):
                 self.lastAttack = self.atkTimer
                 for i in range(8):
                     self.shoot()
+
+class Ant(Enemy):
+    def __init__(self, pos):
+        super().__init__(pos)
+        self.rect.dimensions = pygame.Vector2(25,25)
+        self.drag = 0.8
+        self.speed = 2500
+        self.atkThresh = 200
+        self.timer = 0
+        self.value = 5
+        self.col = pygame.Color(127,90,90)
+
+    def movement(self):
+        player = game.get_entity_by_id("player")
+        p_pos = pygame.Vector2(player.rect.center)
+        s_pos = pygame.Vector2(self.rect.center)
+        dist = (p_pos - s_pos).length()
+        angle = lerp(0, 90, self.atkThresh/dist)
+        self.add_force(self.get_unit_vec_to_entity(player).rotate(angle)*self.speed)
+
+    def update(self, dt):
+        super().update(dt)
+        self.timer += dt
+
+class TermiteSwarm:
+    # lil bit of an inbetween class cause of the way enemies are spawned
+    #just spawns x amount of termites
+    def __init__(self, pos):
+        for i in range(random.randint(5,25)):
+            off = pygame.Vector2(random.uniform(-100, 100),random.uniform(-100, 100))
+            game.curr_scene.add_entity(Termite(pos+off), "enemy")
+
+class Termite(Enemy):
+    def __init__(self, pos):
+        super().__init__(pos)
+        self.rect.dimensions = pygame.Vector2(15,15)
+        self.drag = 1
+        self.speed = 2500
+        self.atkThresh = 200
+        self.timer = 0
+        self.value = 5
+        self.col = pygame.Color(127,90,90)
+        self.dmg = 5
+
+    def movement(self):
+        player = game.get_entity_by_id("player")
+        p_pos = pygame.Vector2(player.rect.center)
+        s_pos = pygame.Vector2(self.rect.center)
+
+        other_termites = game.get_entities_by_type(Termite)
+        other_termites.remove(self)
+
+        protected_range = 100
+        protected_range_squared = protected_range**2
+        visual_range = 40
+        visual_range_squared = visual_range**2
+        centering_factor = 0.01
+        matching_factor = 0.01
+        avoidfactor = 0.01
+        turnfactor = 10
+        minSpeed = 280
+        maxSpeed = 400
+
+        close_dp = pygame.Vector2()
+        avg_pos = pygame.Vector2()
+        avg_vel = pygame.Vector2()
+        neighbors = 0
+        for other_termite in other_termites:
+            dp = self.rect.topleft - other_termite.rect.topleft
+
+            if dp.length() < visual_range:
+                sqrd_dist = dp.length()**2
+                if sqrd_dist < protected_range_squared:
+                    close_dp += dp
+
+                elif sqrd_dist < visual_range_squared:
+                    neighbors += 1
+
+        if neighbors > 0:
+            print(ave_vel)
+            avg_pos /= neighbors
+            avg_vel /= neighbors
+            
+
+        targ = player.rect.center
+        self.vel += (avg_pos - self.rect.topleft + targ)*centering_factor + (avg_vel - self.vel)*matching_factor
+        self.vel += close_dp*avoidfactor
+
+        margin = 0.05
+        if self.rect.y < H*margin:
+            self.vel.y += turnfactor
+        if self.rect.y > H*(1-margin):
+            self.vel.y -= turnfactor
+
+        if self.rect.x < W*margin:
+            self.vel.x += turnfactor
+        if self.rect.x > W*(1-margin):
+            self.vel.x -= turnfactor
+
+        speed = self.vel.length()
+        if speed < minSpeed:
+            self.vel = self.vel.normalize() * minSpeed
+        if speed > maxSpeed:
+            self.vel = self.vel.normalize() * maxSpeed
+
+    def repulse(self):
+        pass
 

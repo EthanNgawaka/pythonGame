@@ -5,8 +5,8 @@ class Wave(Entity):
     def __init__(self):
         self.enemyTypes = [ # need to add a weighting system
             Fly, Cockroach,
-            MotherCockroach,
-            Mosquito
+            MotherCockroach, Ant,
+            Mosquito, TermiteSwarm,
         ]
         self.timer = 0
         self.num = 1
@@ -51,12 +51,13 @@ class Wave(Entity):
             x = (-w if random.randint(0,1) > 0 else W+w)
             y = random.randint(-h,H+h)
         
-        game.curr_scene.add_entity(
-            EnemyType(
-                pygame.Vector2(x,y), 
-            ),
-            "enemy" # need to change this later prob to actually use enemy type id
-        )
+        enemy = EnemyType(pygame.Vector2(x,y))
+        # if its not instance of enemy then its a swarm type
+        if isinstance(enemy, Enemy):
+            game.curr_scene.add_entity(
+                enemy,
+                "enemy" # need to change this later prob to actually use enemy type id
+            )
 
     def draw(self, window):
         drawText(window, f"Wave Timer: {round(self.timer)}s", (0,0,0), (W-200, 200), 40, True)

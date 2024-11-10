@@ -48,6 +48,7 @@ def main():
     game.curr_scene.init_entity(shop, "shop")
     game.curr_scene.init_entity(MainMenu(), "mainmenu")
     game.curr_scene.init_entity(DebugMenu(), "debugmenu")
+
     # ----------------------------------------------------------------- #
 
     while running:
