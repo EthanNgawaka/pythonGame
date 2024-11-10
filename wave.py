@@ -11,8 +11,8 @@ class Wave(Entity):
         self.timer = 0
         self.num = 1
 
-        self.length = 1
-        self.spawnRate = 0.7#3.5
+        self.length = 60
+        self.spawnRate = 3.5
         self.last_spawn = 0
 
         self.swappedAlready = False

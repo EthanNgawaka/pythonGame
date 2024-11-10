@@ -74,7 +74,6 @@ class Enemy(Entity):
         self.vel = vec * -player.kb
         self.forces = pygame.Vector2()
 
-        player.vel += vec * player.kb
         player.hit(self)
         self.stun = 0.5
 
@@ -85,7 +84,7 @@ class Enemy(Entity):
         vec = bullet.vel.normalize()
         self.vel = vec * player.kb
         self.forces = pygame.Vector2()
-        if self.health <= 0:
+        if self.health <= 0 and self.alive:
             self.die()
         self.stun = 0.1
 
@@ -210,29 +209,62 @@ class MotherCockroach(Cockroach):
         self.value = 40
 
     def on_death(self):
-        for i in range(20):
+        for i in range(random.randint(8,15)):
             spawn_pos = pygame.Vector2(self.rect.topleft)
             spawn_pos.x += random.uniform(0, self.rect.w)
             spawn_pos.y += random.uniform(0, self.rect.h)
             game.curr_scene.add_entity(BabyCockroach(spawn_pos),"enemy")
+
+
 
 class Mosquito(Enemy):
     def __init__(self, pos):
         super().__init__(pos)
         self.rect = Rect(pos, (30,30))
         self.health = 12
-        self.speed = 500
+        self.speed = 200
+
+        self.atkTimer = 0
+        self.lastAttack = 0
+        self.dmg = 10
+        self.atkRate = 2.5
+        self.atkThresh = 550
+        self.col = pygame.Color("black")
 
     def movement(self):
         player = game.get_entity_by_id("player")
         p_pos = pygame.Vector2(player.rect.center)
         s_pos = pygame.Vector2(self.rect.center)
-        if (p_pos - s_pos).length() > 400:
+        if (p_pos - s_pos).length() > self.atkThresh:
             f_vec = self.get_unit_vec_to_entity(player)*self.speed
             self.add_force(f_vec)
 
         theta = random.uniform(math.pi, -math.pi)
         self.vel += (pygame.Vector2(math.cos(theta), math.sin(theta))*random.randint(-30,30))
 
-    def draw(self, window):
-        super().draw(window)
+    def shoot(self):
+        player = game.get_entity_by_id("player")
+        p_pos = pygame.Vector2(player.rect.center)
+        s_pos = pygame.Vector2(self.rect.center)
+        innac = 10
+        theta = vec_angle_to(s_pos,p_pos) + random.uniform(math.pi/innac, -math.pi/innac)
+        vec = pygame.Vector2(math.cos(theta), math.sin(theta)) * random.uniform(5,10)
+        game.curr_scene.add_entity(EnemyBullet(self.rect.center, vec, self.dmg), "enemy bullet")
+
+    def on_bullet_collision(self, blt):
+        super().on_bullet_collision(blt)
+        self.atkTimer = 0.1
+        self.lastAttack = 0
+
+    def update(self, dt):
+        super().update(dt)
+        player = game.get_entity_by_id("player")
+        p_pos = pygame.Vector2(player.rect.center)
+        s_pos = pygame.Vector2(self.rect.center)
+        if (p_pos - s_pos).length() < self.atkThresh:
+            self.atkTimer -= dt
+            if abs(self.lastAttack - self.atkTimer) > self.atkRate:
+                self.lastAttack = self.atkTimer
+                for i in range(8):
+                    self.shoot()
+

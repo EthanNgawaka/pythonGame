@@ -1,6 +1,7 @@
 from game import *
 from deck import *
 from particles import *
+from bullets import *
 
 class PlayerUI(Entity):
     def __init__(self, player):
@@ -190,6 +191,18 @@ class Player(Entity):
             self.health -= ent.dmg
             self.invincibilityTimer = self.iFrames
 
+            if isinstance(ent, EnemyBullet):
+                vec = ent.vel.normalize()
+                self.vel += vec * self.kb * 2
+                return
+
+            theta = vec_angle_to(
+                pygame.Vector2(self.rect.center),
+                pygame.Vector2(ent.rect.center)
+            )
+            vec = pygame.Vector2(math.cos(theta), math.sin(theta))
+            self.vel -= vec * self.kb
+
     def input(self):
         self.movement()
         self.shooting()
@@ -272,43 +285,6 @@ class Player(Entity):
         drawCircle(window, (self.rect.center, self.rect.w/2), self.col)
 
 # ======================================================================= #
-class Bullet(Entity):
-    def __init__(self, center, vel):
-        player = game.get_entity_by_id("player")
-
-        self.r = self.get_size(player.dmg*player.dmgMultiplier)
-        self.rect = Rect((0,0), (self.r*2, self.r*2))
-        self.rect.center = center
-
-        self.vel = vel
-
-        self.piercesLeft = player.piercing
-        self.piercedEnemies = []
-
-    def has_not_pierced(self, enemy):
-        for e in self.piercedEnemies:
-            if e == enemy:
-                return False
-        return True
-
-    def get_size(self,x):
-        return max(x*1.6, 4)
-    
-    def on_enemy_collision(self, enemy):
-        self.piercesLeft -= 1
-        self.piercedEnemies.append(enemy)
-
-        if self.piercesLeft < 0:
-            self.remove_self()
-
-    def update(self, dt):
-        self.move(self.vel)
-        if not AABBCollision(self.rect, [0,0,W,H]):
-            self.remove_self()
-
-    def draw(self, window):
-        drawCircle(window, (self.rect.center, self.r), (255,255,0))
-
 
 class ShotgunBullet(Bullet):
 
