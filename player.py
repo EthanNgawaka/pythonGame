@@ -89,6 +89,7 @@ class Player(Entity):
         self.iFrames = 0.75
 
         # (implemented) #
+        self.panic = 0
         self.piercing = 0
         self.speed = 50
         self.maxHealth = 200
@@ -103,7 +104,6 @@ class Player(Entity):
         self.speedInaccuracy = 0 # +/- % ie 0.1 means +/- 10% speed
         self.inaccuracy = 0.13
         self.bulletSpeed = 20
-        # (NOT implemented) #
         # ---------- #
 
         # random stuff #
@@ -206,6 +206,8 @@ class Player(Entity):
             self.health -= ent.dmg
             self.invincibilityTimer = self.iFrames
 
+            self.speed *= 1 + 0.02*self.panic
+
             if isinstance(ent, EnemyBullet):
                 vec = ent.vel.normalize()
                 self.vel += vec * self.kb * 2
@@ -291,9 +293,6 @@ class Player(Entity):
         # increment / decrement all timers
         self.bulletCooldown -= dt
         self.invincibilityTimer -= dt
-        self.hit_timer -= dt/game.time_speed
-        if game.time_speed < 1 and self.hit_timer <= 0:
-            game.time_speed = 1
 
     def draw(self, window):
         # flashing logic

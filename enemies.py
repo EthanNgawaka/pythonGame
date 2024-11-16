@@ -229,7 +229,7 @@ class Mosquito(Enemy):
         self.atkTimer = 0
         self.lastAttack = 0
         self.dmg = 10
-        self.atkRate = 1.5
+        self.atkRate = 2.25
         self.atkThresh = 750
         self.col = pygame.Color("black")
 
@@ -252,6 +252,8 @@ class Mosquito(Enemy):
         theta = vec_angle_to(s_pos,p_pos) + random.uniform(math.pi/innac, -math.pi/innac)
         vec = pygame.Vector2(math.cos(theta), math.sin(theta)) * random.uniform(5,10) * 60
         game.curr_scene.add_entity(EnemyBullet(self.rect.center, vec, self.dmg), "enemy bullet")
+        self.add_force(-vec*6)
+
 
     def on_bullet_collision(self, blt):
         super().on_bullet_collision(blt)
@@ -284,7 +286,7 @@ class Ant(Enemy):
         self.speed = 2500
         self.atkThresh = 200
         self.timer = 0
-        self.value = 3
+        self.value = 2
         self.col = pygame.Color(127,90,90)
         self.dmg = 5
 
@@ -426,6 +428,7 @@ class Snail(Enemy):
         vel = vec.normalize()*bullet.vel.length()
         game.curr_scene.add_entity(EnemyBullet(bullet.rect.center, vel, self.dmg), "enemy bullet")
 
+# TODO (Make it attract everything )
 class MagneticSnail(Snail):
     def __init__(self, pos):
         super().__init__(pos)

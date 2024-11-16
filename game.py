@@ -114,6 +114,9 @@ class Scene:
 
     def update(self, dt):
         self.handle_adding()
+        if not self.initialized:
+            self.start_state = copy.deepcopy(self)
+            self.initialized = True
 
         for [key, entity] in self.entities.items():
             if not entity.initialized:
@@ -128,9 +131,6 @@ class Scene:
                 continue
 
             entity.update(dt)
-        if not self.initialized:
-            self.start_state = copy.deepcopy(self)
-            self.initialized = True
 
         self.handle_removing()
 
@@ -169,6 +169,10 @@ class Game:
         #         print("s pressed")
         #
         # dif being that pressed only returns true on the first frame the key is pressed
+
+    def close(self, btn):
+        pygame.quit()
+        sys.exit()
 
     def init_window(self, caption):
         self.W, self.H, self.window = init(caption)
@@ -272,6 +276,9 @@ class Game:
             self.transition_timer -= dt
 
     def draw(self, window):
+        if not pygame.get_init():
+            print(pygame.get_init())
+            return
         try:
             self.curr_scene.draw(window)
         except Exception as e:

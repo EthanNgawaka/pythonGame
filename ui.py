@@ -83,6 +83,7 @@ class Button(UI_Element):
         self.highlightCol = self.baseHighlightCol
         self.drawingInflation = pygame.Vector2()
         self.uiTag = self.root.uiTag
+        self.outlined = False
 
         self.onActionDelay = 0.1;
         self.onActionTimer = 0;
@@ -118,7 +119,7 @@ class Button(UI_Element):
 
     def draw(self, window):
         drawingRect = self.get_relative_rect().inflate(self.drawingInflation.x, self.drawingInflation.y)
-        if self.hovered:
+        if self.hovered or self.outlined:
             drawingRect = drawingRect.inflate(5,5)
             drawRect(window, drawingRect.inflate(10,10), self.highlightCol)
         drawRect(window, drawingRect, self.col)

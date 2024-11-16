@@ -33,7 +33,7 @@ def create_main_scene():
     # so currently u have to init all menus idk it works but its kinda scuffed but
     # also sometimes scuffed is ok
     mainScene.init_entity(shop, "shop")
-    mainScene.init_entity(PauseMenu(), "mainmenu")
+    mainScene.init_entity(PauseMenu(), "pausemenu")
     mainScene.init_entity(DebugMenu(), "debugmenu")
     mainScene.init_entity(SettingsMenu(), "settingsmenu")
     return mainScene
@@ -59,8 +59,22 @@ def main():
 
     game.add_scene(mainScene, "main")
     game.add_scene(menuScene, "menu")
-    game.switch_to_scene("menu", False)
+    game.switch_to_scene("main", False)
     # ----------------------------------------------------------------- #
+    """
+    Notes to self:
+        so far so good, enemies need tweaking and honestly just need more variation
+        heres a list of things you need to do:
+            - Rework menu support for controllers
+            - Add more enemies
+            - Make active cards function
+            - Add more passives
+            - Add a button to buy 20% health for 100 copper in shop
+            - Make copper auto attract at end of round (maybe make it a setting somewhere its getting tedious)
+            - Rework particle system
+            - Camera system for camera shake
+            - Rewrite menu system to use new Rect class
+    """
 
     while running:
         dt = game.time_speed * clock.tick(maxFPS) / 1000.0

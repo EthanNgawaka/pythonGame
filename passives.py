@@ -1,9 +1,11 @@
+from sys import base_prefix
 from card import *
 
 # Common
 class SpeedUp(Card):
     name = "speed up"
     basePrice = 50
+    desc = "Speed up!"
     def __init__(self):
         super().__init__()
     def on_pickup(self):
@@ -11,6 +13,7 @@ class SpeedUp(Card):
         
 class DamageUp(Card):
     name = "damage up"
+    desc = "Damage up!"
     basePrice = 150
     def __init__(self):
         super().__init__()
@@ -19,6 +22,7 @@ class DamageUp(Card):
 
 class AccuracyUp(Card):
     name = "accuracy up"
+    desc = "Accuracy up!"
     basePrice = 100
     def __init__(self):
         super().__init__()
@@ -29,6 +33,7 @@ class AccuracyUp(Card):
         
 class AttackSpeedUp(Card):
     name = "Attack speed up"
+    desc = "Attack Speed up!"
     basePrice = 100
     def __init__(self):
         super().__init__()
@@ -37,6 +42,7 @@ class AttackSpeedUp(Card):
 
 class BulletSpeedUp(Card):
     name = "bullet speed up"
+    desc = "Bullet Speed up!"
     basePrice = 50
     def __init__(self):
         super().__init__()
@@ -45,6 +51,7 @@ class BulletSpeedUp(Card):
 
 class MaxHealthUp(Card):
     name = "max health up"
+    desc = "Max Health up!"
     basePrice = 50
     def __init__(self):
         super().__init__()
@@ -57,6 +64,7 @@ class MaxHealthUp(Card):
 class LifeStealUp(Card):
     name = "life steal up"
     basePrice = 150
+    desc = "Life steal up!"
     def __init__(self):
         super().__init__()
     def on_pickup(self):
@@ -66,6 +74,7 @@ class LifeStealUp(Card):
 class Shotgun(Card):
     name = "shotgun"
     basePrice = 175
+    desc = "SHOTGUN MOMENT"
     def __init__(self):
         super().__init__()
     def on_pickup(self):
@@ -77,17 +86,28 @@ class Shotgun(Card):
 
 class Piercing(Card):
     name = "piercing up"
-    basePrice = 150
+    basePrice = 200
+    desc = "Piercing up!"
     def __init__(self):
         super().__init__()
     def on_pickup(self):
         self.player.piercing += 1
         self.player.kb /= 2 # half kb
 
+class Panic(Card):
+    name = "panic"
+    basePrice = 150
+    desc = "+2% permanent speed on hit!"
+    def __init__(self):
+        super().__init__()
+    def on_pickup(self):
+        self.player.panic += 1
+
 # Legendary
 class Minigun(Card):
     name = "Minigun"
     basePrice = 250
+    desc = "It's a minigun, what more do you want?"
     def __init__(self):
         super().__init__()
     def on_pickup(self):
@@ -100,6 +120,7 @@ class Minigun(Card):
 class DoubleShot(Card):
     name = "Bullet count up"
     basePrice = 250
+    desc = "Extra bullet!"
     def __init__(self):
         super().__init__()
     def on_pickup(self):

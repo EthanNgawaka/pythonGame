@@ -21,10 +21,18 @@ class MainMenu(Menu):
     def add_elements(self):
         # start button
         self.create_centered_button(
-            (self.rect.w/2, self.rect.h/2), # center
+            (self.rect.w/2, self.rect.h/3), # center
             (self.rect.w/2,self.rect.h/4), # dimensions
             (60,189,60), Text("START",(255,255,255),100), # btnColor, TextObj
             lambda btn: game.switch_to_scene("main"),
+        )
+
+        # exit button
+        self.create_centered_button(
+            (self.rect.w/2, 2*self.rect.h/3), # center
+            (self.rect.w/2,self.rect.h/4), # dimensions
+            (255,0,0), Text("EXIT",(255,255,255),100), # btnColor, TextObj
+            game.close,
         )
 
 class PauseMenu(Menu):
@@ -81,7 +89,7 @@ class PauseMenu(Menu):
             (self.rect.w/2, 7*self.rect.h/8), # center
             (self.rect.w/5,self.rect.h/10), # dimensions
             (255,0,0), Text("EXIT",(255,255,255),45), # btnColor, TextObj
-            lambda e : pygame.quit() # onAction
+            game.close # onAction
         )
 
         if DEBUG:
@@ -138,7 +146,7 @@ class DebugMenu(Menu):
                 AttackSpeedUp, BulletSpeedUp, MaxHealthUp
             ],
             "rare":[
-                Shotgun, Piercing, LifeStealUp
+                Shotgun, Piercing, LifeStealUp, Panic
             ],
             "legendary":[
                 DoubleShot, Minigun
@@ -184,6 +192,15 @@ class DebugMenu(Menu):
             (w*3,h), # dimensions
             (255,0,0), Text("pause wave",(255,255,255),25), # btnColor, TextObj
             pause_wave
+        )
+
+        def end_wave(btn):
+            game.get_entity_by_id("wave").timer = 60
+        self.create_centered_button(
+            (self.rect.w-w*3, self.rect.h-h*7), # center
+            (w*3,h), # dimensions
+            (255,0,0), Text("end wave",(255,255,255),25), # btnColor, TextObj
+            end_wave
         )
 
         def reset_cards(btn):

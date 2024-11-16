@@ -6,6 +6,7 @@ import numpy as np
 import math
 import time
 import cProfile, pstats, io
+import sys
 
 W = 1920 # default but not needed
 H = 1080
@@ -369,7 +370,7 @@ class Controller:
             if last_in_queue != self.prev_last_in_queue:
                 self.virtual_cursor_index = [0,0]
             all_buttons = game.get_entities_by_id("Button")
-            buttons = [btn for btn in all_buttons if btn.uiTag == last_in_queue]
+            buttons = [btn for btn in all_buttons if btn.uiTag == last_in_queue and not btn.disabled]
 
             self.update_button_matrix(buttons)
             try:
