@@ -69,7 +69,6 @@ class Player(Entity):
     def __init__(self, x, y):
         w, h = 30, 30
         self.rect = Rect((x, y), (w, h))
-        print(self.rect)
         self.vel = pygame.Vector2() # [0,0]
         self.curr_weapon = "gun"
         self.col = (127, 35, 219)
@@ -118,6 +117,7 @@ class Player(Entity):
         # timers #
         self.bulletCooldown = 0
         self.invincibilityTimer = 0
+        self.hit_timer = 0
         # ------ #
 
         self.base_stats = self.get_stats()
@@ -131,12 +131,14 @@ class Player(Entity):
         # TODO actives arent implemented yet but im going there next
         self.deck = Deck(self)
 
+    def init(self):
         # Status Effects
         # so status effects are just entities that exist and
         # you can call like add_fire_effect(secs) and thats it,
         # everything else is handled in the Effects individual class
+        super().init()
         fire_ent = Fire(self)
-        game.curr_scene.init_entity(fire_ent, "fire_eff")
+        game.curr_scene.add_entity(fire_ent, "fire_eff")
         self.status_effects = {
             "fire": fire_ent,
         }
@@ -198,6 +200,9 @@ class Player(Entity):
 
     def hit(self, ent):
         if self.invincibilityTimer <= 0:
+            # this is for hitstop idk it feels kinda bad on every single hit
+            #game.time_speed = 0.001
+            #self.hit_timer = 0.05
             self.health -= ent.dmg
             self.invincibilityTimer = self.iFrames
 
@@ -211,7 +216,7 @@ class Player(Entity):
                 pygame.Vector2(ent.rect.center)
             )
             vec = pygame.Vector2(math.cos(theta), math.sin(theta))
-            self.vel -= vec * self.kb
+            self.vel -= vec * self.kb * 2
 
     def input(self):
         self.movement()
@@ -219,7 +224,7 @@ class Player(Entity):
 
     def spawn_bullet(self, pos, theta):
         speed = self.bulletSpeed*(1+random.uniform(-self.speedInaccuracy, self.speedInaccuracy))
-        vel = pygame.Vector2(math.cos(theta), math.sin(theta)) * (speed)
+        vel = pygame.Vector2(math.cos(theta), math.sin(theta)) * (speed) * 60
         id = "bullet"
 
         game.curr_scene.add_entity(Bullet(pos, vel), id)
@@ -286,6 +291,9 @@ class Player(Entity):
         # increment / decrement all timers
         self.bulletCooldown -= dt
         self.invincibilityTimer -= dt
+        self.hit_timer -= dt/game.time_speed
+        if game.time_speed < 1 and self.hit_timer <= 0:
+            game.time_speed = 1
 
     def draw(self, window):
         # flashing logic
@@ -293,5 +301,3 @@ class Player(Entity):
             return
 
         drawCircle(window, (self.rect.center, self.rect.w/2), self.col)
-
-# ======================================================================= #

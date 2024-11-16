@@ -250,7 +250,7 @@ class Mosquito(Enemy):
         s_pos = pygame.Vector2(self.rect.center)
         innac = 10
         theta = vec_angle_to(s_pos,p_pos) + random.uniform(math.pi/innac, -math.pi/innac)
-        vec = pygame.Vector2(math.cos(theta), math.sin(theta)) * random.uniform(5,10)
+        vec = pygame.Vector2(math.cos(theta), math.sin(theta)) * random.uniform(5,10) * 60
         game.curr_scene.add_entity(EnemyBullet(self.rect.center, vec, self.dmg), "enemy bullet")
 
     def on_bullet_collision(self, blt):

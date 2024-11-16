@@ -34,7 +34,7 @@ class Bullet(Entity):
             self.remove_self()
 
     def update(self, dt):
-        self.move(self.vel)
+        self.move(self.vel*dt)
         if not AABBCollision(self.rect, [0,0,game.W,game.H]):
             self.remove_self()
 
@@ -57,7 +57,7 @@ class EnemyBullet(Entity):
         self.remove_self()
 
     def update(self, dt):
-        self.move(self.vel)
+        self.move(self.vel*dt)
         player = game.get_entity_by_id("player")
         if AABBCollision(self.rect, player.rect):
             self.on_player_collision(player)

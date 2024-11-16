@@ -7,11 +7,8 @@ from shop import *
 from wave import *
 from menus import *
 
-clock = pygame.time.Clock()
-maxFPS = 60
-
 def drawFPS(dt, window):
-    drawText(window, f"fps: {1/dt:.2f}", (0,0,0), (game.W-100,100), 40, True)
+    drawText(window, f"fps: {1/max(dt,0.0001):.2f}", (0,0,0), (game.W-100,100), 40, True)
 
 class Background(Entity):
     def __init__(self):
@@ -21,38 +18,57 @@ class Background(Entity):
     def draw(self, window):
         drawRect(window, self.rect, (125,125,125))
 
-def main():
-    game.init_window("Untitled Roguelike")
-    running = True
-
-    # this will def be diff later but for now just setup the main scene #
-    # use init_entity when adding entities up first otherwise they wont
-    # be really added until the next update loop
-    # ( this is to stop dict len changes when iterating blah blah blah )
+def create_main_scene():
     mainScene = Scene()
-    game.add_scene(mainScene, "main")
-    game.switch_to_scene("main")
-
     bg = Background()
     player = Player(game.W/2, game.H/2)
     playerUi = PlayerUI(player)
     shop = Shop()
     wave = Wave()
-    game.curr_scene.init_entity(bg, "bg", -100000)
-    game.curr_scene.init_entity(player, "player")
-    game.curr_scene.init_entity(playerUi, "playerUI", 1000)
-    game.curr_scene.init_entity(wave, "wave")
+    mainScene.init_entity(bg, "bg", -100000)
+    mainScene.init_entity(player, "player")
+    mainScene.init_entity(playerUi, "playerUI", 1000)
+    mainScene.init_entity(wave, "wave")
 
     # so currently u have to init all menus idk it works but its kinda scuffed but
     # also sometimes scuffed is ok
-    game.curr_scene.init_entity(shop, "shop")
-    game.curr_scene.init_entity(MainMenu(), "mainmenu")
-    game.curr_scene.init_entity(DebugMenu(), "debugmenu")
-    game.curr_scene.init_entity(SettingsMenu(), "settingsmenu")
+    mainScene.init_entity(shop, "shop")
+    mainScene.init_entity(PauseMenu(), "mainmenu")
+    mainScene.init_entity(DebugMenu(), "debugmenu")
+    mainScene.init_entity(SettingsMenu(), "settingsmenu")
+    return mainScene
+
+def create_menu_scene():
+    scene = Scene()
+    bg = Background()
+    menu = MainMenu()
+    scene.init_entity(bg, "bg", -100000)
+    scene.init_entity(menu, "menu", "UI")
+
+    return scene
+
+def main():
+    game.init_window("Untitled Roguelike")
+    running = True
+
+    # use init_entity when adding entities up first otherwise they wont
+    # be really added until the next update loop
+    # ( this is to stop dict len changes when iterating blah blah blah )
+    mainScene = create_main_scene()
+    menuScene = create_menu_scene()
+
+    game.add_scene(mainScene, "main")
+    game.add_scene(menuScene, "menu")
+    game.switch_to_scene("menu", False)
     # ----------------------------------------------------------------- #
 
     while running:
-        dt = clock.tick(maxFPS) / 1000.0
+        dt = game.time_speed * clock.tick(maxFPS) / 1000.0
+
+        if game.key_pressed(pygame.K_j):
+            game.time_speed += 0.1
+        if game.key_pressed(pygame.K_k):
+            game.time_speed -= 0.1
 
         game.update(dt)
         game.draw(game.window)

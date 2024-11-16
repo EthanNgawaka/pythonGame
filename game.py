@@ -8,6 +8,9 @@ class Entity:
         print("please implement the UPDATE func uwu")
     def draw(self, window):
         print("please implement the DRAW func uwu")
+    def init(self):
+        # called once curr_scene exists, only used in niche cases
+        self.initialized = True
 
     # well maybe its not too bad that its not an interface
     # cause this is usefule
@@ -18,6 +21,7 @@ class Entity:
     def set_id(self, id):
         self.id = id
         self.alive = True
+        self.initialized = False
     def move(self, vec):
         try:
             self.rect.move(vec)
@@ -27,12 +31,14 @@ class Entity:
             print("rect doesnt exist for this entity! id: " + self.id)
 
 class Scene:
-    def __init__(self):
+    def __init__(self, reset_on_switch=True):
         self.entities = {}
         self.drawPriorityLookup = {}
         self.toAdd = []
         self.toRm = []
         self.UIPriority = []
+        self.reset_on_switch = reset_on_switch
+        self.initialized = False
 
     def get_sorted_draw_indices(self):
         sorted_list = list(self.drawPriorityLookup.keys()).copy()
@@ -110,6 +116,8 @@ class Scene:
         self.handle_adding()
 
         for [key, entity] in self.entities.items():
+            if not entity.initialized:
+                entity.init()
             if len(self.UIPriority) > 0:
                 try:
                     topTag = self.UIPriority[len(self.UIPriority)-1]
@@ -120,6 +128,9 @@ class Scene:
                 continue
 
             entity.update(dt)
+        if not self.initialized:
+            self.start_state = copy.deepcopy(self)
+            self.initialized = True
 
         self.handle_removing()
 
@@ -129,7 +140,9 @@ class Scene:
             self.entities[self.drawPriorityLookup[priority]].draw(window)
 
     def cleanup(self):
-        pass # idk if i even need this but called when scene is switching
+        if self.reset_on_switch:
+            return self.start_state
+        return False
 
 class Game:
     def __init__(self):
@@ -144,6 +157,9 @@ class Game:
         self.window = None
         self.W = 0
         self.H = 0
+        self.transition_timer = 0
+        self.trans_time = 1
+        self.time_speed = 1.0
         # init keys to avoid index error (pygame has 512 keycodes)
         # im sure theres a better way to do this
         # eg) if game.keyDown(pygame.KEY_a):
@@ -194,6 +210,13 @@ class Game:
         # if down this frame but not the last
         return self.keys[keyCode] and not self.oldKeys[keyCode]
 
+    def transition_lerp(self, x):
+        if x > 0.5:
+            out = (math.sqrt(1-math.pow(-2*x+2,2))+1)/2
+        else:
+            out = (1-math.sqrt(1-math.pow(2*x,2)))/2
+        return out*self.W
+
     def remove_entity(self, entity):
         self.curr_scene.remove_entity(entity)
 
@@ -208,9 +231,23 @@ class Game:
     def add_scene(self, scene, id):
         self.scenes[id] = scene
 
-    def switch_to_scene(self, id):
+    def switch_to_scene(self, id, do_transition=True):
+        while self.transition_timer <= self.trans_time and do_transition:
+            dt = clock.tick(maxFPS)/1000
+            self.transition_timer += dt
+            t = self.transition_timer/self.trans_time
+            l = self.transition_lerp(t)
+            drawRect(game.window, [0,0,l,self.H], (0,0,0))
+            pygame.display.flip()
+
         if self.curr_scene is not None:
-            self.curr_scene.cleanup()
+            reset = self.curr_scene.cleanup()
+            if reset:
+                old_id = None
+                for [s_id,s] in self.scenes.items():
+                    if s == self.curr_scene:
+                        old_id = s_id
+                self.scenes[old_id] = copy.deepcopy(reset)
         try:
             self.curr_scene = self.scenes[id]
         except Exception as e:
@@ -231,11 +268,19 @@ class Game:
         if 1 in self.keys:
             self.input_mode = "keyboard"
 
+        if self.transition_timer > 0:
+            self.transition_timer -= dt
+
     def draw(self, window):
         try:
             self.curr_scene.draw(window)
         except Exception as e:
             print(traceback.format_exc())
+
+        if self.transition_timer > 0:
+            t = self.transition_timer/self.trans_time
+            drawRect(game.window, [0,0,self.transition_lerp(t),self.H], (0,0,0))
+
 
 # singleton game class for global access
 game = Game()

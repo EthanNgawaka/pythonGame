@@ -10,6 +10,27 @@ class MainMenu(Menu):
     def __init__(self):
         super().__init__(
             "mainmenu", "UI",
+            (pygame.Color("#503197"), pygame.Color("#18215d")),
+            True
+        )
+
+    def init(self):
+        super().init()
+        self.open()
+
+    def add_elements(self):
+        # start button
+        self.create_centered_button(
+            (self.rect.w/2, self.rect.h/2), # center
+            (self.rect.w/2,self.rect.h/4), # dimensions
+            (60,189,60), Text("START",(255,255,255),100), # btnColor, TextObj
+            lambda btn: game.switch_to_scene("main"),
+        )
+
+class PauseMenu(Menu):
+    def __init__(self):
+        super().__init__(
+            "pausemenu", "UI",
             (pygame.Color("#503197"), pygame.Color("#18215d"))
         )
         self.close_on_esc = True
@@ -45,6 +66,14 @@ class MainMenu(Menu):
             (self.rect.w/5,self.rect.h/10), # dimensions
             (80,80,80), Text("SETTINGS",(255,255,255),45), # btnColor, TextObj
             open_settings
+        )
+
+        # back to menu button
+        self.create_centered_button(
+            (self.rect.w/2, 6*self.rect.h/8), # center
+            (self.rect.w/5,self.rect.h/10), # dimensions
+            (55,55,55), Text("MENU",(255,255,255),45), # btnColor, TextObj
+            lambda e : game.switch_to_scene("menu") # onAction
         )
 
         # exit button

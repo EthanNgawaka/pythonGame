@@ -10,6 +10,9 @@ import cProfile, pstats, io
 W = 1920 # default but not needed
 H = 1080
 
+clock = pygame.time.Clock()
+maxFPS = 60
+
 DEBUG = True
 
 def profile(fnc):
@@ -223,6 +226,7 @@ class Controller:
     def check_controllers_connected(self):
         for event in pygame.event.get():
             if event.type == pygame.JOYDEVICEADDED:
+                print("new controller added")
                 joy = pygame.joystick.Joystick(event.device_index)
                 self.joysticks.append(joy)
 
@@ -356,7 +360,6 @@ class Controller:
             b = self.RSTICK.length()
             c = self.A or self.B or self.X or self.Y or self.START
             if a or b or c:
-                print("AH")
                 game.input_mode = "controller"
             return
 
