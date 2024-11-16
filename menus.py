@@ -1,4 +1,5 @@
 from ui import *
+from enemies import *
 
 # for debug
 if DEBUG:
@@ -26,20 +27,31 @@ class MainMenu(Menu):
         super().update(dt)
 
     def add_elements(self):
-        # exit button
-        self.create_centered_button(
-            (self.rect.w/2, 4*self.rect.h/5), # center
-            (self.rect.w/5,self.rect.h/5), # dimensions
-            (255,0,0), Text("EXIT",(255,255,255),45), # btnColor, TextObj
-            lambda e : pygame.quit() # onAction
-        )
-
         # resume button
         self.create_centered_button(
-            (self.rect.w/2, self.rect.h/5), # center
-            (self.rect.w/5,self.rect.h/5), # dimensions
+            (self.rect.w/2, self.rect.h/8), # center
+            (self.rect.w/5,self.rect.h/10), # dimensions
             (125,125,125), Text("RESUME",(255,255,255),45), # btnColor, TextObj
             self.close # onAction
+        )
+        
+        # settings button
+        def open_settings(bttn):
+            game.get_entity_by_id("settingsmenu").open()
+
+        self.create_centered_button(
+            (self.rect.w/2, 2*self.rect.h/8), # center
+            (self.rect.w/5,self.rect.h/10), # dimensions
+            (80,80,80), Text("SETTINGS",(255,255,255),45), # btnColor, TextObj
+            open_settings
+        )
+
+        # exit button
+        self.create_centered_button(
+            (self.rect.w/2, 7*self.rect.h/8), # center
+            (self.rect.w/5,self.rect.h/10), # dimensions
+            (255,0,0), Text("EXIT",(255,255,255),45), # btnColor, TextObj
+            lambda e : pygame.quit() # onAction
         )
 
         if DEBUG:
@@ -48,11 +60,36 @@ class MainMenu(Menu):
 
             # debug button
             self.create_centered_button(
-                (self.rect.w/2, self.rect.h/2), # center
-                (self.rect.w/5,self.rect.h/5), # dimensions
+                (self.rect.w/5, self.rect.h/2), # center
+                (self.rect.w/5,self.rect.h/10), # dimensions
                 (255,175,80), Text("DEBUG",(255,255,255),45),
                 open_debug # onAction
             )
+class SettingsMenu(Menu):
+    def __init__(self):
+        super().__init__(
+            "settingsmenu", "UI",
+            (pygame.Color("#503197"), pygame.Color("#18215d"))
+        )
+        self.close_on_esc = True
+
+    def add_elements(self):
+        # back button
+        self.create_centered_button(
+            (self.rect.w/2, 7*self.rect.h/8), # center
+            (self.rect.w/5,self.rect.h/10), # dimensions
+            (125,125,125), Text("BACK",(255,255,255),45), # btnColor, TextObj
+            self.close # onAction
+        )
+
+        # fullscreen button
+        self.create_centered_button(
+            (self.rect.w/2, 1*self.rect.h/8), # center
+            (self.rect.w/2,self.rect.h/10), # dimensions
+            (125,125,125), Text("TOGGLE FULLSCREEN",(255,255,255),45), # btnColor, TextObj
+            lambda e: pygame.display.toggle_fullscreen() # onAction
+        )
+
 
 class DebugMenu(Menu):
     def __init__(self):
@@ -98,6 +135,34 @@ class DebugMenu(Menu):
             (w*3,h), # dimensions
             (255,0,0), Text("spawn 10 enemies",(255,255,255),25), # btnColor, TextObj
             spawn_enemies
+        )
+
+        def spawn_dummy(btn):
+            game.curr_scene.add_entity(Dummy((W/2, H/2)),"dummy")
+        self.create_centered_button(
+            (self.rect.w-w*3, self.rect.h-h*4), # center
+            (w*3,h), # dimensions
+            (255,0,0), Text("Spawn dummy",(255,255,255),25), # btnColor, TextObj
+            spawn_dummy
+        )
+
+        def pause_wave(btn):
+            wave = game.get_entity_by_id("wave")
+            wave.pause = not wave.pause
+        self.create_centered_button(
+            (self.rect.w-w*3, self.rect.h-h*2.5), # center
+            (w*3,h), # dimensions
+            (255,0,0), Text("pause wave",(255,255,255),25), # btnColor, TextObj
+            pause_wave
+        )
+
+        def reset_cards(btn):
+            game.get_entity_by_id("player").reset_stats()
+        self.create_centered_button(
+            (self.rect.w-w*3, self.rect.h-h*5.5), # center
+            (w*3,h), # dimensions
+            (255,0,0), Text("reset cards",(255,255,255),25), # btnColor, TextObj
+            reset_cards
         )
 
         i = 1

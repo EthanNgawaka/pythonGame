@@ -23,7 +23,7 @@ class AccuracyUp(Card):
     def __init__(self):
         super().__init__()
     def on_pickup(self):
-        self.player.inaccuracy -= 0.1
+        self.player.inaccuracy *= 0.33
         if self.player.inaccuracy < 0:
             self.player.inaccuracy = 0
         
@@ -69,7 +69,7 @@ class Shotgun(Card):
         super().__init__()
     def on_pickup(self):
         self.player.bulletCount += 3
-        self.player.dmg /= 2
+        self.player.dmg *= 0.65
         self.player.inaccuracy += 0.1
         self.player.speedInaccuracy += 0.1
         self.player.atkRate += 0.1
@@ -90,7 +90,7 @@ class Minigun(Card):
     def __init__(self):
         super().__init__()
     def on_pickup(self):
-        self.player.dmgMultiplier = 0.2
+        self.player.dmgMultiplier = 0.4
         self.player.inaccuracy += 0.06
         self.player.speedInaccuracy += 0.3
         self.player.atkRateMultiplier = 5

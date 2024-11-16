@@ -140,6 +140,10 @@ class Game:
         self.controller = Controller()
         self.oldKeys = self.keys
         self.input_mode = "keyboard"
+
+        self.window = None
+        self.W = 0
+        self.H = 0
         # init keys to avoid index error (pygame has 512 keycodes)
         # im sure theres a better way to do this
         # eg) if game.keyDown(pygame.KEY_a):
@@ -149,6 +153,17 @@ class Game:
         #         print("s pressed")
         #
         # dif being that pressed only returns true on the first frame the key is pressed
+
+    def init_window(self, caption):
+        self.W, self.H, self.window = init(caption)
+
+    def change_resolution(self, new_w, new_h):
+        # not really working yet
+        # need to make it actually scale the screen but idk
+        # what to use as a base resolution
+        self.window = pygame.display.set_mode((new_w,new_h))
+        self.W = new_w
+        self.H = new_h
     
     def get_entity_by_id(self, id):
         try:

@@ -27,10 +27,10 @@ class Copper(Entity):
 
     def bound_to_screen(self): # this is temp
         bounds = [
-            pygame.Rect(-100,-100, 100, H+200), # left
-            pygame.Rect(W,-100, 100, H+200), # right
-            pygame.Rect(-100,-100, W+200, 100), # top
-            pygame.Rect(-100, H, W+200, 100), # bottom
+            pygame.Rect(-100,-100, 100, game.H+200), # left
+            pygame.Rect(game.W,-100, 100, game.H+200), # right
+            pygame.Rect(-100,-100, game.W+200, 100), # top
+            pygame.Rect(-100, game.H, game.W+200, 100), # bottom
         ]
         for b in bounds:
             col = AABBCollision(b, self.rect)

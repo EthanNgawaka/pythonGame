@@ -7,6 +7,7 @@ class Wave(Entity):
             Fly, Cockroach,
             MotherCockroach, Ant,
             Mosquito, TermiteSwarm,
+            Snail, MagneticSnail
         ]
         self.timer = 0
         self.num = 1
@@ -14,10 +15,13 @@ class Wave(Entity):
         self.length = 60
         self.spawnRate = 3.5
         self.last_spawn = 0
+        self.pause = False
 
         self.swappedAlready = False
 
     def update(self, dt):
+        if self.pause:
+            return
         if self.timer < self.length:
             self.timer += dt
 
@@ -45,11 +49,11 @@ class Wave(Entity):
         EnemyType = self.enemyTypes[random.randint(0,len(self.enemyTypes)-1)]
         w, h = 40, 40
         if random.randint(0,1) > 0:
-            x = random.randint(-w,W+w)
-            y = (-h if random.randint(0,1) > 0 else H+h)
+            x = random.randint(-w,game.W+w)
+            y = (-h if random.randint(0,1) > 0 else game.H+h)
         else:
-            x = (-w if random.randint(0,1) > 0 else W+w)
-            y = random.randint(-h,H+h)
+            x = (-w if random.randint(0,1) > 0 else game.W+w)
+            y = random.randint(-h,game.H+h)
         
         enemy = EnemyType(pygame.Vector2(x,y))
         # if its not instance of enemy then its a swarm type
@@ -60,5 +64,5 @@ class Wave(Entity):
             )
 
     def draw(self, window):
-        drawText(window, f"Wave Timer: {round(self.timer)}s", (0,0,0), (W-200, 200), 40, True)
-        drawText(window, f"Wave #{round(self.num)}", (0,0,0), (W-200, 250), 40, True)
+        drawText(window, f"Wave Timer: {round(self.timer)}s", (0,0,0), (game.W-200, 200), 40, True)
+        drawText(window, f"Wave #{round(self.num)}", (0,0,0), (game.W-200, 250), 40, True)

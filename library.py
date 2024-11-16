@@ -6,10 +6,8 @@ import math
 import time
 import cProfile, pstats, io
 
-#W = 1920
-#H = 1080
-W = 1540
-H = 870
+W = 1920 # default but not needed
+H = 1080
 
 DEBUG = True
 
@@ -443,20 +441,25 @@ class Spritesheet:
         return self.get_sprite(self.currFrame*self.spriteW, state[1]*self.spriteH)
 
 # init funcs
-def init(windowW, windowH, caption):
+def init(caption):
     pygame.init()
     pygame.joystick.init()
-    window = pygame.display.set_mode((windowW,windowH))#, flags=pygame.SCALED | pygame.HIDDEN)
-    #display_info = pygame.display.Info()
+    display_info = pygame.display.Info()
+
+    W = display_info.current_w
+    H = display_info.current_h
+
+    window = pygame.display.set_mode((W,H))#, flags=pygame.SCALED | pygame.HIDDEN)
+
     #SCALE = (display_info.current_w/windowW, display_info.current_h/windowH)
     #nativeWindow = pg_sdl2.Window.from_display_module()
     #nativeWindow.size = (windowW * SCALE[0], windowH * SCALE[1])
     #nativeWindow.position = pg_sdl2.WINDOWPOS_CENTERED
     #nativeWindow.show()
 
-    #pygame.display.toggle_fullscreen()
+    pygame.display.toggle_fullscreen()
     pygame.display.set_caption(caption)
-    return window
+    return (W,H,window)
 
 # misc math funcs
 def vec_angle_to(A, B):

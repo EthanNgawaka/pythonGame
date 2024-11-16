@@ -29,15 +29,15 @@ class Enemy(Entity):
         if self.rect.x < 0 and self.vel.x < 0:
             self.rect.x = 0
             self.vel.x = 0
-        if self.rect.x+self.rect.w > W and self.vel.x > 0:
-            self.rect.x = W - self.rect.w
+        if self.rect.x+self.rect.w > game.W and self.vel.x > 0:
+            self.rect.x = game.W - self.rect.w
             self.vel.x = 0
 
         if self.rect.y < 0 and self.vel.y < 0:
             self.rect.y = 0
             self.vel.y = 0
-        if self.rect.y+self.rect.h > H and self.vel.y > 0:
-            self.rect.y = H - self.rect.h
+        if self.rect.y+self.rect.h > game.H and self.vel.y > 0:
+            self.rect.y = game.H - self.rect.h
             self.vel.y = 0
 
     def collision(self):
@@ -49,7 +49,6 @@ class Enemy(Entity):
 
         for bullet in bullets:
             if AABBCollision(bullet.rect, self.rect) and bullet.has_not_pierced(self):
-                bullet.on_enemy_collision(self)
                 self.on_bullet_collision(bullet)
     def get_copper_drop_qty(self):
         # returns a random qty btwn the value and half the value of the enemy
@@ -78,6 +77,7 @@ class Enemy(Entity):
         self.stun = 0.5
 
     def on_bullet_collision(self, bullet):
+        bullet.on_enemy_collision(self)
         player = game.get_entity_by_id("player")
         self.health -= player.dmg * player.dmgMultiplier
 
@@ -308,8 +308,9 @@ class Termite(Enemy):
         self.atkThresh = 200
         self.timer = 0
         self.value = 5
-        self.col = pygame.Color(127,90,90)
+        self.col = pygame.Color(255,120,120)
         self.dmg = 5
+        self.health = 4
 
     def movement(self):
         player = game.get_entity_by_id("player")
@@ -346,7 +347,6 @@ class Termite(Enemy):
                     neighbors += 1
 
         if neighbors > 0:
-            print(ave_vel)
             avg_pos /= neighbors
             avg_vel /= neighbors
             
@@ -356,14 +356,14 @@ class Termite(Enemy):
         self.vel += close_dp*avoidfactor
 
         margin = 0.05
-        if self.rect.y < H*margin:
+        if self.rect.y < game.H*margin:
             self.vel.y += turnfactor
-        if self.rect.y > H*(1-margin):
+        if self.rect.y > game.H*(1-margin):
             self.vel.y -= turnfactor
 
-        if self.rect.x < W*margin:
+        if self.rect.x < game.W*margin:
             self.vel.x += turnfactor
-        if self.rect.x > W*(1-margin):
+        if self.rect.x > game.W*(1-margin):
             self.vel.x -= turnfactor
 
         speed = self.vel.length()
@@ -375,3 +375,114 @@ class Termite(Enemy):
     def repulse(self):
         pass
 
+class Snail(Enemy):
+    def __init__(self, pos):
+        super().__init__(pos)
+        self.rect = Rect(pos, (40,40))
+        self.col = (255,0,0)
+        self.col1 = (255,0,0)
+        self.col2 = (50,50,50)
+        self.speed = 3100
+        self.drag = 0.8
+        self.health = 10
+        self.value = 8
+        self.dmg = 10
+        self.timer = 0
+
+    def movement(self):
+        player = game.get_entity_by_id("player")
+        vec = self.get_unit_vec_to_entity(player)*self.speed
+        vec *= self.get_moving()
+        self.add_force(vec)
+        self.speed = (abs(math.sin(4*(self.timer-math.pi/2)))*3100)
+
+    def update(self, dt):
+        super().update(dt)
+        self.timer += dt
+        if self.get_moving() > 0:
+            self.col = self.col1
+        else:
+            self.col = self.col2
+
+    def get_moving(self):
+        return max(0,math.sin(self.timer*math.pi/2)-0.2)
+
+    def on_bullet_collision(self, bullet):
+        if self.get_moving() > 0:
+            super().on_bullet_collision(bullet)
+            return
+        bullet.remove_self()
+        player = game.get_entity_by_id("player")
+        vec = player.rect.center - self.rect.center
+        vel = vec.normalize()*bullet.vel.length()
+        game.curr_scene.add_entity(EnemyBullet(bullet.rect.center, vel, self.dmg), "enemy bullet")
+
+class MagneticSnail(Snail):
+    def __init__(self, pos):
+        super().__init__(pos)
+        self.suckage = 30
+        self.suckage_thresh = 450
+    
+    def update(self, dt):
+        super().update(dt)
+        if self.get_moving() <= 0:
+            # attract player, bullets, enemies excluding self
+            player = game.get_entity_by_id("player")
+            diff = self.rect.center-player.rect.center
+            vec = (diff).normalize()
+            d_sqrd = max(diff.length()*diff.length()/100000,1)
+            print(d_sqrd)
+            player.vel += (vec*self.suckage) * 1/(d_sqrd)
+
+            for bullet in game.get_entities_by_type(Bullet):
+                diff = self.rect.center-bullet.rect.center
+                if diff.length() > self.suckage_thresh:
+                    continue
+                vec = diff.normalize()*self.suckage/20
+                speed = bullet.vel.length()
+                bullet.vel += vec
+                bullet.vel = bullet.vel.normalize()*speed
+
+class Dummy(Enemy):
+    def __init__(self, pos):
+        super().__init__(pos)
+        self.rect = Rect((W/2, H/2), (30, 30))
+        self.health = 9999
+        self.timer = 0
+        self.dps = 0
+        self.last_hit = 0
+        self.dps_check_thresh = 1
+        self.dmg_done = 0
+        self.first_hit = 0
+        self.disp_dps = 0
+
+    def update(self, dt):
+        super().update(dt)
+        self.timer += dt
+        if abs(self.last_hit - self.timer) < self.dps_check_thresh:
+            time = abs(self.first_hit - self.last_hit)
+            if time == 0:
+                return
+            
+            self.dps = self.dmg_done/time
+            return
+        
+        self.dps = 0
+        self.dmg_done = 0
+        self.first_hit = 0
+
+    def draw(self, window):
+        super().draw(window)
+        if self.dps > 0:
+            self.disp_dps = self.dps
+        drawText(window, f"DPS: {self.disp_dps:.2f}", (0,0,0), self.rect.center - pygame.Vector2(0,self.rect.h*2), 40, True)
+        drawText(window, f"dmg_done: {self.dmg_done:.2f}", (0,0,0), self.rect.center - pygame.Vector2(0,self.rect.h*4), 40, True)
+
+    def on_bullet_collision(self, bullet):
+        player = game.get_entity_by_id("player")
+        bullet.on_enemy_collision(self)
+        dmg = (player.dmg * player.dmgMultiplier)
+        self.dmg_done += dmg
+        self.last_hit = self.timer
+        if self.first_hit == 0:
+            self.first_hit = self.timer

@@ -20,7 +20,7 @@ class Bullet(Entity):
         return True
 
     def get_size(self,x):
-        return max(x*1.6, 4)
+        return max(x, 3)
     
     def on_enemy_collision(self, enemy):
         self.piercesLeft -= 1
@@ -31,7 +31,7 @@ class Bullet(Entity):
 
     def update(self, dt):
         self.move(self.vel)
-        if not AABBCollision(self.rect, [0,0,W,H]):
+        if not AABBCollision(self.rect, [0,0,game.W,game.H]):
             self.remove_self()
 
     def draw(self, window):
@@ -58,7 +58,7 @@ class EnemyBullet(Entity):
         if AABBCollision(self.rect, player.rect):
             self.on_player_collision(player)
             player.hit(self)
-        if not AABBCollision(self.rect, [0,0,W,H]):
+        if not AABBCollision(self.rect, [0,0,game.W,game.H]):
             self.remove_self()
 
     def draw(self, window):

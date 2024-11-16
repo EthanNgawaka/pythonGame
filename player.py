@@ -120,6 +120,8 @@ class Player(Entity):
         self.invincibilityTimer = 0
         # ------ #
 
+        self.base_stats = self.get_stats()
+
         # Deck (Chips/Inventory)
         # the deck is an object that holds all the cards
         # when a shop is opened the cards are shown and when bought
@@ -142,6 +144,14 @@ class Player(Entity):
 
     def add_fire_effect(self, secs):
         self.status_effects["fire"].timer += secs
+
+    def reset_stats(self):
+        self.set_stats(self.base_stats)
+        self.deck = Deck(self)
+
+    def set_stats(self, dict):
+        for [name, val] in dict.items():
+            setattr(self, name, val)
 
     def get_stats(self):
         # TODO: would be cool to have a slider for each stat in debug
@@ -171,15 +181,15 @@ class Player(Entity):
         if self.rect.x < 0 and self.vel.x < 0:
             self.rect.x = 0
             self.vel.x = 0
-        if self.rect.x+self.rect.w > W and self.vel.x > 0:
-            self.rect.x = W - self.rect.w
+        if self.rect.x+self.rect.w > game.W and self.vel.x > 0:
+            self.rect.x = game.W - self.rect.w
             self.vel.x = 0
 
         if self.rect.y < 0 and self.vel.y < 0:
             self.rect.y = 0
             self.vel.y = 0
-        if self.rect.y+self.rect.h > H and self.vel.y > 0:
-            self.rect.y = H - self.rect.h
+        if self.rect.y+self.rect.h > game.H and self.vel.y > 0:
+            self.rect.y = game.H - self.rect.h
             self.vel.y = 0
 
     def physics(self, dt):

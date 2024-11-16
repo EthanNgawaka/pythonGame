@@ -20,9 +20,9 @@ class Shop(Menu):
             "shop", 100000,
             (pygame.Color("#503197"), pygame.Color("#18215d"))
         )
-        w, h = W*0.75, H*0.5
-        self.openRect = pygame.Rect((W-w)/2,(H-h)/2,w,h)
-        self.closeRect = pygame.Rect((W-w)/2,H*1.2,w,h)
+        w, h = game.W*0.75, game.H*0.5
+        self.openRect = pygame.Rect((game.W-w)/2,(game.H-h)/2,w,h)
+        self.closeRect = pygame.Rect((game.W-w)/2,game.H*1.2,w,h)
         self.rect = self.closeRect.copy()
 
         self.cards = []
