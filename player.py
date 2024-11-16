@@ -67,7 +67,7 @@ class Fire(Entity):
 
 class Player(Entity):
     def __init__(self, x, y):
-        w, h = 40, 40
+        w, h = 30, 30
         self.rect = Rect((x, y), (w, h))
         print(self.rect)
         self.vel = pygame.Vector2() # [0,0]
@@ -87,12 +87,12 @@ class Player(Entity):
         # attributes #
         # (NOT implemented) #
         self.lifesteal = 0
-        self.iFrames = 1.5
+        self.iFrames = 0.75
 
         # (implemented) #
         self.piercing = 0
         self.speed = 50
-        self.maxHealth = 100
+        self.maxHealth = 200
 
         self.kb = 500
         self.dmgMultiplier = 1
@@ -295,11 +295,3 @@ class Player(Entity):
         drawCircle(window, (self.rect.center, self.rect.w/2), self.col)
 
 # ======================================================================= #
-
-class ShotgunBullet(Bullet):
-
-    def draw(self, window):
-        pygame.draw.line(window, (255,255,0), [self.rect[0], self.rect[1]], [self.rect[0] - (self.vel[0]*10), self.rect[1] - (self.vel[1]*10)], 5)
-
-class Ricochet(Bullet):
-    pass

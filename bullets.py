@@ -5,7 +5,11 @@ class Bullet(Entity):
         player = game.get_entity_by_id("player")
 
         self.r = self.get_size(player.dmg*player.dmgMultiplier)
-        self.rect = Rect((0,0), (self.r*2, self.r*2))
+        # so the bullet rect is actually WAY bigger than the drawn bullet
+        # cause aiming feels so tedious without it unless u got bigboy damage
+
+        w = max(self.r*1.5, 35)
+        self.rect = Rect((0,0), (w,w))
         self.rect.center = center
 
         self.vel = vel

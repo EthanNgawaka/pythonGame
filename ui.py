@@ -202,7 +202,7 @@ class Menu(Entity):
             self.lerp(self.openRect, t)
         else:
             if self.UIRoot is not None:
-                t = 1 if self.do_instant_open else 0.1
+                t = 1 if self.do_instant_open else 0.3
                 
                 dist = abs(self.rect.y - self.closeRect.y)
                 self.lerp(self.closeRect, t)

@@ -147,13 +147,14 @@ class Cockroach(Enemy):
         self.speedRange = [1000,2200]
         self.drag = 0.9
         self.dmg = 10
-        self.value = 20
+        self.value = 15
         self.health = 16
 
         self.movementTimer = 0
         self.movementRot = 90
         self.movementRotTarg = 90
         self.movementThresh = 0
+        self.maxSpeed = 2500
 
         self.scatterTimer = 0
         self.rect = Rect(pos, (30,30))
@@ -175,7 +176,7 @@ class Cockroach(Enemy):
 
         self.add_force((move_vec + perp_vec)*self.speed)
         if self.scatterTimer > 0:
-            self.speed = 2500
+            self.speed = self.maxSpeed
 
     def update(self, dt):
         super().update(dt)
@@ -195,7 +196,7 @@ class BabyCockroach(Cockroach):
         self.health = 2
         self.value = 2
         self.dmg = 4
-        self.speedRange = [2000,3000]
+        self.speedRange = [1500,2600]
     
     def draw(self, window):
         drawCircle(window, (self.rect.center, self.rect.w/4), self.col)
@@ -206,10 +207,11 @@ class MotherCockroach(Cockroach):
         self.rect = Rect(pos, (50,50))
         self.speedRange = [500,1000]
         self.health = 30
-        self.value = 40
+        self.value = 10
+        self.maxSpeed = 1200
 
     def on_death(self):
-        for i in range(random.randint(8,15)):
+        for i in range(random.randint(15,35)):
             spawn_pos = pygame.Vector2(self.rect.topleft)
             spawn_pos.x += random.uniform(0, self.rect.w)
             spawn_pos.y += random.uniform(0, self.rect.h)
@@ -227,8 +229,8 @@ class Mosquito(Enemy):
         self.atkTimer = 0
         self.lastAttack = 0
         self.dmg = 10
-        self.atkRate = 2.5
-        self.atkThresh = 550
+        self.atkRate = 1.5
+        self.atkThresh = 750
         self.col = pygame.Color("black")
 
     def movement(self):
@@ -268,6 +270,12 @@ class Mosquito(Enemy):
                 for i in range(8):
                     self.shoot()
 
+class AntSwarm:
+    def __init__(self, pos):
+        for i in range(random.randint(3,10)):
+            off = pygame.Vector2(random.uniform(-100, 100),random.uniform(-100, 100))
+            game.curr_scene.add_entity(Ant(pos+off), "enemy")
+
 class Ant(Enemy):
     def __init__(self, pos):
         super().__init__(pos)
@@ -276,8 +284,9 @@ class Ant(Enemy):
         self.speed = 2500
         self.atkThresh = 200
         self.timer = 0
-        self.value = 5
+        self.value = 3
         self.col = pygame.Color(127,90,90)
+        self.dmg = 5
 
     def movement(self):
         player = game.get_entity_by_id("player")
@@ -307,7 +316,7 @@ class Termite(Enemy):
         self.speed = 2500
         self.atkThresh = 200
         self.timer = 0
-        self.value = 5
+        self.value = 2
         self.col = pygame.Color(255,120,120)
         self.dmg = 5
         self.health = 4
@@ -421,7 +430,7 @@ class MagneticSnail(Snail):
     def __init__(self, pos):
         super().__init__(pos)
         self.suckage = 30
-        self.suckage_thresh = 450
+        self.suckage_thresh = 650
     
     def update(self, dt):
         super().update(dt)
@@ -431,7 +440,6 @@ class MagneticSnail(Snail):
             diff = self.rect.center-player.rect.center
             vec = (diff).normalize()
             d_sqrd = max(diff.length()*diff.length()/100000,1)
-            print(d_sqrd)
             player.vel += (vec*self.suckage) * 1/(d_sqrd)
 
             for bullet in game.get_entities_by_type(Bullet):

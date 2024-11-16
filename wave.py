@@ -3,12 +3,12 @@ from enemies import *
 
 class Wave(Entity):
     def __init__(self):
-        self.enemyTypes = [ # need to add a weighting system
-            Fly, Cockroach,
-            MotherCockroach, Ant,
-            Mosquito, TermiteSwarm,
-            Snail, MagneticSnail
-        ]
+        self.enemyTypes = {
+            "common":[Fly, Mosquito, AntSwarm],
+            "uncommon":[TermiteSwarm, Cockroach, Snail],
+            "rare":[MagneticSnail],
+            "miniboss":[MotherCockroach],
+        }
         self.timer = 0
         self.num = 1
 
@@ -18,6 +18,7 @@ class Wave(Entity):
         self.pause = False
 
         self.swappedAlready = False
+        self.miniboss_spawned = False
 
     def update(self, dt):
         if self.pause:
@@ -40,13 +41,27 @@ class Wave(Entity):
     def new_round(self):
         self.timer = 0
         self.spawnRate -= 0.2
+        self.miniboss_spawned = False
         self.last_spawn = 0
         self.num += 1
         self.swappedAlready = False
         print('new round!')
 
     def spawn_random_enemy(self):
-        EnemyType = self.enemyTypes[random.randint(0,len(self.enemyTypes)-1)]
+        choice = "common"
+        rand = random.uniform(0,1)
+        weight = self.timer/self.length
+        if rand > 0.85-0.25*weight:
+            choice = "uncommon"
+            rand = random.uniform(0,1)
+            if rand > 0.95-0.25*weight:
+                choice = "rare"
+
+        if self.timer > self.length * 0.75 and not self.miniboss_spawned:
+            choice = "miniboss"
+            self.miniboss_spawned = True
+
+        EnemyType = self.enemyTypes[choice][random.randint(0,len(self.enemyTypes[choice])-1)]
         w, h = 40, 40
         if random.randint(0,1) > 0:
             x = random.randint(-w,game.W+w)

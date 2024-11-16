@@ -12,6 +12,7 @@ class MainMenu(Menu):
             "mainmenu", "UI",
             (pygame.Color("#503197"), pygame.Color("#18215d"))
         )
+        self.close_on_esc = True
 
     def update(self, dt):
         close_input = game.key_pressed(pygame.K_ESCAPE) if game.input_mode == "keyboard" else game.controller.get_pressed("start")

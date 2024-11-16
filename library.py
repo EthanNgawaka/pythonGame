@@ -2,6 +2,7 @@ import pygame
 import copy
 import pygame._sdl2 as pg_sdl2
 import random
+import numpy as np
 import math
 import time
 import cProfile, pstats, io
@@ -184,6 +185,7 @@ Eg)
 joystick.get_button(0) -> true if A button is down
 joystick.get_axis(0) -> returns -1 to 1 based on left stick input
 
+this whole things is abit of a mess
 """
 class Controller:
     def __init__(self):
@@ -207,6 +209,10 @@ class Controller:
         self.prev_btns = None
         self.prev_LSTICK = self.LSTICK.copy()
         self.prev_last_in_queue = None
+        self.any_input = False
+        self.input_timer = 0
+        self.input_change = 0
+        self.input_buffer = 0.75
 
     def get_pressed(self, key):
         return getattr(self, key.upper()) == 1
@@ -228,8 +234,12 @@ class Controller:
             return None
 
     def update_virtual_cursor(self):
-        if self.prev_LSTICK.length() <= 0.2 and self.LSTICK.length() > 0.2:
-            # if lstick was not moved last frame
+        if self.LSTICK.length() <= 0:
+            self.input_change = self.input_buffer
+            self.input_timer = 0
+        if self.input_timer <= 0 and self.LSTICK.length() > 0:
+            self.input_timer = self.input_change
+            # pad
             if abs(self.LSTICK.x) > abs(self.LSTICK.y):
                 # moving vertically
                 dIndex = int(abs(self.LSTICK.x)/self.LSTICK.x)
@@ -308,7 +318,7 @@ class Controller:
 
         self.prev_btns = bttns
 
-    def update(self, game):
+    def update(self, game, dt):
         if not self.connected:
             self.check_controllers_connected()
             if len(self.joysticks) > 0:
@@ -340,6 +350,15 @@ class Controller:
             self.RSTICK.x = 0
         if abs(self.RSTICK.y) < self.deadzone_range:
             self.RSTICK.y = 0
+            
+        if game.input_mode == "keyboard":
+            a = self.LSTICK.length()
+            b = self.RSTICK.length()
+            c = self.A or self.B or self.X or self.Y or self.START
+            if a or b or c:
+                print("AH")
+                game.input_mode = "controller"
+            return
 
         queue = game.curr_scene.UIPriority
         if len(queue) > 0:
@@ -350,8 +369,26 @@ class Controller:
             buttons = [btn for btn in all_buttons if btn.uiTag == last_in_queue]
 
             self.update_button_matrix(buttons)
-            self.update_virtual_cursor()
+            try:
+                self.update_virtual_cursor()
+            except IndexError:
+                print("dodgy as fuck but gonna rewrite this soon anyways")
+                # new controller idea
+                """
+                moving along x axis:
+                    find button closest with x axis priority and select it
+                same for y
+                WAYY simpler and none of this hacky shit
+                """
+
             self.prev_last_in_queue = last_in_queue
+
+        if self.input_timer > 0:
+            self.input_timer -= dt
+            if self.input_timer <= 0:
+                self.input_change = max(self.input_change/3, 0.05)
+
+
 
 class Image:
     def __init__(self, src, x, y, w, h):

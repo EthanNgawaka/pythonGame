@@ -224,12 +224,12 @@ class Game:
 
         # updating input stuff
         self.mouse.update()
-        self.controller.update(self)
+        self.controller.update(self, dt)
         self.oldKeys = self.keys
         self.keys = pygame.key.get_pressed()
 
-        if self.key_pressed(pygame.K_SPACE):
-            self.input_mode = "controller" if self.input_mode == "keyboard" else "keyboard"
+        if 1 in self.keys:
+            self.input_mode = "keyboard"
 
     def draw(self, window):
         try:
