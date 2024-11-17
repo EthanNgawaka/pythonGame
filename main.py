@@ -59,7 +59,7 @@ def main():
 
     game.add_scene(mainScene, "main")
     game.add_scene(menuScene, "menu")
-    game.switch_to_scene("main", False)
+    game.switch_to_scene("menu", False)
     # ----------------------------------------------------------------- #
     """
     Notes to self:
