@@ -33,6 +33,10 @@ def profile(fnc):
 
     return inner
 
+# TODO implement this
+def line_intersection_with_rect():
+    pass
+
 class Rect:
     def __init__(self, pos, dim):
         self.topleft = pygame.Vector2(pos)
@@ -40,6 +44,23 @@ class Rect:
 
     def __getitem__(self, item):
         return [*self.topleft, *self.dimensions][item]
+
+    def scale(self, sf_x, sf_y):
+        # lin alg bullshit
+        r = self.copy()
+        t_vec = -r.center
+        vertices = [
+            r.topleft + t_vec,
+            r.topleft+pygame.Vector2(r.w,0) + t_vec,
+            r.topleft+pygame.Vector2(0,r.h) + t_vec,
+            r.topleft+r.dimensions + t_vec,
+        ]
+
+        for i in vertices:
+            i.x *= sf_x
+            i.y *= sf_y
+            i -= t_vec
+        return Rect(vertices[0],vertices[3]-vertices[0])
 
     @property
     def center(self):
@@ -158,39 +179,7 @@ class Camera:
 camera = Camera()
 
 # currently no support for multiple controllers it just uses the first one connected
-"""
-A Button        - Button 0
-B Button        - Button 1
-X Button        - Button 2
-Y Button        - Button 3
-Left Bumper     - Button 4
-Right Bumper    - Button 5
-Back Button     - Button 6
-Start Button    - Button 7
-L. Stick In     - Button 8
-R. Stick In     - Button 9
-Guide Button    - Button 10
-
-Left Stick:
-Left -> Right   - Axis 0
-Up   -> Down    - Axis 1
-
-Right Stick:
-Left -> Right   - Axis 3
-Up   -> Down    - Axis 4
-
-Left Trigger:
-Out -> In       - Axis 2
-
-Right Trigger:
-Out -> In       - Axis 5
-
-Eg)
-joystick.get_button(0) -> true if A button is down
-joystick.get_axis(0) -> returns -1 to 1 based on left stick input
-
-this whole things is abit of a mess
-"""
+# TODO redo this
 class Controller:
     def __init__(self):
         self.joysticks = []
@@ -396,23 +385,40 @@ class Controller:
 
 class Image:
     def __init__(self, src, x, y, w, h):
-        self.x = x
-        self.y = y
-        self.w = w
-        self.h = h
+        self.rect = Rect((x,y),(w,h))
         self.img = pygame.image.load(src).convert()
         self.img.set_colorkey((0,255,0))
         self.sprite = pygame.Surface((self.img.get_width(),self.img.get_height()))
         self.sprite.blit(self.img, (0,0))
+        self.rot = 0
 
-    def setRect(self, newRect):
-        self.x = newRect[0]
-        self.y = newRect[1]
-        self.w = newRect[2]
-        self.h = newRect[3]
+    def __deepcopy__(self, memo):
+        # so you cant "pickle" (serialize) pygame surfaces and self.img is a pygame surface so just override here and it just shallow copies
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            setattr(result, k, copy.copy(v))
+        return result
 
-    def draw(self, window):
-        window.blit(pygame.transform.scale(self.img, (self.w, self.h)), (self.x, self.y))
+
+    def set_rotation(self, rot):
+        self.rot = rot
+
+    def draw(self, window, rect):
+        self.rect = rect
+        window.blit(pygame.transform.scale(self.img, (self.rect.w, self.rect.h)), (self.rect.x, self.rect.y))
+    
+    def draw_rotated(self, window, rect, rot_around = pygame.Vector2()):
+        self.rect = rect
+        scaledImage = pygame.transform.scale(self.img, tuple(self.rect.dimensions))
+        scaledAndRotatedImage = pygame.transform.rotate(scaledImage, self.rot)
+
+        centerPos = self.rect.center
+        if rot_around[0] != 0 or rot_around[1] != 0:
+            centerPos = (rot_around[0], rot_around[1])
+        newRect = scaledAndRotatedImage.get_rect(center=centerPos)
+        window.blit(scaledAndRotatedImage, newRect.topleft)
 
 class Spritesheet:
     def __init__(self, rect, src, spriteSize, secsBetweenFrames, bounce=False): # ([x,y,w,h], filename, [spriteW, spriteH], fps)

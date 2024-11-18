@@ -45,6 +45,12 @@ class Scene:
         sorted_list.sort()
         return sorted_list
     
+    def get_bottom_draw_priority(self):
+        limst = self.get_sorted_draw_indices()
+        if len(limst) == 0:
+            return 0
+        return limst[1] # returns second element because the first is the background
+
     def get_top_draw_priority(self):
         limst = self.get_sorted_draw_indices()
         if len(limst) == 0:
@@ -63,9 +69,12 @@ class Scene:
         last_dp = None
         for i in sorted_dps:
             if last_dp is not None:
-                if abs(i - last_dp) > 1:
+                if abs(i - last_dp) > 1 and last_dp + 1 > 0:
                     return last_dp + 1
             last_dp = i
+
+        if self.get_top_draw_priority() < 0:
+            return 0
 
         return self.get_top_draw_priority()+1
 
@@ -78,6 +87,12 @@ class Scene:
             id += str(random.randint(0,9))
         entity.set_id(id)
         self.entities[id] = entity
+
+        if drawPriority == "bottom":
+            dp = self.get_bottom_draw_priority() - 1
+            self.drawPriorityLookup[dp] = id
+            return
+
         if drawPriority is not None:
             dp = drawPriority
             if drawPriority == "UI":

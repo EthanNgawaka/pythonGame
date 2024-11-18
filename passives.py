@@ -1,4 +1,3 @@
-from sys import base_prefix
 from card import *
 
 # Common

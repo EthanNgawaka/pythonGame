@@ -6,6 +6,7 @@ from ui import *
 from shop import *
 from wave import *
 from menus import *
+from status_effects import *
 
 def drawFPS(dt, window):
     drawText(window, f"fps: {1/max(dt,0.0001):.2f}", (0,0,0), (game.W-100,100), 40, True)
@@ -62,6 +63,8 @@ def main():
     game.switch_to_scene("menu", False)
     # ----------------------------------------------------------------- #
     """
+    K - kinda done
+    X - fully done
     Notes to self:
         so far so good, enemies need tweaking and honestly just need more variation
         heres a list of things you need to do:
@@ -71,7 +74,7 @@ def main():
             - Add more passives
             - Add a button to buy 20% health for 100 copper in shop
             - Make copper auto attract at end of round (maybe make it a setting somewhere its getting tedious)
-            - Rework particle system
+            K Rework particle system
             - Camera system for camera shake
             - Rewrite menu system to use new Rect class
     """

@@ -89,7 +89,7 @@ class Enemy(Entity):
         self.stun = 0.1
 
     def die(self):
-        blood_explosion(*self.rect.center)
+        blood_explosion(*self.rect.center, self.health)
         self.on_death()
         self.remove_self()
         spawn_copper(self.rect.center, self.get_copper_drop_qty())
@@ -278,6 +278,7 @@ class AntSwarm:
             off = pygame.Vector2(random.uniform(-100, 100),random.uniform(-100, 100))
             game.curr_scene.add_entity(Ant(pos+off), "enemy")
 
+# make them bounce off walls
 class Ant(Enemy):
     def __init__(self, pos):
         super().__init__(pos)
@@ -301,6 +302,11 @@ class Ant(Enemy):
     def update(self, dt):
         super().update(dt)
         self.timer += dt
+
+class FireAnt(Ant):
+    def update(self, dt):
+        super().update(dt)
+        # logic for fire spitting
 
 class TermiteSwarm:
     # lil bit of an inbetween class cause of the way enemies are spawned

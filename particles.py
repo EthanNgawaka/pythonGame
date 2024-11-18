@@ -8,35 +8,52 @@ def spawn_fire(x, y):
     numOfParticles = 2
     for i in range(numOfParticles):
         theta = random.uniform(0, 1)*-math.pi
-        vel = [math.cos(theta)*random.uniform(50,200), math.sin(theta)*random.uniform(50,300)]
+        vel = pygame.Vector2(math.cos(theta)*random.uniform(50,200), math.sin(theta)*random.uniform(50,300))
         size = random.randint(4,15)
 
         randomMax = 255
-        randomHalf = 128
+        randomHalf = 80
         randomMin = 0
         startingColor = (randomMax,randomMax,randomMax,255) # white -> yellow -> orange -> red -> smoke
         lerpColors = [(randomMax,randomMax,randomMin,255), (randomMax,randomHalf,randomMin,255), (randomMax,randomMin,randomMin,255), (randomHalf,randomHalf,randomHalf,255)]
         
-        game.curr_scene.add_entity(Particle([x-size/2, y-size/2, size, size], startingColor, vel, colorLerp=lerpColors, grav=-20, lifetime=0.5+random.uniform(0,1.4)), "particle_fire")
+        part = Particle(Rect((x-size/2, y-size/2), (size, size)), vel, random.uniform(0.5,1.9), lerpColors)
+        part.color = startingColor
+        part.gravity = -20
+        game.curr_scene.add_entity(part, "particle_fire")
 
 # TODO redo this cause it wont work???
-def blood_explosion(x, y):
-    print("doesnt work yet lol")
+def blood_explosion(x, y, amnt):
+    numOfParticles = max(amnt*1.5, 5)
+    for i in range(numOfParticles):
+        theta = random.uniform(-math.pi, math.pi)
+        mag = random.uniform(0,1000)
+        vel = pygame.Vector2(math.cos(theta)*mag, math.sin(theta)*mag)
+        size = random.uniform(numOfParticles, numOfParticles*2)
+
+        startingColor = (random.randint(128, 255),0,0,255) # white -> yellow -> orange -> red -> smoke
+        
+        part = Particle(Rect((x-size/2, y-size/2), (size, size)), vel, random.uniform(5,10))
+        part.color = startingColor
+        part.gravity = 0
+
+        parts = game.get_entities_by_id("particle")
+        game.curr_scene.add_entity(part, "particle_blood", "bottom")
 
 class Particle(Entity):
-    def __init__(self, rect, col=(0,0,0,255), vel=[0,0], drag=0.9, grav=10, shrink=False, fade=True, colorLerp=False, lifetime=10): # col = (R, G, B, A)
+    def __init__(self, rect, vel, lifetime, colorLerp = False): # col = (R, G, B, A)
         self.rect = rect
-        self.color = col
+        self.color = (255,255,255)
         self.vel = vel
-        self.drag = drag
-        self.gravity = grav
-
-        self.lifetime = lifetime
-        self.shrink = shrink
-        self.fade = fade
-        self.colorLerp = colorLerp
+        self.drag = 0.9
+        self.gravity = 10
 
         self.startingLifetime = lifetime
+        self.lifetime = self.startingLifetime
+        self.shrink = False
+        self.fade = True
+        self.colorLerp = colorLerp
+
 
         if self.colorLerp:
             self.currentColor = self.color
@@ -73,12 +90,12 @@ class Particle(Entity):
             if self.subLerp > 0:
                 self.subLerp -= dt/self.colorThreshhold
 
-        self.rect[0] += self.vel[0]*dt
-        self.rect[1] += self.vel[1]*dt
+        self.rect.x += self.vel[0]*dt
+        self.rect.y += self.vel[1]*dt
 
-        self.vel[1] += self.gravity
+        self.vel.y += self.gravity
 
-        self.vel = scalMult(self.vel, self.drag)
+        self.vel *= self.drag
 
         self.lifetime -= dt
         if self.lifetime <= 0:

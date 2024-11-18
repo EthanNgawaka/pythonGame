@@ -63,7 +63,7 @@ class Shop(Menu):
         )
 
         # card buttons
-        rect = pygame.Rect((0,-game.H*0.2), (self.rect.w, game.H*0.15)) # text box area idk
+        rect = pygame.Rect((self.rect.w*0.1,-game.H*0.2), (self.rect.w*0.8, game.H*0.15)) # text box area idk
         def f(btn):
             return
         btn = Button(self.UIRoot, rect, (0,0,0), Text("",(0,0,0),0), f)

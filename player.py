@@ -2,6 +2,7 @@ from game import *
 from deck import *
 from particles import *
 from bullets import *
+from status_effects import *
 
 class PlayerUI(Entity):
     def __init__(self, player):
@@ -50,24 +51,9 @@ class PlayerUI(Entity):
         if self.player.invincibilityTimer > 0:
             self.oldHpTimer = self.orangeBarDelay
 
-class Fire(Entity):
-    def __init__(self, player):
-        self.player = player
-        self.timer = 0
-
-    def update(self, dt):
-        if self.timer > 0:
-            self.timer -= dt
-            self.player.health -= dt*10 # 10 /sec
-            spawn_fire(*self.player.rect.center)
-            
-
-    def draw(self, window):
-        pass
-
 class Player(Entity):
     def __init__(self, x, y):
-        w, h = 30, 30
+        w, h = 40, 40
         self.rect = Rect((x, y), (w, h))
         self.vel = pygame.Vector2() # [0,0]
         self.curr_weapon = "gun"
@@ -131,21 +117,24 @@ class Player(Entity):
         # TODO actives arent implemented yet but im going there next
         self.deck = Deck(self)
 
-    def init(self):
-        # Status Effects
-        # so status effects are just entities that exist and
-        # you can call like add_fire_effect(secs) and thats it,
-        # everything else is handled in the Effects individual class
-        super().init()
-        fire_ent = Fire(self)
-        game.curr_scene.add_entity(fire_ent, "fire_eff")
-        self.status_effects = {
-            "fire": fire_ent,
-        }
+        # sprite stuff
+        self.img = Image("./assets/player.png", *self.rect)
 
+    def get_list_of_status_effects_of_type(self, status_type):
+        all_statuses = game.get_entities_by_type(status_type)
+        filtered = [s for s in all_statuses if s.ent == self]
+        return filtered
+    def get_stacks_of_status_effects(self, status_type):
+        return len(self.get_list_of_status_effects_of_type(status_type))
 
-    def add_fire_effect(self, secs):
-        self.status_effects["fire"].timer += secs
+    def add_status_effect(self, status_type, stacks=1):
+        # a status effect "stack" is just an entity that
+        # changes something about another entity every frame
+        # status effects can scale linearly, exponentially or whatever with stacks
+        # although linear is the easiest (1 stack -5hp/s, 2stack -10hp/s etc)
+        # exponential is possible to (example of this is fire)
+        for _ in range(stacks):
+            game.curr_scene.add_entity(status_type(self), "status player")
 
     def reset_stats(self):
         self.set_stats(self.base_stats)
@@ -231,6 +220,7 @@ class Player(Entity):
 
         game.curr_scene.add_entity(Bullet(pos, vel), id)
 
+    # make controller shoot on right trigger
     def shooting(self):
         # mouse input 
         firing = game.mouse.down[0]
@@ -290,6 +280,9 @@ class Player(Entity):
         self.physics(dt)
         self.bound_to_screen()
 
+        if game.key_pressed(pygame.K_SPACE):
+            self.add_status_effect(Fire)
+
         # increment / decrement all timers
         self.bulletCooldown -= dt
         self.invincibilityTimer -= dt
@@ -299,4 +292,8 @@ class Player(Entity):
         if self.invincibilityTimer > 0 and math.ceil(self.invincibilityTimer/self.flashFreq) % 2 == 0:
             return
 
-        drawCircle(window, (self.rect.center, self.rect.w/2), self.col)
+        self.img.draw_rotated(window, self.rect.scale(2,2))
+        dir = -1
+        if self.vel.x < 0:
+            dir = 1
+        self.img.rot += dir*math.pi*self.vel.length()/100
