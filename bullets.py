@@ -1,4 +1,5 @@
 from game import *
+from status_effects import *
 
 class Bullet(Entity):
     def __init__(self, center, vel):
@@ -17,6 +18,10 @@ class Bullet(Entity):
         self.piercesLeft = player.piercing
         self.piercedEnemies = []
 
+        self.fire_spawn_rate = 0.05
+        self.timer = 0
+        self.last_fire_spawn = self.timer
+
     def has_not_pierced(self, enemy):
         for e in self.piercedEnemies:
             if e == enemy:
@@ -27,16 +32,30 @@ class Bullet(Entity):
         return max(x, 3)
     
     def on_enemy_collision(self, enemy):
+        player = game.get_entity_by_id("player")
         self.piercesLeft -= 1
         self.piercedEnemies.append(enemy)
 
         if self.piercesLeft < 0:
             self.remove_self()
 
+        if player.hotShot > 0:
+            enemy.add_status_effect(Fire, player.hotShot)
+
     def update(self, dt):
+        player = game.get_entity_by_id("player")
         self.move(self.vel*dt)
         if not AABBCollision(self.rect, [0,0,game.W,game.H]):
             self.remove_self()
+
+        # fire particles
+        if player.hotShot > 0:
+            if abs(self.timer-self.last_fire_spawn) > self.fire_spawn_rate:
+                self.last_fire_spawn = self.timer
+                spawn_fire(*self.rect.center)
+        # -------------- #
+
+        self.timer += dt
 
     def draw(self, window):
         drawCircle(window, (self.rect.center, self.r), (255,255,0))

@@ -60,7 +60,8 @@ def main():
 
     game.add_scene(mainScene, "main")
     game.add_scene(menuScene, "menu")
-    game.switch_to_scene("menu", False)
+    #game.switch_to_scene("menu", False)
+    game.switch_to_scene("main", False) # skips menu and transition
     # ----------------------------------------------------------------- #
     """
     K - kinda done
@@ -68,12 +69,13 @@ def main():
     Notes to self:
         so far so good, enemies need tweaking and honestly just need more variation
         heres a list of things you need to do:
-            - Rework menu support for controllers
-            - Add more enemies
-            - Make active cards function
             - Add more passives
-            - Add a button to buy 20% health for 100 copper in shop
-            - Make copper auto attract at end of round (maybe make it a setting somewhere its getting tedious)
+            - Add more enemies
+            - Rework menu support for controllers
+            - Add key mapping
+            - Make active cards function
+            X Add a button to buy 20% health for 100 copper in shop
+            X Make copper auto attract at end of round (maybe make it a setting somewhere its getting tedious)
             K Rework particle system
             - Camera system for camera shake
             - Rewrite menu system to use new Rect class

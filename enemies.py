@@ -75,6 +75,21 @@ class Enemy(Entity):
 
         player.hit(self)
         self.stun = 0.5
+    def get_list_of_status_effects_of_type(self, status_type):
+        all_statuses = game.get_entities_by_type(status_type)
+        filtered = [s for s in all_statuses if s.ent == self]
+        return filtered
+    def get_stacks_of_status_effects(self, status_type):
+        return len(self.get_list_of_status_effects_of_type(status_type))
+
+    def add_status_effect(self, status_type, stacks=1):
+        # a status effect "stack" is just an entity that
+        # changes something about another entity every frame
+        # status effects can scale linearly, exponentially or whatever with stacks
+        # although linear is the easiest (1 stack -5hp/s, 2stack -10hp/s etc)
+        # exponential is possible to (example of this is fire)
+        for _ in range(stacks):
+            game.curr_scene.add_entity(status_type(self), "status player")
 
     def on_bullet_collision(self, bullet):
         bullet.on_enemy_collision(self)
@@ -84,8 +99,6 @@ class Enemy(Entity):
         vec = bullet.vel.normalize()
         self.vel = vec * player.kb
         self.forces = pygame.Vector2()
-        if self.health <= 0 and self.alive:
-            self.die()
         self.stun = 0.1
 
     def die(self):
@@ -111,6 +124,8 @@ class Enemy(Entity):
         self.bound_to_screen()
 
     def update(self, dt):
+        if self.health <= 0 and self.alive:
+            self.die()
         self.physics(dt)
         if self.stun > 0:
             self.stun -= dt

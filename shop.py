@@ -2,19 +2,6 @@ from game import *
 from ui import *
 from passives import *
 
-cards = {
-    "common":[
-        SpeedUp, DamageUp, AccuracyUp,
-        AttackSpeedUp, BulletSpeedUp, MaxHealthUp
-    ],
-    "rare":[
-        Shotgun, Piercing, LifeStealUp, Panic
-    ],
-    "legendary":[
-        DoubleShot, Minigun
-    ],
-}
-
 class ShopCard(Button):
     def __init__(self, root_entity, relative_rect, col, text, onAction, description):
         super().__init__(root_entity, relative_rect, col, text, onAction)
@@ -43,6 +30,8 @@ class Shop(Menu):
         self.closeRect = pygame.Rect((game.W-w)/2,game.H*1.2,w,h)
         self.rect = self.closeRect.copy()
 
+        self.heal_cost = 100
+
         self.cards = []
 
     def create_card_ui_elem(self, center, wh, bttnCol, txtObj, func, desc):
@@ -62,6 +51,24 @@ class Shop(Menu):
             self.close
         )
 
+        # heal button
+        def heal(btn):
+            player = game.get_entity_by_id('player')
+            if player.copper >= self.heal_cost and player.health < player.maxHealth:
+                player.copper -= self.heal_cost
+                player.heal(player.health*0.35)
+                self.heal_cost *= 1.25
+                self.heal_cost = round(self.heal_cost/10)*10
+                btn.text.string = f"+35% Health : ${self.heal_cost}"
+                return True
+            return False
+        self.create_centered_button(
+            (self.rect.w/5, self.rect.h),
+            (self.rect.w/3,self.rect.w/15),
+            pygame.Color(90,180,90), Text(f"+35% Health : ${self.heal_cost}",(255,255,255),45),
+            heal
+        )
+
         # card buttons
         rect = pygame.Rect((self.rect.w*0.1,-game.H*0.2), (self.rect.w*0.8, game.H*0.15)) # text box area idk
         def f(btn):
@@ -77,6 +84,8 @@ class Shop(Menu):
                     player.copper -= self.cards[index].basePrice
                     player.deck.add_card(self.cards[index])
                     e.remove_self()
+                    return True
+                return False
 
             dims = (self.rect.w*0.21,self.rect.h*0.7)
             cardRectx = (i+1)*self.rect.w/4
@@ -95,7 +104,7 @@ class Shop(Menu):
 
     def gen_cards(self, rarity):
         for i in range(3):
-            rand_card = cards[rarity][random.randint(0,len(cards[rarity])-1)]
+            rand_card = PASSIVE_CARDS[rarity][random.randint(0,len(PASSIVE_CARDS[rarity])-1)]
             self.cards.append(rand_card())
 
     def close(self, elem):

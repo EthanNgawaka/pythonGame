@@ -80,6 +80,8 @@ class Player(Entity):
         self.speed = 50
         self.maxHealth = 200
 
+        self.hotShot = 0
+
         self.kb = 500
         self.dmgMultiplier = 1
         self.dmg = 5
@@ -95,7 +97,6 @@ class Player(Entity):
         # random stuff #
         self.copper = 0 # coins
         self.health = self.maxHealth
-        self.status_effects = []
 
         self.flashFreq = 0.2
         # ---------- #
@@ -126,7 +127,7 @@ class Player(Entity):
         return filtered
     def get_stacks_of_status_effects(self, status_type):
         return len(self.get_list_of_status_effects_of_type(status_type))
-
+    
     def add_status_effect(self, status_type, stacks=1):
         # a status effect "stack" is just an entity that
         # changes something about another entity every frame
@@ -135,6 +136,11 @@ class Player(Entity):
         # exponential is possible to (example of this is fire)
         for _ in range(stacks):
             game.curr_scene.add_entity(status_type(self), "status player")
+
+    def heal(self, amnt):
+        self.health += amnt
+        if self.health > self.maxHealth:
+            self.health = self.maxHealth
 
     def reset_stats(self):
         self.set_stats(self.base_stats)

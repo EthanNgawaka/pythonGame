@@ -15,16 +15,16 @@ class Fire(Entity):
             all_other_effects[i].timer = self.timer*(i+2)
 
     def update(self, dt):
-        if self.timer > 0:
+        if self.timer > 0 and self.ent in game.curr_scene.entities.values():
             self.timer -= dt
             stacks = self.ent.get_stacks_of_status_effects(self.__class__)
             self.ent.health -= dt*math.pow(1.3, stacks)/stacks
             # div by stacks here means that by the time all the stacks
             # apply their individual health deductions
             # we end up with the entity losing
+            # 1.5^(stacks) hp/sec
             # these numbers are wrong cause balance tweaks but still
             # fine illustration
-            # 1.5^(stacks) hp/sec
             # eg: 2 stacks = 2.25hp/s, 4 stacks = 5hp/s,
             #     6 stacks = 12hp/s, 8 stacks = 26hp/s
             if abs(self.timer-self.last_fire_spawn) > self.fire_spawn_rate:

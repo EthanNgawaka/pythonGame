@@ -90,6 +90,10 @@ class Button(UI_Element):
 
         self.disabled = False;
 
+        self.shakeTimer = 0
+        self.shake = pygame.Vector2()
+        self.shakeIntensity = 10
+
     def toggle(self):
         self.disabled = not self.disabled;
 
@@ -115,10 +119,19 @@ class Button(UI_Element):
             self.onActionTimer -= dt
 
             if self.onActionTimer <= 0:
-                self.onAction(self)
+                if self.onAction(self) is False:
+                    self.shakeTimer = 0.2
+
+        if self.shakeTimer > 0:
+            self.shakeTimer -= dt
+            self.shake.x += random.randint(-self.shakeIntensity, self.shakeIntensity)
+            self.shake.y += random.randint(-self.shakeIntensity, self.shakeIntensity)
+
+        self.shake = self.shake.lerp(pygame.Vector2(0,0), 0.1)
 
     def draw(self, window):
         drawingRect = self.get_relative_rect().inflate(self.drawingInflation.x, self.drawingInflation.y)
+        drawingRect.center = (drawingRect.center[0]+self.shake.x, drawingRect.center[1]+self.shake.y)
         if self.hovered or self.outlined:
             drawingRect = drawingRect.inflate(5,5)
             drawRect(window, drawingRect.inflate(10,10), self.highlightCol)

@@ -18,7 +18,9 @@ class Copper(Entity):
 
         attractionSpeed = 60
         distVec = pygame.Vector2(player.rect.x-self.rect.x, player.rect.y-self.rect.y)
-        if distVec.length() < self.distThreshold:
+        wave = game.get_entity_by_id("wave")
+        end_of_round = len(game.get_entities_by_id('enemy')) <= 0 and wave.timer >= wave.length
+        if distVec.length() < self.distThreshold or end_of_round:
             self.distThreshold = 999
             if distVec.length() > 0:
                 self.vel += distVec.normalize()*attractionSpeed

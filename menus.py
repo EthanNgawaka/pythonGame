@@ -140,18 +140,7 @@ class DebugMenu(Menu):
 
         # need to find a better way to sync to cards available in shop idk
         # its just a debug menu
-        self.cards = {
-            "common":[
-                SpeedUp, DamageUp, AccuracyUp,
-                AttackSpeedUp, BulletSpeedUp, MaxHealthUp
-            ],
-            "rare":[
-                Shotgun, Piercing, LifeStealUp, Panic
-            ],
-            "legendary":[
-                DoubleShot, Minigun
-            ],
-        }
+        self.cards = PASSIVE_CARDS
 
     def add_elements(self):
         # resume button
@@ -192,6 +181,15 @@ class DebugMenu(Menu):
             (w*3,h), # dimensions
             (255,0,0), Text("pause wave",(255,255,255),25), # btnColor, TextObj
             pause_wave
+        )
+
+        def give_copper(btn):
+            game.get_entity_by_id("player").copper += 1000
+        self.create_centered_button(
+            (self.rect.w-w*3, self.rect.h-h*8.5), # center
+            (w*3,h), # dimensions
+            (255,0,0), Text("give copper",(255,255,255),25), # btnColor, TextObj
+            give_copper
         )
 
         def end_wave(btn):
