@@ -1,6 +1,42 @@
 from game import *
 from particles import *
 
+class Weakness(Entity):
+    def __init__(self, entity):
+        self.ent = entity
+        self.fire_spawn_rate = random.uniform(0.01,0.05)
+        self.timer = 5
+        self.last_fire_spawn = self.timer
+        # this gobbledy gook just makes it so
+        # all the stacks timers are reset when a new one is added and
+        # each stack fades gradually and not all at once
+        all_other_effects = self.ent.get_list_of_status_effects_of_type(self.__class__)
+        for i in range(len(all_other_effects)):
+            all_other_effects[i].timer = self.timer*(i+2)
+
+    def update(self, dt):
+        if self.timer > 0 and self.ent in game.curr_scene.entities.values():
+            ls = self.ent.get_list_of_status_effects_of_type(self.__class__)
+            self.timer -= dt
+            self.ent.dmg = self.ent.baseDmg/2
+
+            # particles
+            if abs(self.timer-self.last_fire_spawn) > self.fire_spawn_rate and ls[0] == self:
+                self.last_fire_spawn = self.timer
+                spawn_weakness_particle(*self.ent.rect.center)
+        else:
+            self.ent.dmg = self.ent.baseDmg
+            self.remove_self()
+
+    def draw(self, window):
+        ls = self.ent.get_list_of_status_effects_of_type(self.__class__)
+        if ls[0] == self:
+            drawText(
+                    window, f"WEAKNESS: {len(ls)}", (255,0,0),
+                self.ent.rect.center+pygame.Vector2(0,self.ent.rect.h),
+                45, True
+            )
+
 class Fire(Entity):
     def __init__(self, entity):
         self.ent = entity

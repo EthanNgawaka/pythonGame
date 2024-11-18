@@ -85,6 +85,7 @@ class Player(Entity):
         self.kb = 500
         self.dmgMultiplier = 1
         self.dmg = 5
+        self.baseDmg = 5
         self.atkRateMultiplier = 1
         self.atkRate= 0.35
 
@@ -287,7 +288,7 @@ class Player(Entity):
         self.bound_to_screen()
 
         if game.key_pressed(pygame.K_SPACE):
-            self.add_status_effect(Fire)
+            self.add_status_effect(Weakness)
 
         # increment / decrement all timers
         self.bulletCooldown -= dt

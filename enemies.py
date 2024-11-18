@@ -18,6 +18,7 @@ class Enemy(Entity):
         self.col = pygame.Color("red")
         self.speed = 1000
         self.health  = 10
+        self.baseDmg = self.dmg
 
     def movement(self):
         pass
@@ -149,6 +150,7 @@ class Fly(Enemy):
         self.health = 10
         self.value = 8
         self.dmg = 10
+        self.baseDmg = self.dmg
 
     def movement(self):
         player = game.get_entity_by_id("player")
@@ -162,6 +164,7 @@ class Cockroach(Enemy):
         self.speedRange = [1000,2200]
         self.drag = 0.9
         self.dmg = 10
+        self.baseDmg = self.dmg
         self.value = 15
         self.health = 16
 
@@ -211,6 +214,7 @@ class BabyCockroach(Cockroach):
         self.health = 2
         self.value = 2
         self.dmg = 4
+        self.baseDmg = self.dmg
         self.speedRange = [1500,2600]
     
     def draw(self, window):
@@ -244,6 +248,7 @@ class Mosquito(Enemy):
         self.atkTimer = 0
         self.lastAttack = 0
         self.dmg = 10
+        self.baseDmg = self.dmg
         self.atkRate = 2.25
         self.atkThresh = 750
         self.col = pygame.Color("black")
@@ -305,13 +310,36 @@ class Ant(Enemy):
         self.value = 2
         self.col = pygame.Color(127,90,90)
         self.dmg = 5
+        self.baseDmg = self.dmg
+        self.dir = 1
+
+    def bound_to_screen(self): # this is temp
+        if self.rect.x < 0 and self.vel.x < 0:
+            self.rect.x = 0
+            self.vel.x = 0
+            self.dir *= -1
+
+        if self.rect.x+self.rect.w > game.W and self.vel.x > 0:
+            self.rect.x = game.W - self.rect.w
+            self.vel.x = 0
+            self.dir *= -1
+
+        if self.rect.y < 0 and self.vel.y < 0:
+            self.rect.y = 0
+            self.vel.y = 0
+            self.dir *= -1
+
+        if self.rect.y+self.rect.h > game.H and self.vel.y > 0:
+            self.rect.y = game.H - self.rect.h
+            self.vel.y = 0
+            self.dir *= -1
 
     def movement(self):
         player = game.get_entity_by_id("player")
         p_pos = pygame.Vector2(player.rect.center)
         s_pos = pygame.Vector2(self.rect.center)
         dist = (p_pos - s_pos).length()
-        angle = lerp(0, 90, self.atkThresh/dist)
+        angle = self.dir*lerp(0, 90, self.atkThresh/dist)
         self.add_force(self.get_unit_vec_to_entity(player).rotate(angle)*self.speed)
 
     def update(self, dt):
@@ -342,6 +370,7 @@ class Termite(Enemy):
         self.value = 2
         self.col = pygame.Color(255,120,120)
         self.dmg = 5
+        self.baseDmg = self.dmg
         self.health = 4
 
     def movement(self):
@@ -419,6 +448,7 @@ class Snail(Enemy):
         self.health = 10
         self.value = 8
         self.dmg = 10
+        self.baseDmg = self.dmg
         self.timer = 0
 
     def movement(self):
