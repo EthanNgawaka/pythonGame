@@ -185,6 +185,7 @@ class Controller:
         self.joysticks = []
         self.LSTICK = pygame.Vector2()
         self.RSTICK = pygame.Vector2()
+        self.RTRIGGER = 0
         self.A = 0
         self.B = 0
         self.X = 0
@@ -195,7 +196,7 @@ class Controller:
         self.virtual_cursor_index = [0,0]
         self.btn_matrix = []
 
-        self.buttons = {"a":0, "b":1, "x":2, "y":3, "start":11}
+        self.buttons = {"a":0, "b":1, "x":2, "y":3, "start":11, "rtrigger":0}
         self.connected = False
 
         self.deadzone_range = 0.1
@@ -336,6 +337,8 @@ class Controller:
         self.prev_LSTICK = self.LSTICK.copy()
         self.LSTICK = pygame.Vector2(joy.get_axis(0),joy.get_axis(1))
         self.RSTICK = pygame.Vector2(joy.get_axis(2),joy.get_axis(3))
+        self.RTRIGGER = 1 if joy.get_axis(4) > -0.5 else 0 # just gets rid of the range cause i dont think thats very useful for this game
+        print(self.RTRIGGER)
         if abs(self.LSTICK.x) < self.deadzone_range:
             self.LSTICK.x = 0
         if abs(self.LSTICK.y) < self.deadzone_range:

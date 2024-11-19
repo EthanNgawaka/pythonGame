@@ -6,9 +6,11 @@ class Wave(Entity):
         self.enemyTypes = {
             "common":[Fly, Mosquito, AntSwarm],
             "uncommon":[TermiteSwarm, Cockroach, Snail],
-            "rare":[MagneticSnail],
-            "miniboss":[MotherCockroach],
+            "rare":[MagneticSnail, FireAntSwarm],
+            "miniboss":[MotherCockroach, MotherFly],
         }
+        # testing only one enemy:
+        self.override_enemy_type = None
         self.timer = 0
         self.num = 1
 
@@ -62,6 +64,8 @@ class Wave(Entity):
             self.miniboss_spawned = True
 
         EnemyType = self.enemyTypes[choice][random.randint(0,len(self.enemyTypes[choice])-1)]
+        if self.override_enemy_type is not None:
+            EnemyType = self.override_enemy_type
         w, h = 40, 40
         if random.randint(0,1) > 0:
             x = random.randint(-w,game.W+w)

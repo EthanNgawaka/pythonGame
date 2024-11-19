@@ -56,7 +56,7 @@ class Shop(Menu):
             player = game.get_entity_by_id('player')
             if player.copper >= self.heal_cost and player.health < player.maxHealth:
                 player.copper -= self.heal_cost
-                player.heal(player.health*0.35)
+                player.heal(player.maxHealth*0.35)
                 self.heal_cost *= 1.25
                 self.heal_cost = round(self.heal_cost/10)*10
                 btn.text.string = f"+35% Health : ${self.heal_cost}"

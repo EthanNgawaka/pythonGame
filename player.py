@@ -78,7 +78,7 @@ class Player(Entity):
         self.panic = 0
         self.piercing = 0
         self.speed = 50
-        self.maxHealth = 200
+        self.maxHealth = 150
 
         self.hotShot = 0
 
@@ -88,6 +88,7 @@ class Player(Entity):
         self.baseDmg = 5
         self.atkRateMultiplier = 1
         self.atkRate= 0.35
+        self.baseAtkRate = self.atkRate
 
         self.bulletCount = 1
         self.speedInaccuracy = 0 # +/- % ie 0.1 means +/- 10% speed
@@ -100,6 +101,7 @@ class Player(Entity):
         self.health = self.maxHealth
 
         self.flashFreq = 0.2
+        self.last_known_aim_dir = 0
         # ---------- #
 
         # timers #
@@ -199,6 +201,8 @@ class Player(Entity):
             # this is for hitstop idk it feels kinda bad on every single hit
             #game.time_speed = 0.001
             #self.hit_timer = 0.05
+            if ent.inflictFire:
+                self.add_status_effect(Fire)
             self.health -= ent.dmg
             self.invincibilityTimer = self.iFrames
 
@@ -235,8 +239,12 @@ class Player(Entity):
 
         # controller input
         if game.input_mode == "controller":
-            firing = game.controller.RSTICK.length() > 0
-            theta = math.atan2(game.controller.RSTICK.y, game.controller.RSTICK.x)
+            firing = game.controller.RTRIGGER
+            if game.controller.RSTICK.length() > 0.5:
+                theta = math.atan2(game.controller.RSTICK.y, game.controller.RSTICK.x)
+                self.last_known_aim_dir = theta
+            else:
+                theta = self.last_known_aim_dir
 
         if self.curr_weapon == "gun":
             # focus on this for now once really solid base game add more weapons
@@ -245,6 +253,7 @@ class Player(Entity):
                     for i in range(self.bulletCount):
                         rand_angle = random.uniform(-self.inaccuracy, self.inaccuracy)
                         self.spawn_bullet(self.rect.center, theta + rand_angle)
+                        self.vel -= pygame.Vector2(math.cos(theta), math.sin(theta))*60
 
                     self.bulletCooldown = self.atkRate / self.atkRateMultiplier
 
@@ -281,6 +290,10 @@ class Player(Entity):
             # super cool i dont have to implement this myself
             self.vel += movementDir * self.speed
 
+    def game_over(self):
+        game.switch_to_scene("menu")
+        self.remove_self()
+
     # always keep update and draw at bottom
     def update(self, dt):
         self.input()
@@ -288,11 +301,14 @@ class Player(Entity):
         self.bound_to_screen()
 
         if game.key_pressed(pygame.K_SPACE):
-            self.add_status_effect(Weakness)
+            self.add_status_effect(Acid)
 
         # increment / decrement all timers
         self.bulletCooldown -= dt
         self.invincibilityTimer -= dt
+
+        if self.health <= 0:
+            self.game_over()
 
     def draw(self, window):
         # flashing logic

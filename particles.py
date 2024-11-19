@@ -21,6 +21,24 @@ def spawn_fire(x, y):
         part.gravity = -20
         game.curr_scene.add_entity(part, "particle_fire", "bottom")
 
+def spawn_acid_particle(x, y):
+    numOfParticles = 3
+    for i in range(numOfParticles):
+        theta = random.uniform(-1, 1)*-math.pi
+        vel = pygame.Vector2(math.cos(theta)*random.uniform(50,200), math.sin(theta)*random.uniform(50,300))
+        size = random.randint(4,15)
+
+        randomMax = 255
+        randomHalf = 90
+        randomMin = 0
+        startingColor = (randomMin,randomMax,randomMin,255) # white -> yellow -> orange -> red -> smoke
+        lerpColors = [(randomMin,randomHalf,randomMin,255), (randomMin,randomHalf,randomMin,255), (randomHalf,randomHalf,randomHalf,255)]
+        
+        part = Particle(Rect((x-size/2, y-size/2), (size, size)), vel, random.uniform(0.5,1.9), lerpColors)
+        part.color = startingColor
+        part.gravity = -10
+        game.curr_scene.add_entity(part, "particle_fire", "bottom")
+
 def spawn_weakness_particle(x, y):
     numOfParticles = 3
     for i in range(numOfParticles):
@@ -41,16 +59,16 @@ def spawn_weakness_particle(x, y):
 
 # TODO redo this cause it wont work???
 def blood_explosion(x, y, amnt):
-    numOfParticles = max(amnt*1.5, 5)
+    numOfParticles = max(amnt, 5)
     for i in range(numOfParticles):
         theta = random.uniform(-math.pi, math.pi)
         mag = random.uniform(0,1000)
         vel = pygame.Vector2(math.cos(theta)*mag, math.sin(theta)*mag)
-        size = random.uniform(numOfParticles, numOfParticles*2)
+        size = max(3,random.uniform(numOfParticles/2, numOfParticles))
 
         startingColor = (random.randint(128, 255),0,0,255) # white -> yellow -> orange -> red -> smoke
         
-        part = Particle(Rect((x-size/2, y-size/2), (size, size)), vel, random.uniform(5,10))
+        part = Particle(Rect((x-size/2, y-size/2), (size, size)), vel, random.uniform(5,15))
         part.color = startingColor
         part.gravity = 0
 

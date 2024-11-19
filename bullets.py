@@ -67,7 +67,12 @@ class EnemyBullet(Entity):
 
         self.rect.center = center
         self.vel = vel
+        self.inflictFire = False
         self.dmg = dmg
+
+        self.fire_spawn_rate = 0.1
+        self.timer = 0
+        self.last_fire_spawn = self.timer
 
     def get_size(self,x):
         return max(x*1.6, 4)
@@ -76,6 +81,7 @@ class EnemyBullet(Entity):
         self.remove_self()
 
     def update(self, dt):
+        self.timer += dt
         self.move(self.vel*dt)
         player = game.get_entity_by_id("player")
         if AABBCollision(self.rect, player.rect):
@@ -83,6 +89,11 @@ class EnemyBullet(Entity):
             player.hit(self)
         if not AABBCollision(self.rect, [0,0,game.W,game.H]):
             self.remove_self()
+
+        if self.inflictFire:
+            if abs(self.timer-self.last_fire_spawn) > self.fire_spawn_rate:
+                self.last_fire_spawn = self.timer
+                spawn_fire(*self.rect.center)
 
     def draw(self, window):
         drawCircle(window, (self.rect.center, self.r*2), (255,0,0))

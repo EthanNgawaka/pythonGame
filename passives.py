@@ -69,7 +69,7 @@ class Shotgun(Card):
     desc = "SHOTGUN MOMENT"
     def on_pickup(self):
         self.player.bulletCount += 3
-        self.player.dmg *= 0.4
+        self.player.dmg *= 0.6
         self.player.inaccuracy += 0.1
         self.player.speedInaccuracy += 0.1
         self.player.atkRate += 0.1
@@ -95,7 +95,7 @@ class Minigun(Card):
     basePrice = 250
     desc = "It's a minigun, what more do you want?"
     def on_pickup(self):
-        self.player.dmgMultiplier = 0.4
+        self.player.dmgMultiplier = 0.5
         self.player.inaccuracy += 0.06
         self.player.speedInaccuracy += 0.3
         self.player.atkRateMultiplier = 5

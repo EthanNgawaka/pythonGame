@@ -18,7 +18,10 @@ class Enemy(Entity):
         self.col = pygame.Color("red")
         self.speed = 1000
         self.health  = 10
+        self.maxHealth = self.health
         self.baseDmg = self.dmg
+        self.inflictFire = False
+        self.atkRate = 0
 
     def movement(self):
         pass
@@ -103,7 +106,7 @@ class Enemy(Entity):
         self.stun = 0.1
 
     def die(self):
-        blood_explosion(*self.rect.center, self.health)
+        blood_explosion(*self.rect.center, self.maxHealth)
         self.on_death()
         self.remove_self()
         spawn_copper(self.rect.center, self.get_copper_drop_qty())
@@ -144,17 +147,29 @@ class Fly(Enemy):
     def __init__(self, pos):
         super().__init__(pos)
         self.rect = Rect(pos, (30,30))
-        self.col = (255,0,0)
-        self.speed = 1100
+        self.col = (72,192,114)
+        self.speed = 900
         self.drag = 0.98
         self.health = 10
         self.value = 8
         self.dmg = 10
         self.baseDmg = self.dmg
+        self.maxHealth = self.health
 
     def movement(self):
         player = game.get_entity_by_id("player")
         self.add_force(self.get_unit_vec_to_entity(player)*self.speed)
+
+class BabyFly(Fly):
+    def __init__(self, pos):
+        super().__init__(pos)
+        self.rect.dimensions = pygame.Vector2(15,15)
+        self.speed = 700
+        self.health = 5
+        self.maxHealth = self.health
+        self.value = 1
+        self.dmg = 5
+        self.baseDmg = self.dmg
 
 class Cockroach(Enemy):
     def __init__(self, pos):
@@ -167,6 +182,7 @@ class Cockroach(Enemy):
         self.baseDmg = self.dmg
         self.value = 15
         self.health = 16
+        self.maxHealth = self.health
 
         self.movementTimer = 0
         self.movementRot = 90
@@ -216,6 +232,7 @@ class BabyCockroach(Cockroach):
         self.dmg = 4
         self.baseDmg = self.dmg
         self.speedRange = [1500,2600]
+        self.maxHealth = self.health
     
     def draw(self, window):
         drawCircle(window, (self.rect.center, self.rect.w/4), self.col)
@@ -228,6 +245,7 @@ class MotherCockroach(Cockroach):
         self.health = 30
         self.value = 10
         self.maxSpeed = 1200
+        self.maxHealth = self.health
 
     def on_death(self):
         for i in range(random.randint(15,35)):
@@ -235,8 +253,6 @@ class MotherCockroach(Cockroach):
             spawn_pos.x += random.uniform(0, self.rect.w)
             spawn_pos.y += random.uniform(0, self.rect.h)
             game.curr_scene.add_entity(BabyCockroach(spawn_pos),"enemy")
-
-
 
 class Mosquito(Enemy):
     def __init__(self, pos):
@@ -250,8 +266,10 @@ class Mosquito(Enemy):
         self.dmg = 10
         self.baseDmg = self.dmg
         self.atkRate = 2.25
+        self.baseAtkRate = self.atkRate
         self.atkThresh = 750
         self.col = pygame.Color("black")
+        self.maxHealth = self.health
 
     def movement(self):
         player = game.get_entity_by_id("player")
@@ -298,7 +316,6 @@ class AntSwarm:
             off = pygame.Vector2(random.uniform(-100, 100),random.uniform(-100, 100))
             game.curr_scene.add_entity(Ant(pos+off), "enemy")
 
-# make them bounce off walls
 class Ant(Enemy):
     def __init__(self, pos):
         super().__init__(pos)
@@ -312,6 +329,7 @@ class Ant(Enemy):
         self.dmg = 5
         self.baseDmg = self.dmg
         self.dir = 1
+        self.maxHealth = self.health
 
     def bound_to_screen(self): # this is temp
         if self.rect.x < 0 and self.vel.x < 0:
@@ -346,10 +364,42 @@ class Ant(Enemy):
         super().update(dt)
         self.timer += dt
 
+class FireAntSwarm:
+    def __init__(self, pos):
+        num = random.randint(2,6)
+        for i in range(num):
+            off = pygame.Vector2(random.uniform(-100, 100),random.uniform(-100, 100))
+            game.curr_scene.add_entity(FireAnt(pos+off), "enemy")
+
 class FireAnt(Ant):
+    def __init__(self, pos):
+        super().__init__(pos)
+        self.atkRate = 4.35 + random.uniform(-0.5,1.5)
+        self.baseAtkRate = self.atkRate
+        self.last_shot = 0
+        self.col = (255,50,50)
+        self.thresh = 500
+        self.maxHealth = self.health
+
+    def shoot(self):
+        player = game.get_entity_by_id("player")
+        p_pos = pygame.Vector2(player.rect.center)
+        s_pos = pygame.Vector2(self.rect.center)
+        theta = vec_angle_to(s_pos,p_pos)
+        vec = pygame.Vector2(math.cos(theta), math.sin(theta)) * random.uniform(5,10) * 80
+        bllt = EnemyBullet(self.rect.center, vec, self.dmg)
+        bllt.inflictFire = True # this just enables the fire
+        game.curr_scene.add_entity(bllt, "enemy bullet")
+        self.add_force(-vec*6)
+
     def update(self, dt):
+        player = game.get_entity_by_id("player")
+        p_pos = pygame.Vector2(player.rect.center)
+        s_pos = pygame.Vector2(self.rect.center)
         super().update(dt)
-        # logic for fire spitting
+        if abs(self.timer - self.last_shot) >= self.atkRate and (p_pos-s_pos).length() <= self.thresh:
+            self.last_shot = self.timer
+            self.shoot()
 
 class TermiteSwarm:
     # lil bit of an inbetween class cause of the way enemies are spawned
@@ -372,6 +422,7 @@ class Termite(Enemy):
         self.dmg = 5
         self.baseDmg = self.dmg
         self.health = 4
+        self.maxHealth = self.health
 
     def movement(self):
         player = game.get_entity_by_id("player")
@@ -450,6 +501,7 @@ class Snail(Enemy):
         self.dmg = 10
         self.baseDmg = self.dmg
         self.timer = 0
+        self.maxHealth = self.health
 
     def movement(self):
         player = game.get_entity_by_id("player")
@@ -516,6 +568,7 @@ class Dummy(Enemy):
         self.dps_check_thresh = 1
         self.dmg_done = 0
         self.first_hit = 0
+        self.maxHealth = self.health
         self.disp_dps = 0
 
     def update(self, dt):
@@ -548,3 +601,71 @@ class Dummy(Enemy):
         self.last_hit = self.timer
         if self.first_hit == 0:
             self.first_hit = self.timer
+
+class MotherFly(Enemy):
+    def __init__(self, pos):
+        super().__init__(pos)
+        self.rect = Rect(pos, (60,60))
+        self.health = 30
+        self.maxHealth = self.health
+        self.speed = 200
+
+        self.atkTimer = 0
+        self.lastAttack = 0
+        self.dmg = 10
+        self.baseDmg = self.dmg
+        self.atkRate = 10
+        self.baseAtkRate = self.atkRate
+        self.atkThresh = game.W
+        self.col = pygame.Color("black")
+        self.atkTimer = -self.atkRate/3
+
+    def on_death(self):
+        for i in range(random.randint(5,20)):
+            spawn_pos = pygame.Vector2(self.rect.topleft)
+            spawn_pos.x += random.uniform(0, self.rect.w)
+            spawn_pos.y += random.uniform(0, self.rect.h)
+            game.curr_scene.add_entity(BabyFly(spawn_pos),"enemy")
+
+    def movement(self):
+        player = game.get_entity_by_id("player")
+        p_pos = pygame.Vector2(player.rect.center)
+        s_pos = pygame.Vector2(self.rect.center)
+        if (p_pos - s_pos).length() > self.atkThresh:
+            f_vec = self.get_unit_vec_to_entity(player)*self.speed
+            self.add_force(f_vec)
+
+        theta = random.uniform(math.pi, -math.pi)
+        self.vel += (pygame.Vector2(math.cos(theta), math.sin(theta))*random.randint(-30,30))
+
+    def shoot(self):
+        player = game.get_entity_by_id("player")
+        p_pos = pygame.Vector2(player.rect.center)
+        s_pos = pygame.Vector2(self.rect.center)
+        innac = 10
+        theta = vec_angle_to(s_pos,p_pos) + random.uniform(math.pi/innac, -math.pi/innac)
+        EnemyType = BabyFly if random.uniform(0,1) <= 0.75 else Mosquito
+        fac = 100 if EnemyType is Mosquito else 40
+        vec = pygame.Vector2(math.cos(theta), math.sin(theta)) * random.uniform(5,10) * fac
+        enemy = EnemyType(self.rect.center)
+        enemy.vel = vec
+        game.curr_scene.add_entity(enemy, "enemy")
+        self.add_force(-vec*6)
+
+
+    def on_bullet_collision(self, blt):
+        super().on_bullet_collision(blt)
+        self.atkTimer = 0.1
+        self.lastAttack = 0
+
+    def update(self, dt):
+        super().update(dt)
+        player = game.get_entity_by_id("player")
+        p_pos = pygame.Vector2(player.rect.center)
+        s_pos = pygame.Vector2(self.rect.center)
+        if (p_pos - s_pos).length() < self.atkThresh:
+            self.atkTimer -= dt
+            if abs(self.lastAttack - self.atkTimer) > self.atkRate:
+                self.lastAttack = self.atkTimer
+                for i in range(random.randint(4,8)):
+                    self.shoot()
