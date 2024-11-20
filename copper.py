@@ -12,7 +12,13 @@ class Copper(Entity):
         self.vel = vel
         self.distThreshold = 250
         self.forces = pygame.Vector2()
-
+        self.sprite = Spritesheet(self.rect, "./assets/coin.png", (32,32), 0.05)
+        self.sprite.addState("normal", 0, 10)
+        self.sprite.addState("glitched", 1, 7)
+        self.sprite.setState("normal")
+        self.glitch_cooldown = 0
+        
+        
     def attract(self):
         player = game.get_entity_by_id("player")
 
@@ -58,6 +64,14 @@ class Copper(Entity):
         self.attract()
         self.physics(dt)
         self.bound_to_screen()
+        self.sprite.update(dt)
+        self.glitch_cooldown -= dt
+        if self.glitch_cooldown <= 0:
+            self.glitch_cooldown = random.uniform(0.1,0.5)
+            if random.uniform(0, 100) <= 5:
+                self.sprite.setState("glitched")
+            else:
+                self.sprite.setState("normal")
 
     def draw(self, window):
-        drawCircle(window, (self.rect.center,self.rect.w/2), (255, 153, 51))
+        self.sprite.draw(self.rect.scale(4,4), window)
