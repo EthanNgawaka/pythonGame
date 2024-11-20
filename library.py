@@ -2,7 +2,6 @@ import pygame
 import copy
 import pygame._sdl2 as pg_sdl2
 import random
-import numpy as np
 import math
 import time
 import cProfile, pstats, io
