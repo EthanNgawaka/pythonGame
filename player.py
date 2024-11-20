@@ -88,6 +88,7 @@ class AOEBlast(Entity):
         self.lifetime = 0.7
 
         self.shrink = False
+        game.time_speed = 0.2
 
         for e in game.get_entities_by_id("enemy"):
             if AABBCollision(self.rect, e.rect) and not isinstance(e, EnemyBullet):
@@ -171,13 +172,14 @@ class Player(Entity):
         # ---------- #
 
         # random stuff #
-        self.copper = 0 # coins
+        self.copper = 10000 # coins
         self.health = self.maxHealth
 
         self.flashFreq = 0.2
         self.last_known_aim_dir = 0
 
         self.fire_theta = 0
+        self.gun_jiggle = 0
         # ---------- #
 
         # timers #
@@ -273,7 +275,7 @@ class Player(Entity):
 
     def physics(self, dt):
         self.move(self.vel*dt)
-        self.vel *= self.drag
+        self.vel *= self.drag if game.time_speed >= 1 else 1
 
     def AOE_blast(self, radius):
         game.curr_scene.add_entity(AOEBlast(radius,self.rect.center,10*self.static_discharge), "aoe player blast", "bottom")
@@ -321,10 +323,25 @@ class Player(Entity):
     def new_wave(self):
         self.curr_shield = self.shield
 
+    def get_pos_of_tip_of_gun(self):
+        theta = self.fire_theta * -1 + self.gun_jiggle
+        tip = self.gun_img.rect.center
+        off = 3
+        if abs(self.fire_theta) > math.pi/2:
+            off = 0
+        tip += pygame.Vector2(math.sin(theta+off), math.cos(theta+off))*10
+        return tip
+
     def spawn_bullet(self, pos, theta):
         speed = self.bulletSpeed*(1+random.uniform(-self.speedInaccuracy, self.speedInaccuracy))
         vel = pygame.Vector2(math.cos(theta), math.sin(theta)) * (speed) * 60
         id = "bullet"
+
+        if abs(self.fire_theta) > math.pi/2:
+            # if aiming to the left
+            self.gun_jiggle += random.uniform(-math.pi/8, 0)
+        else:
+            self.gun_jiggle += random.uniform(math.pi/8, 0)
 
         if self.atkRateMultiplier > 2:
             camera.shake(3)
@@ -355,7 +372,9 @@ class Player(Entity):
                 if firing:
                     for i in range(self.bulletCount):
                         rand_angle = random.uniform(-self.inaccuracy, self.inaccuracy)
-                        spawn_pos = (self.rect.center.x + math.sin(-theta + 1.6) * 55, self.rect.center.y + math.cos(-theta + 1.6) * 55)
+                        # this logic didnt quite work
+                        #spawn_pos = (self.rect.center.x + math.sin(-theta + 1.6) * 55, self.rect.center.y + math.cos(-theta + 1.6) * 55)
+                        spawn_pos = self.get_pos_of_tip_of_gun()
                         self.spawn_bullet(spawn_pos, theta + rand_angle)
                         self.vel -= pygame.Vector2(math.cos(theta), math.sin(theta))*60
 
@@ -404,9 +423,6 @@ class Player(Entity):
         self.physics(dt)
         self.bound_to_screen()
 
-        if game.key_pressed(pygame.K_SPACE):
-            self.add_status_effect(Acid)
-
         # increment / decrement all timers
         self.bulletCooldown -= dt
         self.invincibilityTimer -= dt
@@ -429,8 +445,9 @@ class Player(Entity):
 
         #---------------# GUN DRAWING #---------------#
         # idk why theta needs to be multiplied by -1 but unless i do it goes weird
-        theta = self.fire_theta * -1
+        theta = self.fire_theta * -1 + self.gun_jiggle
         self.gun_img.rect = self.rect.scale(2,2)
+        self.gun_jiggle = lerp(self.gun_jiggle, 0, 0.1)
 
         # this part makes it so the gun isnt overlapping with the player and is drawn a a bit away from the center
         # py module math. uses radians and 1.5 makes the gun line up with the mouse
@@ -438,6 +455,11 @@ class Player(Entity):
         self.gun_img.rect.y += math.cos(theta + 1.5) * 50
 
         # .draw_rotated uses degrees so multiply theta by 57.2958 to get the degrees instead of radians
-        self.gun_img.rot = theta * 57.2958
-        self.gun_img.draw_rotated(window, self.gun_img.rect)
+        self.gun_img.rot = theta * 57.2958 # gun jiggle hear just lerps to 0 and is set to a rand val when shooting to make it look jiggley
+        if abs(self.fire_theta) > math.pi/2:
+            self.gun_img.draw_rotated_and_flipped(window, self.gun_img.rect, False,True)
+        else:
+            self.gun_img.draw_rotated(window, self.gun_img.rect)
+
+        #drawCircle(window, (self.get_pos_of_tip_of_gun(), 10), (255,0,0))
         #-------------------------------------------#

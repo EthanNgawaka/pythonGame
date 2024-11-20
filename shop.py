@@ -18,6 +18,15 @@ class ShopCard(Button):
         self.targetY = 0
         self.rect.y = self.restY
 
+        self.suck = False
+        self.vel = pygame.Vector2()
+        self.init_dist = 0
+        self.accel = pygame.Vector2()
+        self.suck_timer = 0
+        self.suck_max = 4
+        self.start_rect = self.rect.copy()
+        self.start_rect.y = self.hoveredY
+
     def draw_name(self, window):
         drawingRect = self.get_relative_rect().inflate(self.drawingInflation.x, self.drawingInflation.y)
         drawingRect.center = (drawingRect.center[0]+self.shake.x, drawingRect.center[1]+self.shake.y)
@@ -43,13 +52,36 @@ class ShopCard(Button):
 
         # TODO: Draw card image here!!
 
+    def ease_out_elastic(self, t):
+        if t == 0:
+            return 0
+        if t == 1:
+            return 1
+        c4 = 2*math.pi/3
+        return math.pow(2,-10*t)*math.sin((t*10-0.75)*c4)+1
+
+    def update(self, dt):
+        if not self.suck:
+            super().update(dt)
+            return
+
+        center_screen = pygame.Vector2(game.W/2, game.H/2)
+        t2 = self.suck_timer/self.suck_max
+        t = self.ease_out_elastic(1-t2)
+        #self.rect.center = self.rect.center.lerp(pygame.Vector2(game.W/2, game.H/2), t)
+        self.rect.center = (1-t)*self.start_rect.center + t*center_screen
+        self.suck_timer -= dt
+        if self.suck_timer <= 0:
+            self.remove_self()
+
     def draw(self, window):
         super().draw(window)
-        if self.hovered:
-            self.targetY = self.hoveredY
-        else:
-            self.targetY = self.restY
-        self.rect.y = lerp(self.rect.y, self.targetY, 0.1)
+        if not self.suck:
+            if self.hovered:
+                self.targetY = self.hoveredY
+            else:
+                self.targetY = self.restY
+            self.rect.y = lerp(self.rect.y, self.targetY, 0.1)
 
 class Shop(Menu):
     def __init__(self):
@@ -109,7 +141,8 @@ class Shop(Menu):
                 if player.copper >= self.cards[index].basePrice:
                     player.copper -= self.cards[index].basePrice
                     player.deck.add_card(self.cards[index])
-                    e.remove_self()
+                    e.suck = True
+                    e.suck_timer = e.suck_max
                     return True
                 return False
 

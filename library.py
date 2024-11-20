@@ -424,6 +424,23 @@ class Image:
     def set_rotation(self, rot):
         self.rot = rot
 
+    def draw_rotated_and_flipped(self, window, rect, horiz=False,vert=False, rot_around = pygame.Vector2()):
+        self.rect = rect
+        self.rect.topleft -= camera.pos
+        scaledImage = pygame.transform.flip(pygame.transform.scale(self.img, tuple(self.rect.dimensions)),horiz,vert) # flip on this step
+        scaledAndRotatedImage = pygame.transform.rotate(scaledImage, self.rot)
+
+        centerPos = self.rect.center
+        if rot_around[0] != 0 or rot_around[1] != 0:
+            centerPos = (rot_around[0], rot_around[1])
+        newRect = scaledAndRotatedImage.get_rect(center=centerPos)
+        window.blit(scaledAndRotatedImage, newRect.topleft)
+
+    def draw_flipped(self, window, rect, horiz=False,vert=False):
+        self.rect = rect
+        self.rect.topleft -= camera.pos
+        window.blit(pygame.transform.flip(pygame.transform.scale(self.img, (self.rect.w, self.rect.h)), horiz, vert), (self.rect.x, self.rect.y))
+
     def draw(self, window, rect):
         self.rect = rect
         self.rect.topleft -= camera.pos

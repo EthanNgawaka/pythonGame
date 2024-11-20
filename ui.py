@@ -23,9 +23,9 @@ class UI_Root(Entity):
         self.fill_col = fill_col
         self.col = (self.fill_col, self.outline_col)
 
-    def add_element(self, elem):
+    def add_element(self, elem, priority="UI"):
         self.elements.append(elem)
-        game.curr_scene.add_entity(elem, elem.__class__.__name__, "UI")
+        game.curr_scene.add_entity(elem, elem.__class__.__name__, priority)
 
     def update(self, dt):
         pass
@@ -227,7 +227,6 @@ class Menu(Entity):
                 
                 dist = abs(self.rect.y - self.closeRect.y)
                 self.lerp(self.closeRect, t)
-                print(dist)
                 if dist < 80: # arbitrary seems to work fine tho
                     self.UIRoot.remove_self()
                     self.UIRoot = None

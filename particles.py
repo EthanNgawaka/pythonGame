@@ -133,9 +133,9 @@ class Particle(Entity):
         self.rect.x += self.vel[0]*dt
         self.rect.y += self.vel[1]*dt
 
-        self.vel.y += self.gravity
-
-        self.vel *= self.drag
+        if game.time_speed >= 1:
+            self.vel.y += self.gravity
+            self.vel *= self.drag
 
         self.lifetime -= dt
         if self.lifetime <= 0:

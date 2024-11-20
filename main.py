@@ -28,7 +28,7 @@ def create_main_scene():
     wave = Wave()
     mainScene.init_entity(bg, "bg", -100000)
     mainScene.init_entity(player, "player")
-    mainScene.init_entity(playerUi, "playerUI", 1000)
+    mainScene.init_entity(playerUi, "playerUI", 10000)
     mainScene.init_entity(wave, "wave")
 
     # so currently u have to init all menus idk it works but its kinda scuffed but
@@ -82,13 +82,22 @@ def main():
             - Rewrite menu system to use new Rect class
     """
 
+    time_slow_timer = 0
     while running:
-        dt = game.time_speed * clock.tick(maxFPS) / 1000.0
+        real_dt = clock.tick(maxFPS) / 1000.0
+        dt = game.time_speed * real_dt
 
         if game.key_pressed(pygame.K_j):
             game.time_speed += 0.1
         if game.key_pressed(pygame.K_k):
             game.time_speed -= 0.1
+
+        if game.time_speed < 1:
+            time_slow_timer += real_dt
+            game.time_speed = min(1, math.pow(time_slow_timer, 5))
+            if game.time_speed >= 1:
+                game.time_speed = 1
+                time_slow_timer = 0
 
         game.update(dt)
         game.draw(game.window)
