@@ -17,7 +17,7 @@ class Background(Entity):
     def update(self, dt):
         pass
     def draw(self, window):
-        drawRect(window, self.rect, (125,125,125))
+        drawRect(window, self.rect, (125,125,125), 0, True)
 
 def create_main_scene():
     mainScene = Scene()

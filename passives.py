@@ -7,6 +7,20 @@ class SpeedUp(Card):
     desc = "Speed up!"
     def on_pickup(self):
         self.player.speed += 20
+
+class IFrameUp(Card):
+    name = "Invincibility Up"
+    basePrice = 50
+    desc = "More IFrames!"
+    def on_pickup(self):
+        self.player.iFrames += 0.5
+
+class BulletSize(Card):
+    name = "Bigger Bullets"
+    basePrice = 50
+    desc = "What do you think it does?"
+    def on_pickup(self):
+        self.player.bulletSize *= 1.5
         
 class DamageUp(Card):
     name = "damage up"
@@ -46,8 +60,37 @@ class MaxHealthUp(Card):
         self.player.maxHealth += 20
         self.player.health += 20
 
-
 # Rare
+class Shield(Card):
+    name = "Shield"
+    basePrice = 100
+    desc = "+1 free hit per round"
+    def on_pickup(self):
+        self.player.shield += 1
+        self.player.curr_shield = self.player.shield
+
+class Firewall(Card):
+    name = "Firewall"
+    basePrice = 200
+    desc = "Immunity to fire"
+    def on_pickup(self):
+        self.player.fire_immunity = True
+
+class RubberBullets(Card):
+    name = "Rubber Bullets"
+    basePrice = 125
+    desc = "Still lethal, just bouncier! (+1 bounce)"
+    def on_pickup(self):
+        self.player.bouncy = True
+        self.player.piercing += 1
+
+class StaticDischarge(Card):
+    name = "Static Discharge"
+    basePrice = 100
+    desc = "blast on hit"
+    def on_pickup(self):
+        self.player.static_discharge += 1
+
 class LifeStealUp(Card):
     name = "life steal up"
     basePrice = 150
@@ -111,13 +154,18 @@ class DoubleShot(Card):
 PASSIVE_CARDS = {
     "common":[
         SpeedUp, DamageUp, AccuracyUp,
-        AttackSpeedUp, BulletSpeedUp, MaxHealthUp
+        AttackSpeedUp, BulletSpeedUp, MaxHealthUp,
+        IFrameUp, BulletSize
     ],
     "rare":[
-        Shotgun, Piercing, LifeStealUp, Panic, HotShot
+        Shotgun, Piercing, LifeStealUp,
+        Panic, HotShot, Shield,
+        StaticDischarge, Firewall, RubberBullets,
     ],
     "legendary":[
         DoubleShot, Minigun
+    ],
+    "devil_deal":[
     ],
 }
 

@@ -48,6 +48,8 @@ class Wave(Entity):
         self.num += 1
         self.swappedAlready = False
         print('new round!')
+        # reset player things here
+        game.get_entity_by_id("player").new_wave()
 
     def spawn_random_enemy(self):
         choice = "common"

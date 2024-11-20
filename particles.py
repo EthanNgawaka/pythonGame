@@ -58,10 +58,15 @@ def spawn_weakness_particle(x, y):
         game.curr_scene.add_entity(part, "particle_fire", "bottom")
 
 # TODO redo this cause it wont work???
-def blood_explosion(x, y, amnt):
+def blood_explosion(x, y, amnt, init_theta=None):
     numOfParticles = max(amnt, 5)
     for i in range(numOfParticles):
         theta = random.uniform(-math.pi, math.pi)
+        # improve this i want it to be normall distrubted with
+        # mu = init_theta and std dev idk
+        if init_theta is not None:
+            theta /= 4
+            theta += init_theta
         mag = random.uniform(0,1000)
         vel = pygame.Vector2(math.cos(theta)*mag, math.sin(theta)*mag)
         size = max(3,random.uniform(numOfParticles/2, numOfParticles))

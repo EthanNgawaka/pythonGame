@@ -7,6 +7,7 @@ from particles import *
 class Enemy(Entity):
     def __init__(self, pos):
         self.rect = Rect(pos,(30,30))
+        self.fire_immunity = False
         self.vel = pygame.Vector2()
         self.drag = 0.96
         self.invMass = 1
@@ -95,18 +96,27 @@ class Enemy(Entity):
         for _ in range(stacks):
             game.curr_scene.add_entity(status_type(self), "status player")
 
-    def on_bullet_collision(self, bullet):
-        bullet.on_enemy_collision(self)
-        player = game.get_entity_by_id("player")
-        self.health -= player.dmg * player.dmgMultiplier
-
-        vec = bullet.vel.normalize()
-        self.vel = vec * player.kb
+    def hit(self, dmg, vec):
+        self.health -= dmg
+        self.vel = vec
         self.forces = pygame.Vector2()
         self.stun = 0.1
 
-    def die(self):
-        blood_explosion(*self.rect.center, self.maxHealth)
+    def on_bullet_collision(self, bullet):
+        player = game.get_entity_by_id("player")
+        dmg = player.dmg * player.dmgMultiplier
+        if player.lifesteal > 0:
+            player.heal((dmg/3) * player.lifesteal)
+
+        vec = bullet.vel.normalize()
+        self.hit(dmg, vec*player.kb)
+
+        if self.health <= 0 and self.alive:
+            self.die(math.atan2(vec.y,vec.x))
+        bullet.on_enemy_collision(self)
+
+    def die(self, theta=None):
+        blood_explosion(*self.rect.center, self.maxHealth, theta)
         self.on_death()
         self.remove_self()
         spawn_copper(self.rect.center, self.get_copper_drop_qty())
@@ -378,6 +388,7 @@ class FireAnt(Ant):
         self.baseAtkRate = self.atkRate
         self.last_shot = 0
         self.col = (255,50,50)
+        self.fire_immunity = True
         self.thresh = 500
         self.maxHealth = self.health
 

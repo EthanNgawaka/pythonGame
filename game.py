@@ -283,6 +283,7 @@ class Game:
         self.controller.update(self, dt)
         self.oldKeys = self.keys
         self.keys = pygame.key.get_pressed()
+        camera.update(dt)
 
         if 1 in self.keys:
             self.input_mode = "keyboard"
