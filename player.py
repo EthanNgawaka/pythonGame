@@ -324,7 +324,7 @@ class Player(Entity):
         id = "bullet"
 
         t = (self.atkRate*self.atkRateMultiplier)/self.atkRate
-        camera.shake(min(5*t,10), 0.15)
+        camera.shake(min(2*t,10), 0.15)
 
         blt = Bullet(pos, vel)
         blt.bouncy = self.bouncy_bullets
