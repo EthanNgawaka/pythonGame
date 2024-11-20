@@ -14,6 +14,12 @@ class PlayerUI(Entity):
         self.oldHpTimer = 0
         self.orangeBarDelay = 1
 
+        self.flash_timer = 0
+        self.flash_limit = 0.2
+        self.last_flash = 0
+        self.static_index = 0
+        self.static_colors = [pygame.Color("#2092be"), pygame.Color("#53d0ff")]
+
     def draw_hp_bar(self, window):
         diffFromMaxHealth = self.player.maxHealth - self.player.health
 
@@ -40,16 +46,78 @@ class PlayerUI(Entity):
             drawText(window, f"{stat_name}: {stat_val}", (0,0,0), (50,250+40*i), 20)
             i+=1
 
+    def draw_static_discharge(self, window):
+        if self.player.static_discharge > 0:
+            static_discharge_rect = Rect((0,0),(self.player.rect.w*2.5, self.player.rect.h*0.3))
+            static_discharge_rect.center = self.player.rect.center - pygame.Vector2(0,self.player.rect.h)
+            drawRect(window, static_discharge_rect, pygame.Color("grey"))
+            charge_rect = static_discharge_rect.copy()
+            t = min(1,self.player.static_discharge_timer/self.player.static_discharge_max)
+            drawRect(window, charge_rect.scale(t,1), self.static_colors[self.static_index])
+            if t == 1:
+                if abs(self.flash_timer - self.last_flash) >= self.flash_limit:
+                    self.last_flash = self.flash_timer
+                    self.static_index = 1 if self.static_index == 0 else 0
+            else:
+                self.static_index = 0
+
     def draw(self, window):
         self.draw_hp_bar(window)
         self.draw_copper(window)
         if DEBUG:
             self.draw_stats(window)
 
+        self.draw_static_discharge(window)
+
     def update(self, dt):
+        self.flash_timer += dt
         self.oldHpTimer -= dt
         if self.player.invincibilityTimer > 0:
             self.oldHpTimer = self.orangeBarDelay
+
+class AOEBlast(Entity):
+    def __init__(self, r, center, dmg):
+        self.max_r = r
+        self.r = 0
+        self.rect = Rect((0,0), (r*2, r*2))
+        self.rect.center = center
+        self.player = game.get_entity_by_id("player")
+        self.dmg = dmg
+
+        self.timer = 0
+        self.lifetime = 0.7
+
+        self.shrink = False
+
+        for e in game.get_entities_by_id("enemy"):
+            if AABBCollision(self.rect, e.rect) and not isinstance(e, EnemyBullet):
+                e.hit(self.dmg, (self.rect.center-e.rect.center).normalize()*25)
+
+    def ease_out_elastic(self, t):
+        if t == 0:
+            return 0
+        if t == 1:
+            return 1
+        c4 = 2*math.pi/3
+        return math.pow(2,-10*t)*math.sin((t*10-0.75)*c4)+1
+
+    def update(self, dt):
+        t = self.timer/self.lifetime
+        print(t)
+        if t >= 0.54:
+            self.shrink = True
+
+        if self.shrink:
+            self.timer -= dt*2
+            self.r = lerp(self.r, 0, 0.5)
+            if self.timer <= 0:
+                self.remove_self()
+        else:
+            self.r = self.ease_out_elastic(t)*self.max_r
+            self.timer += dt
+
+    def draw(self, window):
+        drawCircle(window,(self.rect.center,self.r),pygame.Color("#53d0ff"))
 
 class Player(Entity):
     def __init__(self, x, y):
@@ -74,6 +142,10 @@ class Player(Entity):
         self.iFrames = 0.75
 
         # (implemented) #
+        self.fire_immunity = True
+        self.static_discharge = 0
+        self.shield = 0
+        self.curr_shield = 0
         self.lifesteal = 0
         self.panic = 0
         self.piercing = 0
@@ -108,6 +180,8 @@ class Player(Entity):
         self.bulletCooldown = 0
         self.invincibilityTimer = 0
         self.hit_timer = 0
+        self.static_discharge_timer = 0 # so this increases faster with higher levels of it
+        self.static_discharge_max = 8
         # ------ #
 
         self.base_stats = self.get_stats()
@@ -196,17 +270,30 @@ class Player(Entity):
         self.move(self.vel*dt)
         self.vel *= self.drag
 
+    def AOE_blast(self, radius):
+        game.curr_scene.add_entity(AOEBlast(radius,self.rect.center,10*self.static_discharge), "aoe player blast", "bottom")
+
     def hit(self, ent):
         if self.invincibilityTimer <= 0:
             # this is for hitstop idk it feels kinda bad on every single hit
             #game.time_speed = 0.001
             #self.hit_timer = 0.05
+            if self.curr_shield > 0:
+                self.curr_shield -= 1
+                self.invincibilityTimer = self.iFrames
+                return
             if ent.inflictFire:
                 self.add_status_effect(Fire)
             self.health -= ent.dmg
             self.invincibilityTimer = self.iFrames
 
             self.speed *= 1 + 0.02*self.panic
+
+            if self.static_discharge_timer > 0:
+                if self.static_discharge_timer >= self.static_discharge_max:
+                    self.AOE_blast(250)
+                self.static_discharge_timer = 0
+
 
             if isinstance(ent, EnemyBullet):
                 vec = ent.vel.normalize()
@@ -223,6 +310,9 @@ class Player(Entity):
     def input(self):
         self.movement()
         self.shooting()
+
+    def new_wave(self):
+        self.curr_shield = self.shield
 
     def spawn_bullet(self, pos, theta):
         speed = self.bulletSpeed*(1+random.uniform(-self.speedInaccuracy, self.speedInaccuracy))
@@ -306,6 +396,7 @@ class Player(Entity):
         # increment / decrement all timers
         self.bulletCooldown -= dt
         self.invincibilityTimer -= dt
+        self.static_discharge_timer += dt * self.static_discharge # higher level faster recharge
 
         if self.health <= 0:
             self.game_over()

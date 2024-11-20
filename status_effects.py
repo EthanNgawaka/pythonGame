@@ -87,6 +87,10 @@ class Fire(Entity):
             all_other_effects[i].timer = self.timer*(i+2)
 
     def update(self, dt):
+        if self.ent.fire_immunity:
+            self.remove_self()
+            return
+
         if self.timer > 0 and self.ent in game.curr_scene.entities.values():
             self.timer -= dt
             stacks = self.ent.get_stacks_of_status_effects(self.__class__)

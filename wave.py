@@ -10,7 +10,7 @@ class Wave(Entity):
             "miniboss":[MotherCockroach, MotherFly],
         }
         # testing only one enemy:
-        self.override_enemy_type = None
+        self.override_enemy_type = FireAntSwarm
         self.timer = 0
         self.num = 1
 
@@ -48,6 +48,8 @@ class Wave(Entity):
         self.num += 1
         self.swappedAlready = False
         print('new round!')
+        # reset player things here
+        game.get_entity_by_id("player").new_wave()
 
     def spawn_random_enemy(self):
         choice = "common"

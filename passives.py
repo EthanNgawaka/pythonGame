@@ -46,8 +46,29 @@ class MaxHealthUp(Card):
         self.player.maxHealth += 20
         self.player.health += 20
 
-
 # Rare
+class Shield(Card):
+    name = "Shield"
+    basePrice = 100
+    desc = "+1 free hit per round"
+    def on_pickup(self):
+        self.player.shield += 1
+        self.player.curr_shield = self.player.shield
+
+class Firewall(Card):
+    name = "Firewall"
+    basePrice = 200
+    desc = "Immunity to fire"
+    def on_pickup(self):
+        self.player.fire_immunity = True
+
+class StaticDischarge(Card):
+    name = "Static Discharge"
+    basePrice = 100
+    desc = "blast on hit"
+    def on_pickup(self):
+        self.player.static_discharge += 1
+
 class LifeStealUp(Card):
     name = "life steal up"
     basePrice = 150
@@ -114,10 +135,14 @@ PASSIVE_CARDS = {
         AttackSpeedUp, BulletSpeedUp, MaxHealthUp
     ],
     "rare":[
-        Shotgun, Piercing, LifeStealUp, Panic, HotShot
+        Shotgun, Piercing, LifeStealUp,
+        Panic, HotShot, Shield,
+        StaticDischarge, Firewall,
     ],
     "legendary":[
         DoubleShot, Minigun
+    ],
+    "devil_deal":[
     ],
 }
 
