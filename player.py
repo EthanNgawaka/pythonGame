@@ -139,9 +139,10 @@ class Player(Entity):
 
         # attributes #
         # (NOT implemented) #
-        self.iFrames = 0.75
 
         # (implemented) #
+        self.bulletSize = 1
+        self.iFrames = 0.75
         self.fire_immunity = False
         self.static_discharge = 0
         self.shield = 0
@@ -321,7 +322,7 @@ class Player(Entity):
         id = "bullet"
 
         blt = Bullet(pos, vel)
-        blt.bouncy = True
+        blt.bouncy = self.bouncy_bullets
         game.curr_scene.add_entity(blt, id)
 
     # make controller shoot on right trigger

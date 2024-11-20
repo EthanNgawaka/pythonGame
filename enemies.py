@@ -103,7 +103,6 @@ class Enemy(Entity):
         self.stun = 0.1
 
     def on_bullet_collision(self, bullet):
-        bullet.on_enemy_collision(self)
         player = game.get_entity_by_id("player")
         dmg = player.dmg * player.dmgMultiplier
         if player.lifesteal > 0:
@@ -114,6 +113,7 @@ class Enemy(Entity):
 
         if self.health <= 0 and self.alive:
             self.die(math.atan2(vec.y,vec.x))
+        bullet.on_enemy_collision(self)
 
     def die(self, theta=None):
         blood_explosion(*self.rect.center, self.maxHealth, theta)

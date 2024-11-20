@@ -5,7 +5,7 @@ class Bullet(Entity):
     def __init__(self, center, vel):
         player = game.get_entity_by_id("player")
 
-        self.r = self.get_size(player.dmg*player.dmgMultiplier)
+        self.r = self.get_size(player.dmg*player.dmgMultiplier*player.bulletSize)
         # so the bullet rect is actually WAY bigger than the drawn bullet
         # cause aiming feels so tedious without it unless u got bigboy damage
 

@@ -7,6 +7,20 @@ class SpeedUp(Card):
     desc = "Speed up!"
     def on_pickup(self):
         self.player.speed += 20
+
+class IFrameUp(Card):
+    name = "Invincibility Up"
+    basePrice = 50
+    desc = "More IFrames!"
+    def on_pickup(self):
+        self.player.iFrames += 0.5
+
+class BulletSize(Card):
+    name = "Bigger Bullets"
+    basePrice = 50
+    desc = "What do you think it does?"
+    def on_pickup(self):
+        self.player.bulletSize *= 1.5
         
 class DamageUp(Card):
     name = "damage up"
@@ -140,7 +154,8 @@ class DoubleShot(Card):
 PASSIVE_CARDS = {
     "common":[
         SpeedUp, DamageUp, AccuracyUp,
-        AttackSpeedUp, BulletSpeedUp, MaxHealthUp
+        AttackSpeedUp, BulletSpeedUp, MaxHealthUp,
+        IFrameUp, BulletSize
     ],
     "rare":[
         Shotgun, Piercing, LifeStealUp,
