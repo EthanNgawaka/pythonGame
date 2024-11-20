@@ -77,7 +77,7 @@ def main():
             X Add a button to buy 20% health for 100 copper in shop
             X Make copper auto attract at end of round (maybe make it a setting somewhere its getting tedious)
             K Rework particle system
-            - Camera system for camera shake
+            X Camera system for camera shake
             - Rewrite menu system to use new Rect class
     """
 
