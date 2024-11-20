@@ -71,10 +71,10 @@ class Player(Entity):
 
         # attributes #
         # (NOT implemented) #
-        self.lifesteal = 0
         self.iFrames = 0.75
 
         # (implemented) #
+        self.lifesteal = 0
         self.panic = 0
         self.piercing = 0
         self.speed = 50

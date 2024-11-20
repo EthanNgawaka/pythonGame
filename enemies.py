@@ -99,14 +99,19 @@ class Enemy(Entity):
         bullet.on_enemy_collision(self)
         player = game.get_entity_by_id("player")
         self.health -= player.dmg * player.dmgMultiplier
+        if player.lifesteal > 0:
+            player.heal((player.dmg*player.dmgMultiplier/3) * player.lifesteal)
 
         vec = bullet.vel.normalize()
         self.vel = vec * player.kb
         self.forces = pygame.Vector2()
         self.stun = 0.1
 
-    def die(self):
-        blood_explosion(*self.rect.center, self.maxHealth)
+        if self.health <= 0 and self.alive:
+            self.die(math.atan2(vec.y,vec.x))
+
+    def die(self, theta=None):
+        blood_explosion(*self.rect.center, self.maxHealth, theta)
         self.on_death()
         self.remove_self()
         spawn_copper(self.rect.center, self.get_copper_drop_qty())

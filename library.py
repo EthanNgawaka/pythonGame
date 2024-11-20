@@ -444,6 +444,15 @@ class Spritesheet:
     def rotate(self, rotation):
         self.rotation = rotation
 
+    def __deepcopy__(self, memo):
+        # so you cant "pickle" (serialize) pygame surfaces and self.img is a pygame surface so just override here and it just shallow copies
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            setattr(result, k, copy.copy(v))
+        return result
+
     def addState(self, state_name, correspondingLine, frames):
         self.states[state_name] = [frames, correspondingLine]
         self.state = state_name
