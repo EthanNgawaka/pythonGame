@@ -151,8 +151,8 @@ class Mouse:
 # TODO( integrate with game class )
 class Camera:
     def __init__(self, trackingEasing=0.1):
-        self.pos = [0,0]
-        self.target = [0,0]
+        self.pos = pygame.Vector2(0,0)
+        self.target = pygame.Vector2(0,0)
         self.shakeTimer = 0
         self.shakeIntensity = 0
         self.trackingEasing = trackingEasing
@@ -163,19 +163,22 @@ class Camera:
 
     def shake(self, intensity=20, duration=0.2, shakeEasing=0.6):
         self.shakeTimer = duration
-        self.shakeIntensity = intensity
+        self.shakeIntensity = max(self.shakeIntensity, intensity)
         self.shakeEasing = shakeEasing
 
     def getRect(self):
-        return [self.pos[0], self.pos[1], 0, 0]
+        return Rect((self.pos[0], self.pos[1]), (0, 0))
 
     def update(self, dt):
-        self.pos = vecLerp(self.pos, self.target, self.trackingEasing)
+        self.pos = self.pos.lerp(self.target, self.trackingEasing)
 
         if self.shakeTimer > 0:
             self.shakeTimer -= dt
-            shakeVec = [random.uniform(-1,1)*self.shakeIntensity, random.uniform(-1,1)*self.shakeIntensity]
-            self.pos = vecLerp(self.pos, add(self.pos,shakeVec), self.shakeEasing)
+            shakeVec = pygame.Vector2()
+            shakeVec.x = random.uniform(-1,1)*self.shakeIntensity
+            shakeVec.y = random.uniform(-0.25,0.25)*self.shakeIntensity
+            self.pos = self.pos.lerp(self.pos+shakeVec, self.shakeEasing)
+
 camera = Camera()
 
 # currently no support for multiple controllers it just uses the first one connected
@@ -410,10 +413,12 @@ class Image:
 
     def draw(self, window, rect):
         self.rect = rect
+        self.rect.topleft -= camera.pos
         window.blit(pygame.transform.scale(self.img, (self.rect.w, self.rect.h)), (self.rect.x, self.rect.y))
     
     def draw_rotated(self, window, rect, rot_around = pygame.Vector2()):
         self.rect = rect
+        self.rect.topleft -= camera.pos
         scaledImage = pygame.transform.scale(self.img, tuple(self.rect.dimensions))
         scaledAndRotatedImage = pygame.transform.rotate(scaledImage, self.rot)
 
@@ -465,6 +470,7 @@ class Spritesheet:
 
     def draw(self, rect, window, rotateAround=[0,0]):
         self.rect = rect
+        self.rect.topleft -= camera.pos
         scaledImage = pygame.transform.scale(self.get_curr_sprite(), (self.rect[2], self.rect[3]))
         scaledAndRotatedImage = pygame.transform.rotate(scaledImage, self.rotation)
 
@@ -559,7 +565,8 @@ def AABBCollision(rect1, rect2): # rect = (x,y,w,h) returns min trans vec if tru
 # if exists use it if not create it and add it to cached fonts
 cached_fonts = {}
 # drawing funcs
-def drawText(window, string, col, pos, size, drawAtCenter=False, drawAsUI=False):
+def drawText(window, string, col, in_pos, size, drawAtCenter=False, drawAsUI=False):
+    pos = in_pos - camera.pos
     font = pygame.font.SysFont("Arial",size)
     if (string, col, size) in cached_fonts:
         img = cached_fonts[(string, col, size)]
@@ -579,7 +586,8 @@ def drawText(window, string, col, pos, size, drawAtCenter=False, drawAsUI=False)
     else:
         window.blit(img, drawPos)
 
-def drawRect(window, rect, col_obj, outline_thickness=0):
+def drawRect(window, in_rect, col_obj, outline_thickness=0, ignore_camera=False):
+    rect = in_rect
     # col = (R, G, B, [A])
     # col_obj = (fill_col, outline_col)
     # can just pass fill_col if outline_thickness is left as 0
@@ -603,21 +611,29 @@ def drawRect(window, rect, col_obj, outline_thickness=0):
         if outline_thickness > 0:
             s.fill((out_col[0],out_col[1],out_col[2]), s.get_rect().inflate(-outline_thickness, -outline_thickness))
 
-        window.blit(s, (rect[0], rect[1]))
+        window.blit(s, (rect[0]-camera.pos.x, rect[1]-camera.pos.y))
         return
         
     # just draw the goddamn rectangle
+    draw_rect = rect.copy()
+    if not ignore_camera:
+        try:
+            draw_rect.topleft -= camera.pos
+        except AttributeError:
+            draw_rect[0] -= camera.pos.x
+            draw_rect[1] -= camera.pos.y
     try:
         pygame.draw.rect(window, col, rect)
         if outline_thickness > 0:
-            pygame.draw.rect(window, out_col, rect, outline_thickness)
+            pygame.draw.rect(window, out_col, draw_rect, outline_thickness)
     except TypeError:
-        pygame.draw.rect(window, col, rect.as_tuple())
+        pygame.draw.rect(window, col, draw_rect.as_tuple())
         if outline_thickness > 0:
-            pygame.draw.rect(window, out_col, rect.as_tuple(), outline_thickness)
+            pygame.draw.rect(window, out_col, draw_rect.as_tuple(), outline_thickness)
 
-
-
-def drawCircle(window, circle, col): # circle = (center, radius)
+def drawCircle(window, in_circle, col): # circle = (center, radius)
+    circle = in_circle
+    circle[0][0] -= camera.pos.x
+    circle[0][1] -= camera.pos.y
     pygame.draw.circle(window, col, circle[0], circle[1])
 

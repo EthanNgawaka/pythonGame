@@ -274,9 +274,11 @@ class Player(Entity):
 
     def AOE_blast(self, radius):
         game.curr_scene.add_entity(AOEBlast(radius,self.rect.center,10*self.static_discharge), "aoe player blast", "bottom")
+        camera.shake(40,0.7)
 
     def hit(self, ent):
         if self.invincibilityTimer <= 0:
+            camera.shake(40)
             # this is for hitstop idk it feels kinda bad on every single hit
             #game.time_speed = 0.001
             #self.hit_timer = 0.05
@@ -320,6 +322,9 @@ class Player(Entity):
         speed = self.bulletSpeed*(1+random.uniform(-self.speedInaccuracy, self.speedInaccuracy))
         vel = pygame.Vector2(math.cos(theta), math.sin(theta)) * (speed) * 60
         id = "bullet"
+
+        t = (self.atkRate*self.atkRateMultiplier)/self.atkRate
+        camera.shake(min(5*t,10), 0.15)
 
         blt = Bullet(pos, vel)
         blt.bouncy = self.bouncy_bullets
