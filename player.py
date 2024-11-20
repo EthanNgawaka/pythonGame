@@ -176,6 +176,8 @@ class Player(Entity):
 
         self.flashFreq = 0.2
         self.last_known_aim_dir = 0
+
+        self.fire_theta = 0
         # ---------- #
 
         # timers #
@@ -198,7 +200,8 @@ class Player(Entity):
         self.deck = Deck(self)
 
         # sprite stuff
-        self.img = Image("./assets/player.png", *self.rect)
+        self.player_img = Image("./assets/player.png", *self.rect)
+        self.gun_img = Image("./assets/gun.png", *self.rect)
 
     def get_list_of_status_effects_of_type(self, status_type):
         all_statuses = game.get_entities_by_type(status_type)
@@ -335,6 +338,7 @@ class Player(Entity):
         # mouse input 
         firing = game.mouse.down[0]
         theta = vec_angle_to(self.rect.center, game.mouse.pos)
+        self.fire_theta = theta
 
         # controller input
         if game.input_mode == "controller":
@@ -346,12 +350,14 @@ class Player(Entity):
                 theta = self.last_known_aim_dir
 
         if self.curr_weapon == "gun":
+            self.fire_theta = theta
             # focus on this for now once really solid base game add more weapons
             if self.bulletCooldown <= 0:
                 if firing:
                     for i in range(self.bulletCount):
                         rand_angle = random.uniform(-self.inaccuracy, self.inaccuracy)
-                        self.spawn_bullet(self.rect.center, theta + rand_angle)
+                        spawn_pos = (self.rect.center.x + math.sin(-theta + 1.6) * 55, self.rect.center.y + math.cos(-theta + 1.6) * 55)
+                        self.spawn_bullet(spawn_pos, theta + rand_angle)
                         self.vel -= pygame.Vector2(math.cos(theta), math.sin(theta))*60
 
                     self.bulletCooldown = self.atkRate / self.atkRateMultiplier
@@ -415,8 +421,24 @@ class Player(Entity):
         if self.invincibilityTimer > 0 and math.ceil(self.invincibilityTimer/self.flashFreq) % 2 == 0:
             return
 
-        self.img.draw_rotated(window, self.rect.scale(2,2))
+        self.player_img.draw_rotated(window, self.rect.scale(2,2))
         dir = -1
         if self.vel.x < 0:
             dir = 1
-        self.img.rot += dir*math.pi*self.vel.length()/100
+        self.player_img.rot += dir*math.pi*self.vel.length()/100
+
+
+        #---------------# GUN DRAWING #---------------#
+        # idk why theta needs to be multiplied by -1 but unless i do it goes weird
+        theta = self.fire_theta * -1
+        self.gun_img.rect = self.rect.scale(2,2)
+
+        # this part makes it so the gun isnt overlapping with the player and is drawn a a bit away from the center
+        # py module math. uses radians and 1.5 makes the gun line up with the mouse
+        self.gun_img.rect.x += math.sin(theta + 1.5) * 50
+        self.gun_img.rect.y += math.cos(theta + 1.5) * 50
+
+        # .draw_rotated uses degrees so multiply theta by 57.2958 to get the degrees instead of radians
+        self.gun_img.rot = theta * 57.2958
+        self.gun_img.draw_rotated(window, self.gun_img.rect)
+        #-------------------------------------------#
