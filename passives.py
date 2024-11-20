@@ -62,6 +62,14 @@ class Firewall(Card):
     def on_pickup(self):
         self.player.fire_immunity = True
 
+class RubberBullets(Card):
+    name = "Rubber Bullets"
+    basePrice = 125
+    desc = "Still lethal, just bouncier! (+1 bounce)"
+    def on_pickup(self):
+        self.player.bouncy = True
+        self.player.piercing += 1
+
 class StaticDischarge(Card):
     name = "Static Discharge"
     basePrice = 100
@@ -137,7 +145,7 @@ PASSIVE_CARDS = {
     "rare":[
         Shotgun, Piercing, LifeStealUp,
         Panic, HotShot, Shield,
-        StaticDischarge, Firewall,
+        StaticDischarge, Firewall, RubberBullets,
     ],
     "legendary":[
         DoubleShot, Minigun

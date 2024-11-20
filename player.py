@@ -142,7 +142,7 @@ class Player(Entity):
         self.iFrames = 0.75
 
         # (implemented) #
-        self.fire_immunity = True
+        self.fire_immunity = False
         self.static_discharge = 0
         self.shield = 0
         self.curr_shield = 0
@@ -153,6 +153,7 @@ class Player(Entity):
         self.maxHealth = 150
 
         self.hotShot = 0
+        self.bouncy_bullets = False
 
         self.kb = 500
         self.dmgMultiplier = 1
@@ -319,7 +320,9 @@ class Player(Entity):
         vel = pygame.Vector2(math.cos(theta), math.sin(theta)) * (speed) * 60
         id = "bullet"
 
-        game.curr_scene.add_entity(Bullet(pos, vel), id)
+        blt = Bullet(pos, vel)
+        blt.bouncy = True
+        game.curr_scene.add_entity(blt, id)
 
     # make controller shoot on right trigger
     def shooting(self):

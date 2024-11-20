@@ -21,6 +21,7 @@ class Bullet(Entity):
         self.fire_spawn_rate = 0.05
         self.timer = 0
         self.last_fire_spawn = self.timer
+        self.bouncy = False
 
     def has_not_pierced(self, enemy):
         for e in self.piercedEnemies:
@@ -42,11 +43,23 @@ class Bullet(Entity):
         if player.hotShot > 0:
             enemy.add_status_effect(Fire, player.hotShot)
 
+        if self.bouncy:
+            vec = (self.rect.center - enemy.rect.center).normalize()
+            self.vel = vec * self.vel.length()
+
     def update(self, dt):
         player = game.get_entity_by_id("player")
         self.move(self.vel*dt)
         if not AABBCollision(self.rect, [0,0,game.W,game.H]):
-            self.remove_self()
+            if self.bouncy and self.piercesLeft > 0:
+                if self.rect.y < 0 or self.rect.y > game.H:
+                    self.vel.y *= -1
+                if self.rect.x < 0 or self.rect.x > game.W:
+                    self.vel.x *= -1
+                self.piercesLeft -= 1
+                self.move(self.vel*dt)
+            else:
+                self.remove_self()
 
         # fire particles
         if player.hotShot > 0:
