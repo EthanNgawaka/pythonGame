@@ -629,7 +629,8 @@ class MotherFly(Enemy):
         self.baseAtkRate = self.atkRate
         self.atkThresh = game.W
         self.col = pygame.Color("black")
-        self.atkTimer = -self.atkRate/3
+
+        self.atkTimer = self.atkRate/3
 
     def on_death(self):
         for i in range(random.randint(5,20)):

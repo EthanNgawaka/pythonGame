@@ -326,9 +326,8 @@ class Player(Entity):
         vel = pygame.Vector2(math.cos(theta), math.sin(theta)) * (speed) * 60
         id = "bullet"
 
-        t = (self.atkRate*self.atkRateMultiplier)/self.atkRate
-        camera.shake(min(2*t,10), 0.15)
-
+        if self.atkRateMultiplier > 2:
+            camera.shake(3)
         blt = Bullet(pos, vel)
         blt.bouncy = self.bouncy_bullets
         game.curr_scene.add_entity(blt, id)

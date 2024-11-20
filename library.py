@@ -104,6 +104,19 @@ class Rect:
     def move(self, vec):
         self.topleft += vec
 
+    def translate(self, vec):
+        new_rect = self.copy()
+        new_rect.topleft += vec
+        return new_rect
+
+    def inflate(self, w, h):
+        new_rect = self.copy()
+        new_rect.x -= w/2
+        new_rect.y -= h/2
+        new_rect.w += w
+        new_rect.h += h
+        return new_rect
+
     def copy(self):
         return copy.deepcopy(self)
 
@@ -162,7 +175,8 @@ class Camera:
 
     def shake(self, intensity=20, duration=0.2, shakeEasing=0.6):
         self.shakeTimer = duration
-        self.shakeIntensity = max(self.shakeIntensity, intensity)
+        #self.shakeIntensity = max(self.shakeIntensity, intensity)
+        self.shakeIntensity = intensity
         self.shakeEasing = shakeEasing
 
     def getRect(self):
@@ -563,8 +577,53 @@ def AABBCollision(rect1, rect2): # rect = (x,y,w,h) returns min trans vec if tru
 # a font img is uniquely determined by its string, col and size
 # if exists use it if not create it and add it to cached fonts
 cached_fonts = {}
+def drawWrappedText(window, string, col, size, rect, pad = [0,0,0], center=False):
+    # pad = [x, y, line padding]
+    # if wrap is given its a rect defining the place the text will be drawn,
+    # in this case, if drawAtCenter, each line will be centered
+    # (think of centering a line in word doc)
+    # but it will still be inside of the rect
+    font = pygame.font.SysFont("Arial",size)
+    wrap = rect
+    w_pad = pad[0]
+    h_pad = pad[1]
+    line_pad = pad[2]
+    line_h = pygame.font.Font.size(font, "Tg")[1]
+    max_w = wrap[2] - w_pad
+    words = string.split(" ")
+    lines = []
+    curr_line = []
+    for word in words:
+        curr_line.append(word)
+        font_dim = pygame.font.Font.size(font, " ".join(curr_line))
+        if font_dim[0] > max_w or word == "|":
+            overflow = curr_line[-1:]
+            curr_line = curr_line[:-1]
+            lines.append(" ".join(curr_line).strip())
+            if word == "|":
+                curr_line = []
+                continue
+            curr_line = overflow
+    lines.append(" ".join(curr_line).strip())
+
+    if center:
+        for i in range(len(lines)):
+            draw_pos = wrap.center.copy()
+            draw_pos.y = wrap.y
+            draw_pos.y += h_pad + (i) * (line_h + line_pad)
+            drawText(window, lines[i], col, draw_pos, size, True) 
+        return
+
+    for i in range(len(lines)):
+        draw_pos = wrap.topleft.copy()
+        draw_pos.x += w_pad/2
+        draw_pos.y += h_pad + (i) * (line_h + line_pad)
+        drawText(window, lines[i], col, draw_pos, size, False) 
+
+    return
+
 # drawing funcs
-def drawText(window, string, col, in_pos, size, drawAtCenter=False, drawAsUI=False):
+def drawText(window, string, col, in_pos, size, drawAtCenter=False):
     pos = in_pos - camera.pos
     font = pygame.font.SysFont("Arial",size)
     if (string, col, size) in cached_fonts:
@@ -573,10 +632,7 @@ def drawText(window, string, col, in_pos, size, drawAtCenter=False, drawAsUI=Fal
         img = font.render(string, True, col)
         cached_fonts[(string, col, size)] = img
 
-    if drawAsUI:
-        drawPos = pos
-    else:
-        drawPos = pos
+    drawPos = pos
 
     if drawAtCenter:
         textRect = img.get_rect()

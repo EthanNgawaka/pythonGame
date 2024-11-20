@@ -62,6 +62,7 @@ def main():
     game.add_scene(menuScene, "menu")
     #game.switch_to_scene("menu", False)
     game.switch_to_scene("main", False) # skips menu and transition
+    game.get_entity_by_id("wave").timer = 60 # skip straight to shop
     # ----------------------------------------------------------------- #
     """
     K - kinda done

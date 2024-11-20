@@ -213,7 +213,7 @@ class DebugMenu(Menu):
         i = 1
         player = game.get_entity_by_id("player")
         for rarity in self.cards:
-            labelRect = pygame.Rect(0,0,0,0)
+            labelRect = Rect((0,0),(0,0))
             labelRect.center = (i*self.rect.w/4, self.rect.h/10)
             labelTxt = Text(rarity, (255,255,255),45)
             self.UIRoot.add_element(Label(self.UIRoot, labelRect, labelTxt))

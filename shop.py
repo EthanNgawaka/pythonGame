@@ -3,21 +3,53 @@ from ui import *
 from passives import *
 
 class ShopCard(Button):
-    def __init__(self, root_entity, relative_rect, col, text, onAction, description):
+    def __init__(self, root_entity, relative_rect, col, text, onAction, card):
         super().__init__(root_entity, relative_rect, col, text, onAction)
         print(self.uiTag)
-        self.description = description
+        self.card = card
+
+        labelRect = Rect((0,0),(0,0))
+        labelRect.center = (self.rect.w/2, self.rect.h*-0.1)
+        labelTxt = Text("$"+str(self.card.basePrice), (255,255,255),35)
+        self.root.add_element(Label(self, labelRect, labelTxt))
+
+        self.hoveredY = self.rect.y - self.rect.h*0.07
+        self.restY = self.rect.y+self.rect.h/2
+        self.targetY = 0
+        self.rect.y = self.restY
+
+    def draw_name(self, window):
+        drawingRect = self.get_relative_rect().inflate(self.drawingInflation.x, self.drawingInflation.y)
+        drawingRect.center = (drawingRect.center[0]+self.shake.x, drawingRect.center[1]+self.shake.y)
+        vec = drawingRect.center
+        vec.y -= self.rect.h*0.45
+        drawingRect.h *= 0.1
+        drawRect(window, drawingRect, pygame.Color("#4b0090"))
+        drawText(window, self.text.string, self.text.col, vec, round(self.text.size+self.drawingInflation.x/2), True)
+
+        drawingRect.h /= 0.1
+        drawingRect.y += drawingRect.h * 0.6
+        drawingRect.h *= 0.4
+        drawRect(window, drawingRect, pygame.Color("#4b0090"))
+        text_rect = self.get_relative_rect().copy()
+        text_rect.center += self.shake
+        text_rect.y += text_rect.h * 0.6
+        text_rect.h *= 0.4
+        drawWrappedText(window, 
+            self.card.desc,
+            self.text.col, round(self.text.size),
+            text_rect, [100,50,5]
+        )
+
+        # TODO: Draw card image here!!
 
     def draw(self, window):
         super().draw(window)
         if self.hovered:
-            shop = game.get_entity_by_id('shop')
-            x = shop.rect.center[0]
-            y = shop.rect.y - game.H*0.15
-            drawText(
-                window, self.description, (255,255,255),
-                (x,y), 45, True
-             )
+            self.targetY = self.hoveredY
+        else:
+            self.targetY = self.restY
+        self.rect.y = lerp(self.rect.y, self.targetY, 0.1)
 
 class Shop(Menu):
     def __init__(self):
@@ -25,9 +57,10 @@ class Shop(Menu):
             "shop", 100000,
             (pygame.Color("#503197"), pygame.Color("#18215d"))
         )
-        w, h = game.W*0.75, game.H*0.5
-        self.openRect = pygame.Rect((game.W-w)/2,(game.H-h)*0.65,w,h)
-        self.closeRect = pygame.Rect((game.W-w)/2,game.H*1.2,w,h)
+        w, h = game.W, game.H
+        self.openRect = Rect((0,0),(w,h))
+        self.closeRect = self.openRect.copy()
+        self.closeRect.y += self.openRect.h
         self.rect = self.closeRect.copy()
 
         self.heal_cost = 100
@@ -36,7 +69,7 @@ class Shop(Menu):
 
     def create_card_ui_elem(self, center, wh, bttnCol, txtObj, func, desc):
         # params( (x, y), (w, h), Text(), onAction )
-        rect = pygame.Rect((0,0),(wh))
+        rect = Rect((0,0),(wh))
         rect.center = center
         btn = ShopCard(self.UIRoot, rect, bttnCol, txtObj, func, desc)
         self.UIRoot.add_element(btn)
@@ -45,9 +78,9 @@ class Shop(Menu):
     def add_elements(self):
         # exit button
         self.create_centered_button(
-            (self.rect.w/2, self.rect.h),
-            (self.rect.w/5,self.rect.h/5),
-            pygame.Color("#18215d"), Text("EXIT",(255,255,255),45),
+            (4.95*self.rect.w/6, self.rect.w/20),
+            (self.rect.w/5,self.rect.h/10),
+            pygame.Color("#4b0090"), Text("EXIT",(255,255,255),45),
             self.close
         )
 
@@ -63,20 +96,13 @@ class Shop(Menu):
                 return True
             return False
         self.create_centered_button(
-            (self.rect.w/5, self.rect.h),
+            (self.rect.w/2, self.rect.w/20),
             (self.rect.w/3,self.rect.w/15),
             pygame.Color(90,180,90), Text(f"+35% Health : ${self.heal_cost}",(255,255,255),45),
             heal
         )
 
         # card buttons
-        rect = pygame.Rect((self.rect.w*0.1,-game.H*0.2), (self.rect.w*0.8, game.H*0.15)) # text box area idk
-        def f(btn):
-            return
-        btn = Button(self.UIRoot, rect, (0,0,0), Text("",(0,0,0),0), f)
-        btn.disabled = True
-        btn.outlined = True
-        self.UIRoot.add_element(btn)
         for i in range(0,3):
             def func(e, index=i):
                 player = game.get_entity_by_id('player')
@@ -87,20 +113,16 @@ class Shop(Menu):
                     return True
                 return False
 
-            dims = (self.rect.w*0.21,self.rect.h*0.7)
-            cardRectx = (i+1)*self.rect.w/4
-            cardRecty = self.rect.h*0.4
+            dims = (self.rect.w*0.26,self.rect.h*0.55)
+            pad = (self.rect.w - dims[0]*3)/4
+            cardRectx = dims[0]/2 + pad*(i+1) + (i)*dims[0]
+            cardRecty = self.rect.h-dims[1]/2
             cardBtn = self.create_card_ui_elem(
                 (cardRectx, cardRecty),
                 dims,
                 pygame.Color("#503197"), Text(self.cards[i].name,(255,255,255),35),
-                func, self.cards[i].desc
+                func, self.cards[i]
             )
-
-            labelRect = pygame.Rect(0,0,0,0)
-            labelRect.center = (cardBtn.rect.w/2, cardBtn.rect.h*1.1)
-            labelTxt = Text("$"+str(self.cards[i].basePrice), (255,255,255),35)
-            self.UIRoot.add_element(Label(cardBtn, labelRect, labelTxt))
 
     def gen_cards(self, rarity):
         for i in range(3):

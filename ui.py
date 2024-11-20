@@ -11,7 +11,7 @@ class UI_Element(Entity):
 
     def get_relative_rect(self):
         root_rel_rect = self.root.get_relative_rect()
-        return self.rect.move(root_rel_rect.x, root_rel_rect.y)
+        return self.rect.translate(pygame.Vector2(root_rel_rect.x, root_rel_rect.y))
 
 class UI_Root(Entity):
     def __init__(self, root_entity, relative_rect, fill_col, outline_col):
@@ -32,7 +32,7 @@ class UI_Root(Entity):
 
     def get_relative_rect(self):
         root_rel_rect = self.root.rect
-        return self.rect.move(root_rel_rect.x, root_rel_rect.y)
+        return self.rect.translate(pygame.Vector2(root_rel_rect.x, root_rel_rect.y))
     
     def remove_self(self): # delete all leaves and branches as well
         if self.alive:
@@ -42,7 +42,7 @@ class UI_Root(Entity):
                 el.remove_self()
 
     def draw(self, window):
-        drawRect(window, self.rect.move(self.root.rect.x, self.root.rect.y), self.col, 10)
+        drawRect(window, self.rect.translate(pygame.Vector2(self.root.rect.x, self.root.rect.y)), self.col, 10)
 
 class Text:
     def __init__(self, string, col, size):
@@ -129,6 +129,11 @@ class Button(UI_Element):
 
         self.shake = self.shake.lerp(pygame.Vector2(0,0), 0.1)
 
+    def draw_name(self, window):
+        drawingRect = self.get_relative_rect().inflate(self.drawingInflation.x, self.drawingInflation.y)
+        drawingRect.center = (drawingRect.center[0]+self.shake.x, drawingRect.center[1]+self.shake.y)
+        drawText(window, self.text.string, self.text.col, drawingRect.center, round(self.text.size+self.drawingInflation.x/2), True)
+
     def draw(self, window):
         drawingRect = self.get_relative_rect().inflate(self.drawingInflation.x, self.drawingInflation.y)
         drawingRect.center = (drawingRect.center[0]+self.shake.x, drawingRect.center[1]+self.shake.y)
@@ -136,7 +141,7 @@ class Button(UI_Element):
             drawingRect = drawingRect.inflate(5,5)
             drawRect(window, drawingRect.inflate(10,10), self.highlightCol)
         drawRect(window, drawingRect, self.col)
-        drawText(window, self.text.string, self.text.col, drawingRect.center, round(self.text.size+self.drawingInflation.x/2), True)
+        self.draw_name(window)
 
 # so basically u create a class extending Menu then
 # pass in a uiTag ie "mainmenu" and draw priority
@@ -145,10 +150,12 @@ class Button(UI_Element):
 class Menu(Entity):
     def __init__(self, uiTag, priority, col_obj, do_instant_open = False):
         self.isUI = True
-        w, h = W*0.6, H*0.7
-        self.openRect = pygame.Rect((W-w)/2,(H-h)/2,w,h)
-        self.closeRect = pygame.Rect((W-w)/2,H*1.2,w,h)
+        w, h = game.W*0.6, game.H*0.7
+        self.openRect = Rect(((W-w)/2,(H-h)/2),(w,h))
+        self.closeRect = self.openRect.copy()
+        self.closeRect.y = game.H
         self.rect = self.closeRect.copy()
+
         self.isOpen = False
         self.UIRoot = None
         self.uiTag = uiTag
@@ -161,7 +168,7 @@ class Menu(Entity):
 
     def create_centered_button(self, center, wh, bttnCol, txtObj, func):
         # params( (x, y), (w, h), Text(), onAction )
-        rect = pygame.Rect((0,0),(wh))
+        rect = Rect((0,0),(wh))
         rect.center = center
         btn = Button(self.UIRoot, rect, bttnCol, txtObj, func)
         self.UIRoot.add_element(btn)
@@ -220,6 +227,7 @@ class Menu(Entity):
                 
                 dist = abs(self.rect.y - self.closeRect.y)
                 self.lerp(self.closeRect, t)
+                print(dist)
                 if dist < 80: # arbitrary seems to work fine tho
                     self.UIRoot.remove_self()
                     self.UIRoot = None
