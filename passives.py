@@ -83,7 +83,7 @@ class RubberBullets(Card):
     basePrice = 125
     desc = "Still lethal, just bouncier! (+1 bounce)"
     def on_pickup(self):
-        self.player.bouncy = True
+        self.player.bouncy_bullets = True
         self.player.piercing += 1
 
 class StaticDischarge(Card):
@@ -179,6 +179,14 @@ class BloodBullets(Card):
         self.player.dmgMultiplier *= 2.5
         self.player.atkRateMultiplier *= 1.5
 
+class Homing(Card):
+    name = "Homing"
+    basePrice = 350
+    desc = "Bullets home in on nearby enemies"
+    def on_pickup(self):
+        self.player.homing += 1
+        self.player.bulletSpeed *= 0.7
+
 class Phoenix(Card):
     name = "System Reboot"
     basePrice = 350
@@ -200,6 +208,7 @@ PASSIVE_CARDS = {
     "legendary":[
         DoubleShot, Minigun, Resistance,
         CoinGun, BloodBullets, Phoenix,
+        Homing,
     ],
     "devil_deal":[ # definitely not stealing from isaac
     ],

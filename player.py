@@ -144,6 +144,7 @@ class Player(Entity):
         # (NOT implemented) #
 
         # (implemented) #
+        self.homing = 0
         self.blood_bullets = 0
         self.coin_gun = 0
         self.bulletSize = 1
@@ -364,6 +365,8 @@ class Player(Entity):
             camera.shake(3)
         blt = Bullet(pos, vel)
         blt.bouncy = self.bouncy_bullets
+        blt.homing = True
+        blt.homing_thresh *= self.homing
         game.curr_scene.add_entity(blt, id)
 
     # make controller shoot on right trigger

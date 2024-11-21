@@ -230,6 +230,12 @@ class Game:
                 out.append(e)
         return out
 
+    def does_entity_exist(self, ent):
+        for [k,e] in self.curr_scene.entities.items():
+            if e == ent:
+                return True
+        return False
+
     def key_down(self, keyCode):
         return self.keys[keyCode]
 

@@ -22,6 +22,9 @@ class Bullet(Entity):
         self.timer = 0
         self.last_fire_spawn = self.timer
         self.bouncy = False
+        self.homing = False
+        self.homing_thresh = 350
+        self.targeting_enemy = None
 
     def has_not_pierced(self, enemy):
         for e in self.piercedEnemies:
@@ -47,8 +50,23 @@ class Bullet(Entity):
             vec = (self.rect.center - enemy.rect.center).normalize()
             self.vel = vec * self.vel.length()
 
+    def do_homing(self, dt):
+        for e in game.get_entities_by_id("enemy"):
+            if isinstance(e, EnemyBullet):
+                continue
+            vec = e.rect.center-self.rect.center
+            if vec.length() <= self.homing_thresh and e not in self.piercedEnemies:
+                mag = self.vel.length()
+                norm = vec.normalize()
+                self.vel = self.vel.lerp(norm*self.vel.length(), 0.1)
+                self.vel = self.vel.normalize()*mag
+
     def update(self, dt):
         player = game.get_entity_by_id("player")
+        print(self.bouncy)
+
+        if self.homing:
+            self.do_homing(dt)
         self.move(self.vel*dt)
         if not AABBCollision(self.rect, [0,0,game.W,game.H]):
             if self.bouncy and self.piercesLeft > 0:
