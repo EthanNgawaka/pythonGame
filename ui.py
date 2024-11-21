@@ -146,6 +146,10 @@ class Button(UI_Element):
         drawRect(window, self.drawingRect, self.col)
         self.draw_name(window)
 
+        if self.hovered or self.outlined:
+            white_surf = create_white_surf(rect_to_surf(self.drawingRect), 80)
+            window.blit(white_surf, (self.drawingRect.topleft.x, self.drawingRect.topleft.y))
+
 # so basically u create a class extending Menu then
 # pass in a uiTag ie "mainmenu" and draw priority
 # then implement add_elements where you can yknow add
@@ -229,8 +233,9 @@ class Menu(Entity):
                 t = 1 if self.do_instant_open else 0.3
                 
                 dist = abs(self.rect.y - self.closeRect.y)
+                print(dist)
                 self.lerp(self.closeRect, t)
-                if dist < 80: # arbitrary seems to work fine tho
+                if dist < 10: # arbitrary seems to work fine tho
                     self.UIRoot.remove_self()
                     self.UIRoot = None
     

@@ -15,6 +15,18 @@ maxFPS = 60
 
 DEBUG = True
 
+def create_white_surf(surf, alpha):
+    mask = pygame.mask.from_surface(surf)
+    white_surface = mask.to_surface()
+    white_surface.set_colorkey((0, 0, 0))
+    white_surface.set_alpha(alpha)
+    return white_surface
+
+def rect_to_surf(rect):
+    s = pygame.Surface((rect[2], rect[3]))
+
+    return s
+
 def profile(fnc):
     """A decorator that uses cProfile to profile a function"""
     def inner(*args, **kwargs):
@@ -400,6 +412,14 @@ class Image:
             setattr(result, k, copy.copy(v))
         return result
 
+    def get_surface(self, rect):
+        self.rect = rect
+        self.rect.topleft -= camera.pos
+        scaledImage = pygame.transform.scale(self.img, tuple(self.rect.dimensions))
+        scaledAndRotatedImage = pygame.transform.rotate(scaledImage, self.rot)
+        centerPos = self.rect.center
+        newRect = scaledAndRotatedImage.get_rect(center=centerPos)
+        return (scaledAndRotatedImage, newRect)
 
     def set_rotation(self, rot):
         self.rot = rot

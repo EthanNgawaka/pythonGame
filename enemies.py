@@ -25,6 +25,9 @@ class Enemy(Entity):
         self.atkRate = 0
         self.dmg_taken_multiplier = 1
 
+        self.hit_timer = 0
+        self.flash_max = 0.2
+
     def take_dmg(self, amnt):
         self.health -= amnt * self.dmg_taken_multiplier
 
@@ -156,6 +159,7 @@ class Enemy(Entity):
         self.movement()
         self.bound_to_screen()
         self.repulse()
+        self.hit_timer -= dt
 
     def draw(self, window):
         drawCircle(window, (self.rect.center, self.rect.w/2), self.col)
