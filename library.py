@@ -118,7 +118,7 @@ class Rect:
         return new_rect
 
     def copy(self):
-        return copy.deepcopy(self)
+        return Rect(self.topleft,self.dimensions)
 
     def as_tuple(self):
         return (self.x, self.y, self.w, self.h)
@@ -544,7 +544,7 @@ def init(caption):
     W = display_info.current_w
     H = display_info.current_h
 
-    window = pygame.display.set_mode((W,H))#, flags=pygame.SCALED | pygame.HIDDEN)
+    window = pygame.display.set_mode((W,H), pygame.FULLSCREEN | pygame.DOUBLEBUF)#, flags=pygame.SCALED | pygame.HIDDEN)
 
     #SCALE = (display_info.current_w/windowW, display_info.current_h/windowH)
     #nativeWindow = pg_sdl2.Window.from_display_module()
@@ -552,7 +552,7 @@ def init(caption):
     #nativeWindow.position = pg_sdl2.WINDOWPOS_CENTERED
     #nativeWindow.show()
 
-    pygame.display.toggle_fullscreen()
+    #pygame.display.toggle_fullscreen()
     pygame.display.set_caption(caption)
     return (W,H,window)
 
@@ -642,10 +642,10 @@ def drawWrappedText(window, string, col, size, rect, pad = [0,0,0], center=False
 # drawing funcs
 def drawText(window, string, col, in_pos, size, drawAtCenter=False):
     pos = in_pos - camera.pos
-    font = pygame.font.SysFont("Arial",size)
     if (string, col, size) in cached_fonts:
         img = cached_fonts[(string, col, size)]
     else:
+        font = pygame.font.SysFont("Arial",size)
         img = font.render(string, True, col)
         cached_fonts[(string, col, size)] = img
 

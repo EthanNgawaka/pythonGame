@@ -94,6 +94,8 @@ class Button(UI_Element):
         self.shake = pygame.Vector2()
         self.shakeIntensity = 10
 
+        self.drawingRect = None
+
     def toggle(self):
         self.disabled = not self.disabled;
 
@@ -130,17 +132,17 @@ class Button(UI_Element):
         self.shake = self.shake.lerp(pygame.Vector2(0,0), 0.1)
 
     def draw_name(self, window):
-        drawingRect = self.get_relative_rect().inflate(self.drawingInflation.x, self.drawingInflation.y)
-        drawingRect.center = (drawingRect.center[0]+self.shake.x, drawingRect.center[1]+self.shake.y)
-        drawText(window, self.text.string, self.text.col, drawingRect.center, round(self.text.size+self.drawingInflation.x/2), True)
+        drawText(window, self.text.string, self.text.col, self.drawingRect.center, round(self.text.size+self.drawingInflation.x/2), True)
 
     def draw(self, window):
-        drawingRect = self.get_relative_rect().inflate(self.drawingInflation.x, self.drawingInflation.y)
-        drawingRect.center = (drawingRect.center[0]+self.shake.x, drawingRect.center[1]+self.shake.y)
+        self.drawingRect = self.get_relative_rect()
+        if self.drawingInflation.length() > 0:
+            self.drawingRect = self.drawingRect.inflate(self.drawingInflation.x, self.drawingInflation.y)
+
+        self.drawingRect.center = (self.drawingRect.center[0]+self.shake.x, self.drawingRect.center[1]+self.shake.y)
         if self.hovered or self.outlined:
-            drawingRect = drawingRect.inflate(5,5)
-            drawRect(window, drawingRect.inflate(10,10), self.highlightCol)
-        drawRect(window, drawingRect, self.col)
+            drawRect(window, self.drawingRect.inflate(10,10), self.highlightCol)
+        drawRect(window, self.drawingRect, self.col)
         self.draw_name(window)
 
 # so basically u create a class extending Menu then
