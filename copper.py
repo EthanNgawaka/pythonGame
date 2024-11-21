@@ -12,7 +12,7 @@ class Copper(Entity):
         self.vel = vel
         self.distThreshold = 250
         self.forces = pygame.Vector2()
-        self.sprite = Spritesheet(self.rect, "./assets/coin.png", (32,32), 0.05)
+        self.sprite = Spritesheet(self.rect.scale(2,2), "./assets/coin.png", (32,32), 0.05)
         self.sprite.addState("normal", 0, 10)
         self.sprite.addState("glitched", 1, 7)
         self.sprite.setState("normal")
