@@ -474,10 +474,9 @@ class Player(Entity):
     def draw(self, window):
         # flashing logic
         draw_rect = self.rect.scale(2,2)
-        self.player_img.draw_rotated(window, draw_rect.copy())
+        player_surf, surf_rect = self.player_img.draw_rotated(window, draw_rect.copy())
         if self.invincibilityTimer > 0 and math.ceil(self.invincibilityTimer/self.flashFreq) % 2 == 0:
-            player_s, rot_rect = self.player_img.get_surface(draw_rect.copy())
-            window.blit(create_white_surf(player_s, 200), rot_rect.topleft)
+            window.blit(create_white_surf(player_surf, 200), surf_rect.topleft)
 
         dir = -1
         if self.vel.x < 0:

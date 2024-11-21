@@ -412,15 +412,6 @@ class Image:
             setattr(result, k, copy.copy(v))
         return result
 
-    def get_surface(self, rect):
-        self.rect = rect
-        self.rect.topleft -= camera.pos
-        scaledImage = pygame.transform.scale(self.img, tuple(self.rect.dimensions))
-        scaledAndRotatedImage = pygame.transform.rotate(scaledImage, self.rot)
-        centerPos = self.rect.center
-        newRect = scaledAndRotatedImage.get_rect(center=centerPos)
-        return (scaledAndRotatedImage, newRect)
-
     def set_rotation(self, rot):
         self.rot = rot
 
@@ -457,6 +448,7 @@ class Image:
             centerPos = (rot_around[0], rot_around[1])
         newRect = scaledAndRotatedImage.get_rect(center=centerPos)
         window.blit(scaledAndRotatedImage, newRect.topleft)
+        return (scaledAndRotatedImage, newRect)
 
 class Spritesheet:
     def __init__(self, rect, src, spriteSize, secsBetweenFrames, bounce=False): # ([x,y,w,h], filename, [spriteW, spriteH], fps)
@@ -511,6 +503,7 @@ class Spritesheet:
         newRect = scaledAndRotatedImage.get_rect(center=centerPos)
 
         window.blit(scaledAndRotatedImage, newRect.topleft)
+        return (scaledAndRotatedImage, newRect)
         
     def update(self, dt):
         self.timer += dt

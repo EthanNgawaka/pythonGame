@@ -4,13 +4,13 @@ from enemies import *
 class Wave(Entity):
     def __init__(self):
         self.enemyTypes = {
-            "common":[Fly, Mosquito, AntSwarm],
-            "uncommon":[TermiteSwarm, Cockroach, Snail],
+            "common":[Fly, Mosquito, Cockroach, Ant],
+            "uncommon":[TermiteSwarm, CockroachSwarm, AntSwarm, Snail],
             "rare":[MagneticSnail, FireAntSwarm],
             "miniboss":[MotherCockroach, MotherFly],
         }
         # testing only one enemy:
-        self.override_enemy_type = Cockroach
+        self.override_enemy_type = CockroachSwarm
         self.timer = 0
         self.num = 1
 

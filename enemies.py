@@ -107,7 +107,8 @@ class Enemy(Entity):
         self.take_dmg(dmg)
         self.vel = vec
         self.forces = pygame.Vector2()
-        self.stun = 0.1
+        self.stun = 0.15
+        blood_explosion(*self.rect.center, self.maxHealth/4, math.atan2(vec.y, vec.x))
 
     def on_bullet_collision(self, bullet):
         player = game.get_entity_by_id("player")
@@ -193,6 +194,12 @@ class BabyFly(Fly):
         self.dmg = 5
         self.baseDmg = self.dmg
 
+class CockroachSwarm:
+    def __init__(self, pos):
+        for i in range(random.randint(2,4)):
+            off = pygame.Vector2(random.uniform(-100, 100),random.uniform(-100, 100))
+            game.curr_scene.add_entity(Cockroach(pos+off), "enemy")
+
 class Cockroach(Enemy):
     def __init__(self, pos):
         super().__init__(pos)
@@ -202,8 +209,8 @@ class Cockroach(Enemy):
         self.drag = 0.9
         self.dmg = 10
         self.baseDmg = self.dmg
-        self.value = 15
-        self.health = 16
+        self.value = 10
+        self.health = 12
         self.maxHealth = self.health
 
         self.movementTimer = 0
@@ -251,7 +258,9 @@ class Cockroach(Enemy):
         self.sprite.rotate((theta * -57.298) - 90)
     
     def draw(self, window):
-        self.sprite.draw(self.rect.scale(2,2), window)
+        surf, rect = self.sprite.draw(self.rect.scale(2,2), window)
+        if self.stun > 0:
+            window.blit(create_white_surf(surf, 200), rect.topleft)
 
 # TODO make baby cockroaches scatter when one is killed by player
 class BabyCockroach(Cockroach):
