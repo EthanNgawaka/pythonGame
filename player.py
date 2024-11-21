@@ -219,6 +219,7 @@ class Player(Entity):
 
     def init(self):
         super().init()
+        self.deck.add_card(Repulse())
 
     def get_list_of_status_effects_of_type(self, status_type):
         all_statuses = game.get_entities_by_type(status_type)
