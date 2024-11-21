@@ -25,7 +25,8 @@ class UI_Root(Entity):
 
     def add_element(self, elem, priority="UI"):
         self.elements.append(elem)
-        game.curr_scene.add_entity(elem, elem.__class__.__name__, priority)
+        id = elem.__class__.__name__
+        game.curr_scene.add_entity(elem,id, priority)
 
     def update(self, dt):
         pass

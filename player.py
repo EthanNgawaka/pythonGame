@@ -64,8 +64,8 @@ class PlayerUI(Entity):
     def draw(self, window):
         self.draw_hp_bar(window)
         self.draw_copper(window)
-        if DEBUG:
-            self.draw_stats(window)
+        #if DEBUG:
+        #    self.draw_stats(window)
 
         self.draw_static_discharge(window)
 
@@ -250,8 +250,11 @@ class Player(Entity):
             "atkRate", "speed", "dmg", "maxHealth",
             "atkRateMultiplier", "kb", "bulletCount",
             "speedInaccuracy", "inaccuracy", "bulletSpeed",
-            "lifesteal", "piercing", "dmgMultiplier"
+            "lifesteal", "piercing", "dmgMultiplier",
+            "hotShot", "bulletSize", "iFrames",
+            "shield", "panic", "bouncy_bullets",
         ]
+
         out_dict = {}
         for stat_name in stat_names:
             out_dict[stat_name] = getattr(self, stat_name)

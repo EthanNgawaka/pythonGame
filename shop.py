@@ -2,10 +2,9 @@ from game import *
 from ui import *
 from passives import *
 
-class ShopCard(Button):
+class ShopCardButton(Button):
     def __init__(self, root_entity, relative_rect, col, text, onAction, card):
         super().__init__(root_entity, relative_rect, col, text, onAction)
-        print(self.uiTag)
         self.card = card
 
         labelRect = Rect((0,0),(0,0))
@@ -26,6 +25,7 @@ class ShopCard(Button):
         self.suck_max = 4
         self.start_rect = self.rect.copy()
         self.start_rect.y = self.hoveredY
+        print(self.uiTag)
 
     def draw_name(self, window):
         drawingRect = self.get_relative_rect().inflate(self.drawingInflation.x, self.drawingInflation.y)
@@ -65,6 +65,7 @@ class ShopCard(Button):
             super().update(dt)
             return
 
+        self.disabled = True
         center_screen = pygame.Vector2(game.W/2, game.H/2)
         t2 = self.suck_timer/self.suck_max
         t = self.ease_out_elastic(1-t2)
@@ -103,7 +104,7 @@ class Shop(Menu):
         # params( (x, y), (w, h), Text(), onAction )
         rect = Rect((0,0),(wh))
         rect.center = center
-        btn = ShopCard(self.UIRoot, rect, bttnCol, txtObj, func, desc)
+        btn = ShopCardButton(self.UIRoot, rect, bttnCol, txtObj, func, desc)
         self.UIRoot.add_element(btn)
         return btn
 

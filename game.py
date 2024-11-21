@@ -22,6 +22,7 @@ class Entity:
         self.id = id
         self.alive = True
         self.initialized = False
+        self.draw_on_top = False
     def move(self, vec):
         try:
             self.rect.move(vec)
@@ -151,8 +152,15 @@ class Scene:
 
 
     def draw(self, window):
+        top_layer = []
         for priority in self.get_sorted_draw_indices():
-            self.entities[self.drawPriorityLookup[priority]].draw(window)
+            ent = self.entities[self.drawPriorityLookup[priority]]
+            if ent.draw_on_top:
+                top_layer.append(ent)
+                continue
+            ent.draw(window)
+        for ent in top_layer:
+            ent.draw(window)
 
     def cleanup(self):
         if self.reset_on_switch:
@@ -285,7 +293,7 @@ class Game:
         self.keys = pygame.key.get_pressed()
         camera.update(dt)
 
-        if 1 in self.keys:
+        if 1 in self.keys or self.mouse.moved_this_frame:
             self.input_mode = "keyboard"
 
         if self.transition_timer > 0:

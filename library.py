@@ -133,8 +133,13 @@ class Mouse:
         self.down = [False,False]
         self.pos = pygame.Vector2()
         self.rect = pygame.Rect(0,0,0,0)
+
+        self.moved_this_frame = False
+        self.old_pos = pygame.Vector2()
     
     def update(self):
+        self.old_pos = pygame.Vector2(self.pos)
+
         self.pressed = [False,False]
         mousePos = pygame.mouse.get_pos()
         self.pos.x = mousePos[0]
@@ -159,6 +164,9 @@ class Mouse:
             self.down[1] = True
         else:
             self.down[1] = False
+
+        self.moved_this_frame = self.pos != self.old_pos
+
 
 # TODO( integrate with game class )
 class Camera:
@@ -223,6 +231,18 @@ class Controller:
         self.input_timer = 0
         self.input_change = 0
         self.input_buffer = 0.75
+        self.selected_btn = None
+
+        # new controller idea
+        """
+        moving along x axis:
+            find button closest with x axis priority and select it
+        same for y
+        WAYY simpler and none of this hacky shit
+        
+        dist = x^2 + y^3 for x pref
+        dist = x^3 + y^2 for y pref
+        """
 
     def get_pressed(self, key):
         return getattr(self, key.upper()) == 1
@@ -238,96 +258,64 @@ class Controller:
                 self.joysticks.append(joy)
 
     def get_selected_btn(self):
-        try:
-            selected_btn = self.btn_matrix[self.virtual_cursor_index[0]][self.virtual_cursor_index[1]]
-            return selected_btn
-        except:
-            return None
+        return self.selected_btn
 
-    def update_virtual_cursor(self):
+    def get_closest_button(self, weights, buttons_to_check, pos):
+        min_btn = None
+        min_btn_dist = math.inf
+        for btn in buttons_to_check:
+            dist = math.pow(pos.x-btn.rect.center.x, weights[0]) + math.pow(pos.y-btn.rect.center.y, weights[1]) # weighted towards x
+            if dist < min_btn_dist:
+                min_btn = btn
+                min_btn_dist = dist
+
+        return min_btn
+
+    def update_virtual_cursor(self, buttons):
         if self.LSTICK.length() <= 0:
             self.input_change = self.input_buffer
             self.input_timer = 0
         if self.input_timer <= 0 and self.LSTICK.length() > 0:
+            if self.selected_btn is None:
+                self.selected_btn = buttons[0]
+
             self.input_timer = self.input_change
-            # pad
             if abs(self.LSTICK.x) > abs(self.LSTICK.y):
-                # moving vertically
-                dIndex = int(abs(self.LSTICK.x)/self.LSTICK.x)
-                self.virtual_cursor_index[0] += dIndex
-                if self.virtual_cursor_index[0] < 0:
-                    self.virtual_cursor_index[0] = len(self.btn_matrix)-1
+                # moving in x dir
+                if self.LSTICK.x > 0:
+                    # +ve x dir
+                    buttons_to_check = [btn for btn in buttons if btn.rect.center.x > self.selected_btn.rect.center.x]
+                    if len(buttons_to_check) == 0:
+                        # loop back around
+                        return 
+                    self.selected_btn = self.get_closest_button([2,2], buttons_to_check, self.selected_btn.rect.center)
+                    return
 
-                if len(self.btn_matrix)-1 < self.virtual_cursor_index[0]:
-                   # loop around to top of col if needed
-                   self.virtual_cursor_index[0] = 0
-                   return
-
-                len_of_new_col = len(self.btn_matrix[self.virtual_cursor_index[0]]) 
-                if (len_of_new_col - 1) < self.virtual_cursor_index[1]:
-                   # goto bottom of col if yIndex is too high
-                   self.virtual_cursor_index[1] = len_of_new_col - 1
-            else:
-                # moving horizontally
-                dIndex = int(abs(self.LSTICK.y)/self.LSTICK.y)
-                self.virtual_cursor_index[1] += dIndex
-                len_of_col = len(self.btn_matrix[self.virtual_cursor_index[0]]) 
-                if self.virtual_cursor_index[1] < 0:
-                    self.virtual_cursor_index[1] = len_of_col - 1
+                # -ve x dir
+                buttons_to_check = [btn for btn in buttons if btn.rect.center.x < self.selected_btn.rect.center.x]
+                if len(buttons_to_check) == 0:
+                    # loop back around
                     return 
-                
-                if (len_of_col - 1) < self.virtual_cursor_index[1]:
-                   # loop around to top of col if needed
-                   self.virtual_cursor_index[1] = 0
+                self.selected_btn = self.get_closest_button([2,2], buttons_to_check, self.selected_btn.rect.center)
+                return
 
+            # moving in y dir
+            if self.LSTICK.y > 0:
+                # +ve y dir
+                buttons_to_check = [btn for btn in buttons if btn.rect.center.y > self.selected_btn.rect.center.y]
+                if len(buttons_to_check) == 0:
+                    # loop back around
+                    return 
+                self.selected_btn = self.get_closest_button([2,2], buttons_to_check, self.selected_btn.rect.center)
+                return
 
-
-    def update_button_matrix(self, bttns):
-        if self.prev_btns == bttns:
-            # just skip no need to update matrix
+            # -ve y dir
+            buttons_to_check = [btn for btn in buttons if btn.rect.center.y < self.selected_btn.rect.center.y]
+            if len(buttons_to_check) == 0:
+                # loop back around
+                return 
+            self.selected_btn = self.get_closest_button([2,2], buttons_to_check, self.selected_btn.rect.center)
             return
-
-        if len(bttns) <= 0:
-            self.virtual_cursor = pygame.Rect(-100,-100,0,0)
-            self.virtual_cursor_index = [0,0]
-            self.btn_matrix = []
-            return
-
-        if self.virtual_cursor_index is None:
-            self.virtual_cursor_index = [0, 0]
-
-        # create a matrix of button positions
-        btn_matrix = []
-        btn_x_map = {} # x: [buttons at x]
-        for btn in bttns:
-            x = btn.rect.center[0]
-            if x in btn_x_map:
-                btn_x_map[x].append(btn)
-            else:
-                btn_x_map[x] = [btn]
-
-        btn_x_positions = list(btn_x_map.keys()).copy()
-        btn_x_positions.sort()
-        for i in btn_x_positions:
-            btn_matrix.append(btn_x_map[i])
-
-        self.btn_matrix = []
-        for btn_list in btn_matrix:
-            col = []
-            btn_y_map = {} # no 2 buttons with the same x shd have the same y
-            for btn in btn_list:
-                y = btn.rect.center[1]
-                btn_y_map[y] = btn
-            sorted_y_positions = list(btn_y_map.keys()).copy()
-            sorted_y_positions.sort()
-            for j in sorted_y_positions:
-                col.append(btn_y_map[j])
-
-            self.btn_matrix.append(col)
-        # now they are sorted into columns 
-        # and each column is sorted by y position
-
-        self.prev_btns = bttns
 
     def update(self, game, dt):
         if not self.connected:
@@ -354,7 +342,6 @@ class Controller:
         self.LSTICK = pygame.Vector2(joy.get_axis(0),joy.get_axis(1))
         self.RSTICK = pygame.Vector2(joy.get_axis(2),joy.get_axis(3))
         self.RTRIGGER = 1 if joy.get_axis(4) > -0.5 else 0 # just gets rid of the range cause i dont think thats very useful for this game
-        print(self.RTRIGGER)
         if abs(self.LSTICK.x) < self.deadzone_range:
             self.LSTICK.x = 0
         if abs(self.LSTICK.y) < self.deadzone_range:
@@ -363,37 +350,29 @@ class Controller:
             self.RSTICK.x = 0
         if abs(self.RSTICK.y) < self.deadzone_range:
             self.RSTICK.y = 0
-            
+
+        queue = game.curr_scene.UIPriority
         if game.input_mode == "keyboard":
             a = self.LSTICK.length()
             b = self.RSTICK.length()
             c = self.A or self.B or self.X or self.Y or self.START
             if a or b or c:
                 game.input_mode = "controller"
+                all_buttons = game.get_entities_by_id("Button")
+                last_in_queue = queue[len(queue)-1]
+                buttons = [btn for btn in all_buttons if btn.uiTag == last_in_queue and not btn.disabled]
+                self.selected_btn = buttons[0]
             return
 
-        queue = game.curr_scene.UIPriority
         if len(queue) > 0:
             last_in_queue = queue[len(queue)-1]
-            if last_in_queue != self.prev_last_in_queue:
-                self.virtual_cursor_index = [0,0]
             all_buttons = game.get_entities_by_id("Button")
             buttons = [btn for btn in all_buttons if btn.uiTag == last_in_queue and not btn.disabled]
 
-            self.update_button_matrix(buttons)
-            try:
-                self.update_virtual_cursor()
-            except IndexError:
-                print("dodgy as fuck but gonna rewrite this soon anyways")
-                # new controller idea
-                """
-                moving along x axis:
-                    find button closest with x axis priority and select it
-                same for y
-                WAYY simpler and none of this hacky shit
-                """
+            if self.selected_btn is None and len(buttons) > 0:
+                self.selected_btn = buttons[0]
 
-            self.prev_last_in_queue = last_in_queue
+            self.update_virtual_cursor(buttons)
 
         if self.input_timer > 0:
             self.input_timer -= dt

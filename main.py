@@ -29,6 +29,7 @@ def create_main_scene():
     mainScene.init_entity(bg, "bg", -100000)
     mainScene.init_entity(player, "player")
     mainScene.init_entity(playerUi, "playerUI", 10000)
+    playerUi.draw_on_top = True
     mainScene.init_entity(wave, "wave")
 
     # so currently u have to init all menus idk it works but its kinda scuffed but
@@ -62,7 +63,7 @@ def main():
     game.add_scene(menuScene, "menu")
     #game.switch_to_scene("menu", False)
     game.switch_to_scene("main", False) # skips menu and transition
-    game.get_entity_by_id("wave").timer = 60 # skip straight to shop
+    #game.get_entity_by_id("wave").timer = 60 # skip straight to shop
     # ----------------------------------------------------------------- #
     """
     K - kinda done
@@ -72,14 +73,14 @@ def main():
         heres a list of things you need to do:
             - Add more passives
             - Add more enemies
-            - Rework menu support for controllers
+            X Rework menu support for controllers
             - Add key mapping
             - Make active cards function
             X Add a button to buy 20% health for 100 copper in shop
             X Make copper auto attract at end of round (maybe make it a setting somewhere its getting tedious)
-            K Rework particle system
+            X Rework particle system
             X Camera system for camera shake
-            - Rewrite menu system to use new Rect class
+            X Rewrite menu system to use new Rect class
     """
 
     time_slow_timer = 0

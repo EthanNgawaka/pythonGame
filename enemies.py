@@ -106,7 +106,7 @@ class Enemy(Entity):
         player = game.get_entity_by_id("player")
         dmg = player.dmg * player.dmgMultiplier
         if player.lifesteal > 0:
-            player.heal((dmg/3) * player.lifesteal)
+            player.heal(player.lifesteal/4)
 
         vec = bullet.vel.normalize()
         self.hit(dmg, vec*player.kb)
@@ -120,6 +120,10 @@ class Enemy(Entity):
         self.on_death()
         self.remove_self()
         spawn_copper(self.rect.center, self.get_copper_drop_qty())
+
+        player = game.get_entity_by_id("player")
+        if player.lifesteal > 0:
+            player.heal(player.lifesteal)
     
     def get_unit_vec_to_entity(self, player): # not only player just any entity
         theta = vec_angle_to(pygame.Vector2(self.rect.center), pygame.Vector2(player.rect.center))
@@ -322,7 +326,7 @@ class Mosquito(Enemy):
 
 class AntSwarm:
     def __init__(self, pos):
-        for i in range(random.randint(3,10)):
+        for i in range(random.randint(2,4)):
             off = pygame.Vector2(random.uniform(-100, 100),random.uniform(-100, 100))
             game.curr_scene.add_entity(Ant(pos+off), "enemy")
 
@@ -617,7 +621,7 @@ class MotherFly(Enemy):
     def __init__(self, pos):
         super().__init__(pos)
         self.rect = Rect(pos, (60,60))
-        self.health = 30
+        self.health = 45
         self.maxHealth = self.health
         self.speed = 200
 
@@ -625,12 +629,12 @@ class MotherFly(Enemy):
         self.lastAttack = 0
         self.dmg = 10
         self.baseDmg = self.dmg
-        self.atkRate = 10
+        self.atkRate = 5
         self.baseAtkRate = self.atkRate
         self.atkThresh = game.W
         self.col = pygame.Color("black")
 
-        self.atkTimer = self.atkRate/3
+        self.atkTimer = 0
 
     def on_death(self):
         for i in range(random.randint(5,20)):
@@ -661,6 +665,7 @@ class MotherFly(Enemy):
         vec = pygame.Vector2(math.cos(theta), math.sin(theta)) * random.uniform(5,10) * fac
         enemy = EnemyType(self.rect.center)
         enemy.vel = vec
+        enemy.value = 0
         game.curr_scene.add_entity(enemy, "enemy")
         self.add_force(-vec*6)
 
