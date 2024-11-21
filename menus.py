@@ -141,6 +141,9 @@ class DebugMenu(Menu):
         # need to find a better way to sync to cards available in shop idk
         # its just a debug menu
         self.cards = PASSIVE_CARDS
+        for c in self.cards:
+            for c_2 in ACTIVE_CARDS[c]:
+                self.cards[c].append(c_2)
 
     def add_elements(self):
         # resume button

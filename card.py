@@ -2,7 +2,7 @@ from game import *
 
 class Card(Entity):
     def __init__(self):
-        self.rect = Rect((game.W,game.H),(128,128))
+        self.rect = None#Rect((game.W,game.H),(128,128))
         self.player = game.get_entity_by_id("player")
 
     def update(self, dt):

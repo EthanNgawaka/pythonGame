@@ -1,6 +1,12 @@
+from actives import *
 from game import *
 from ui import *
 from passives import *
+
+merged_cards = PASSIVE_CARDS
+for c in merged_cards:
+    for c_2 in ACTIVE_CARDS[c]:
+        merged_cards[c].append(c_2)
 
 class ShopCardButton(Button):
     def __init__(self, root_entity, relative_rect, col, text, onAction, card):
@@ -141,7 +147,7 @@ class Shop(Menu):
                 player = game.get_entity_by_id('player')
                 if player.copper >= self.cards[index].basePrice:
                     player.copper -= self.cards[index].basePrice
-                    player.deck.add_card(self.cards[index])
+                    player.deck.add_card(self.cards[index]())
                     e.suck = True
                     e.suck_timer = e.suck_max
                     return True
@@ -160,8 +166,8 @@ class Shop(Menu):
 
     def gen_cards(self, rarity):
         for i in range(3):
-            rand_card = PASSIVE_CARDS[rarity][random.randint(0,len(PASSIVE_CARDS[rarity])-1)]
-            self.cards.append(rand_card())
+            rand_card = merged_cards[rarity][random.randint(0,len(merged_cards[rarity])-1)]
+            self.cards.append(rand_card)
 
     def close(self, elem):
         super().close(elem)

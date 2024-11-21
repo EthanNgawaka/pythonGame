@@ -78,7 +78,7 @@ class PlayerUI(Entity):
 class AOEBlast(Entity):
     def __init__(self, r, center, dmg):
         self.max_r = r
-        self.r = 0
+        self.r = self.max_r/4
         self.rect = Rect((0,0), (r*2, r*2))
         self.rect.center = center
         self.player = game.get_entity_by_id("player")
@@ -116,7 +116,7 @@ class AOEBlast(Entity):
             if self.timer <= 0:
                 self.remove_self()
         else:
-            self.r = self.ease_out_elastic(t)*self.max_r
+            self.r = max(self.ease_out_elastic(t)*self.max_r, self.max_r/4)
             self.timer += dt
 
     def draw(self, window):
@@ -212,6 +212,13 @@ class Player(Entity):
         # sprite stuff
         self.player_img = Image("./assets/player.png", *self.rect)
         self.gun_img = Image("./assets/gun.png", *self.rect)
+
+    def get_active_key(self, index):
+        active_keys = [pygame.K_SPACE, pygame.K_q, pygame.K_e]
+        return active_keys[index]
+
+    def init(self):
+        super().init()
 
     def get_list_of_status_effects_of_type(self, status_type):
         all_statuses = game.get_entities_by_type(status_type)
@@ -332,7 +339,8 @@ class Player(Entity):
             self.vel -= vec * self.kb * 2
 
     def input(self):
-        self.movement()
+        if game.time_speed >= 1:
+            self.movement()
         self.shooting()
 
     def new_wave(self):
