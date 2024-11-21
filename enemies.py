@@ -23,6 +23,10 @@ class Enemy(Entity):
         self.baseDmg = self.dmg
         self.inflictFire = False
         self.atkRate = 0
+        self.dmg_taken_multiplier = 1
+
+    def take_dmg(self, amnt):
+        self.health -= amnt * self.dmg_taken_multiplier
 
     def movement(self):
         pass
@@ -97,7 +101,7 @@ class Enemy(Entity):
             game.curr_scene.add_entity(status_type(self), "status player")
 
     def hit(self, dmg, vec):
-        self.health -= dmg
+        self.take_dmg(dmg)
         self.vel = vec
         self.forces = pygame.Vector2()
         self.stun = 0.1

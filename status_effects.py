@@ -94,7 +94,7 @@ class Fire(Entity):
         if self.timer > 0 and self.ent in game.curr_scene.entities.values():
             self.timer -= dt
             stacks = self.ent.get_stacks_of_status_effects(self.__class__)
-            self.ent.health -= dt*math.pow(1.3, stacks)/stacks
+            self.ent.take_dmg(dt*math.pow(1.3, stacks)/stacks)
             # div by stacks here means that by the time all the stacks
             # apply their individual health deductions
             # we end up with the entity losing

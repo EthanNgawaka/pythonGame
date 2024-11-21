@@ -358,10 +358,11 @@ class Controller:
             c = self.A or self.B or self.X or self.Y or self.START
             if a or b or c:
                 game.input_mode = "controller"
-                all_buttons = game.get_entities_by_id("Button")
-                last_in_queue = queue[len(queue)-1]
-                buttons = [btn for btn in all_buttons if btn.uiTag == last_in_queue and not btn.disabled]
-                self.selected_btn = buttons[0]
+                if len(queue) > 0:
+                    all_buttons = game.get_entities_by_id("Button")
+                    last_in_queue = queue[len(queue)-1]
+                    buttons = [btn for btn in all_buttons if btn.uiTag == last_in_queue and not btn.disabled]
+                    self.selected_btn = buttons[0]
             return
 
         if len(queue) > 0:

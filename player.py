@@ -91,7 +91,10 @@ class AOEBlast(Entity):
         game.time_speed = 0.2
 
         for e in game.get_entities_by_id("enemy"):
-            if AABBCollision(self.rect, e.rect) and not isinstance(e, EnemyBullet):
+            if AABBCollision(self.rect, e.rect):
+                if isinstance(e, EnemyBullet):
+                    e.remove_self()
+                    continue
                 e.hit(self.dmg, (self.rect.center-e.rect.center).normalize()*25)
 
     def ease_out_elastic(self, t):
@@ -104,7 +107,6 @@ class AOEBlast(Entity):
 
     def update(self, dt):
         t = self.timer/self.lifetime
-        print(t)
         if t >= 0.54:
             self.shrink = True
 
@@ -142,6 +144,8 @@ class Player(Entity):
         # (NOT implemented) #
 
         # (implemented) #
+        self.blood_bullets = 0
+        self.coin_gun = 0
         self.bulletSize = 1
         self.iFrames = 0.75
         self.fire_immunity = False
@@ -164,15 +168,17 @@ class Player(Entity):
         self.atkRateMultiplier = 1
         self.atkRate= 0.35
         self.baseAtkRate = self.atkRate
+        self.dmg_taken_multiplier = 1
 
         self.bulletCount = 1
         self.speedInaccuracy = 0 # +/- % ie 0.1 means +/- 10% speed
         self.inaccuracy = 0.13
         self.bulletSpeed = 20
+        self.phoenix = False
         # ---------- #
 
         # random stuff #
-        self.copper = 10000 # coins
+        self.copper = 0 # coins
         self.health = self.maxHealth
 
         self.flashFreq = 0.2
@@ -188,6 +194,7 @@ class Player(Entity):
         self.hit_timer = 0
         self.static_discharge_timer = 0 # so this increases faster with higher levels of it
         self.static_discharge_max = 8
+        self.phoenix_timer = 0
         # ------ #
 
         self.base_stats = self.get_stats()
@@ -280,9 +287,12 @@ class Player(Entity):
         self.move(self.vel*dt)
         self.vel *= self.drag if game.time_speed >= 1 else 1
 
-    def AOE_blast(self, radius):
-        game.curr_scene.add_entity(AOEBlast(radius,self.rect.center,10*self.static_discharge), "aoe player blast", "bottom")
+    def AOE_blast(self, radius, dmg):
+        game.curr_scene.add_entity(AOEBlast(radius,self.rect.center,dmg), "aoe player blast", "bottom")
         camera.shake(40,0.7)
+
+    def take_dmg(self, amnt):
+        self.health -= amnt * self.dmg_taken_multiplier
 
     def hit(self, ent):
         if self.invincibilityTimer <= 0:
@@ -296,14 +306,15 @@ class Player(Entity):
                 return
             if ent.inflictFire:
                 self.add_status_effect(Fire)
-            self.health -= ent.dmg
+
+            self.take_dmg(ent.dmg)
             self.invincibilityTimer = self.iFrames
 
             self.speed *= 1 + 0.02*self.panic
 
             if self.static_discharge_timer > 0:
                 if self.static_discharge_timer >= self.static_discharge_max:
-                    self.AOE_blast(250)
+                    self.AOE_blast(250,10*self.static_discharge)
                 self.static_discharge_timer = 0
 
 
@@ -336,6 +347,9 @@ class Player(Entity):
         return tip
 
     def spawn_bullet(self, pos, theta):
+        self.copper -= self.coin_gun*3 # 3 coins per level of coin gun
+        self.take_dmg(self.blood_bullets)
+
         speed = self.bulletSpeed*(1+random.uniform(-self.speedInaccuracy, self.speedInaccuracy))
         vel = pygame.Vector2(math.cos(theta), math.sin(theta)) * (speed) * 60
         id = "bullet"
@@ -417,6 +431,20 @@ class Player(Entity):
             self.vel += movementDir * self.speed
 
     def game_over(self):
+        if self.phoenix:
+            self.phoenix = False
+            self.health = self.maxHealth
+            self.atkRate /= 2
+            self.dmg *= 2
+            self.invincibilityTimer = 10
+            self.phoenix_timer = 10
+            # this makes it so no enemies drop coins because
+            # this ability is already kinda broken
+            for e in game.get_entities_by_id('enemy'):
+                e.value = 0
+            self.AOE_blast(game.W, 100)
+            return
+
         game.switch_to_scene("menu")
         self.remove_self()
 
@@ -430,6 +458,12 @@ class Player(Entity):
         self.bulletCooldown -= dt
         self.invincibilityTimer -= dt
         self.static_discharge_timer += dt * self.static_discharge # higher level faster recharge
+        if self.phoenix_timer > 0:
+            self.phoenix_timer -= dt
+            spawn_fire(*self.rect.center)
+            if self.phoenix_timer <= 0:
+                self.dmg = self.baseDmg
+                self.atkRate = self.baseAtkRate
 
         if self.health <= 0:
             self.game_over()

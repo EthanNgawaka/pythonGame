@@ -28,6 +28,7 @@ class DamageUp(Card):
     basePrice = 150
     def on_pickup(self):
         self.player.dmg += 2
+        self.player.baseDmg = self.player.dmg
 
 class AccuracyUp(Card):
     name = "accuracy up"
@@ -44,6 +45,7 @@ class AttackSpeedUp(Card):
     basePrice = 100
     def on_pickup(self):
         self.player.atkRate *= 0.8
+        self.player.baseAtkRate = self.player.baseAtkRate
 
 class BulletSpeedUp(Card):
     name = "bullet speed up"
@@ -71,7 +73,7 @@ class Shield(Card):
 
 class Firewall(Card):
     name = "Firewall"
-    basePrice = 200
+    basePrice = 300
     desc = "Immunity to fire"
     def on_pickup(self):
         self.player.fire_immunity = True
@@ -86,21 +88,21 @@ class RubberBullets(Card):
 
 class StaticDischarge(Card):
     name = "Static Discharge"
-    basePrice = 100
+    basePrice = 350
     desc = "blast on hit"
     def on_pickup(self):
         self.player.static_discharge += 1
 
 class LifeStealUp(Card):
     name = "life steal up"
-    basePrice = 150
+    basePrice = 350
     desc = "Life steal up!"
     def on_pickup(self):
         self.player.lifesteal += 1
 
 class HotShot(Card):
     name = "Hot shot"
-    basePrice = 125
+    basePrice = 200
     desc = "+1 Stack of fire on enemy hit"
     def on_pickup(self):
         self.player.hotShot += 1
@@ -108,18 +110,20 @@ class HotShot(Card):
 # i think shotgun should apply a dmg multiplier but idk
 class Shotgun(Card):
     name = "shotgun"
-    basePrice = 175
+    basePrice = 150
     desc = "SHOTGUN MOMENT"
     def on_pickup(self):
         self.player.bulletCount += 3
         self.player.dmg *= 0.6
+        self.player.baseDmg = self.player.dmg
         self.player.inaccuracy += 0.1
         self.player.speedInaccuracy += 0.1
         self.player.atkRate += 0.1
+        self.player.baseAtkRate = self.player.baseAtkRate
 
 class Piercing(Card):
     name = "piercing up"
-    basePrice = 200
+    basePrice = 150
     desc = "Piercing up!"
     def on_pickup(self):
         self.player.piercing += 1
@@ -151,6 +155,37 @@ class DoubleShot(Card):
     def on_pickup(self):
         self.player.bulletCount += 1
 
+class CoinGun(Card):
+    name = "Coin Gun"
+    basePrice = 500
+    desc = "Double damage at a cost..."
+    def on_pickup(self):
+        self.player.dmgMultiplier *= 2
+        self.player.coin_gun += 1
+
+class Resistance(Card):
+    name = "Resistance"
+    basePrice = 350
+    desc = "20% damage reduction!"
+    def on_pickup(self):
+        self.player.dmg_take_multiplier *= 0.8
+
+class BloodBullets(Card):
+    name = "Blood Bullets"
+    basePrice = 350
+    desc = "Damage way up, Firerate up, bullets cost health!"
+    def on_pickup(self):
+        self.player.blood_bullets += 1
+        self.player.dmgMultiplier *= 2.5
+        self.player.atkRateMultiplier *= 1.5
+
+class Phoenix(Card):
+    name = "System Reboot"
+    basePrice = 350
+    desc = "On death, kill all enemies on screen and revive with full health and x2 damage and firerate for short duration"
+    def on_pickup(self):
+        self.player.phoenix = True
+
 PASSIVE_CARDS = {
     "common":[
         SpeedUp, DamageUp, AccuracyUp,
@@ -163,9 +198,10 @@ PASSIVE_CARDS = {
         StaticDischarge, Firewall, RubberBullets,
     ],
     "legendary":[
-        DoubleShot, Minigun
+        DoubleShot, Minigun, Resistance,
+        CoinGun, BloodBullets, Phoenix,
     ],
-    "devil_deal":[
+    "devil_deal":[ # definitely not stealing from isaac
     ],
 }
 
