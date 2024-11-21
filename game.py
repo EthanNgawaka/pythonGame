@@ -305,6 +305,7 @@ class Game:
         if self.transition_timer > 0:
             self.transition_timer -= dt
 
+    @profile
     def draw(self, window):
         if not pygame.get_init():
             print(pygame.get_init())

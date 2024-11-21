@@ -85,6 +85,7 @@ class Button(UI_Element):
         self.drawingInflation = pygame.Vector2()
         self.uiTag = self.root.uiTag
         self.outlined = False
+        self.highlight = True
 
         self.onActionDelay = 0.1;
         self.onActionTimer = 0;
@@ -146,8 +147,8 @@ class Button(UI_Element):
         drawRect(window, self.drawingRect, self.col)
         self.draw_name(window)
 
-        if self.hovered or self.outlined:
-            white_surf = create_white_surf(rect_to_surf(self.drawingRect), 80)
+        if (self.hovered or self.outlined) and self.highlight:
+            white_surf = create_colored_surf(rect_to_surf(self.drawingRect), 80, self.baseHighlightCol)
             window.blit(white_surf, (self.drawingRect.topleft.x, self.drawingRect.topleft.y))
 
 # so basically u create a class extending Menu then
@@ -233,7 +234,6 @@ class Menu(Entity):
                 t = 1 if self.do_instant_open else 0.3
                 
                 dist = abs(self.rect.y - self.closeRect.y)
-                print(dist)
                 self.lerp(self.closeRect, t)
                 if dist < 10: # arbitrary seems to work fine tho
                     self.UIRoot.remove_self()

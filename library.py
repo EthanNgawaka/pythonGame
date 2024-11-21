@@ -22,6 +22,14 @@ def create_white_surf(surf, alpha):
     white_surface.set_alpha(alpha)
     return white_surface
 
+def create_colored_surf(surf, alpha, col):
+    mask = pygame.mask.from_surface(surf)
+    white_surface = mask.to_surface()
+    white_surface.set_colorkey((0, 0, 0))
+    white_surface.set_alpha(alpha)
+    white_surface.fill(col)
+    return white_surface
+
 def rect_to_surf(rect):
     s = pygame.Surface((rect[2], rect[3]))
 

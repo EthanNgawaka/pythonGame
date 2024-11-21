@@ -222,7 +222,7 @@ class Cockroach(Enemy):
         self.scatterTimer = 0
         self.rect = Rect(pos, (30,30))
         self.sprite = Spritesheet(self.rect, "./assets/cockroach.png", (32,32), 0.1)
-        self.sprite.addState("normal", 0, 2)
+        self.sprite.addState("normal", 0, 8)
         self.sprite.setState("normal")
 
     def on_player_collision(self, player):
@@ -255,7 +255,7 @@ class Cockroach(Enemy):
         self.scatterTimer -= dt
         self.sprite.update(dt)
         theta = math.atan2(self.vel.y, self.vel.x)
-        self.sprite.rotate((theta * -57.298) - 90)
+        self.sprite.rotate((theta * -57.298) - 90 + random.randint(-20,20))
     
     def draw(self, window):
         surf, rect = self.sprite.draw(self.rect.scale(2,2), window)

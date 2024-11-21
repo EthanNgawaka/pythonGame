@@ -25,7 +25,7 @@ class ShopCardButton(Button):
         self.suck_max = 4
         self.start_rect = self.rect.copy()
         self.start_rect.y = self.hoveredY
-        print(self.uiTag)
+        self.highlight = False
 
     def draw_name(self, window):
         drawingRect = self.get_relative_rect().inflate(self.drawingInflation.x, self.drawingInflation.y)
