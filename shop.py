@@ -16,7 +16,7 @@ class ShopCardButton(Button):
         labelRect = Rect((0,0),(0,0))
         labelRect.center = (self.rect.w/2, self.rect.h*-0.1)
         labelTxt = Text("$"+str(self.card.basePrice), (255,255,255),35)
-        self.root.add_element(Label(self, labelRect, labelTxt))
+        self.root.add_element(Label(self, labelRect, labelTxt), 4)
 
         self.hoveredY = self.rect.y - self.rect.h*0.07
         self.restY = self.rect.y+self.rect.h/2
@@ -93,7 +93,7 @@ class ShopCardButton(Button):
 class Shop(Menu):
     def __init__(self):
         super().__init__(
-            "shop", 100000,
+            "shop", 4,
             (pygame.Color("#503197"), pygame.Color("#18215d"))
         )
         w, h = game.W, game.H
@@ -111,7 +111,7 @@ class Shop(Menu):
         rect = Rect((0,0),(wh))
         rect.center = center
         btn = ShopCardButton(self.UIRoot, rect, bttnCol, txtObj, func, desc)
-        self.UIRoot.add_element(btn)
+        self.UIRoot.add_element(btn, 4)
         return btn
 
     def add_elements(self):
@@ -120,7 +120,8 @@ class Shop(Menu):
             (4.95*self.rect.w/6, self.rect.w/20),
             (self.rect.w/5,self.rect.h/10),
             pygame.Color("#4b0090"), Text("EXIT",(255,255,255),45),
-            self.close
+            self.close,
+            4
         )
 
         # heal button
@@ -138,7 +139,8 @@ class Shop(Menu):
             (self.rect.w/2, self.rect.w/20),
             (self.rect.w/3,self.rect.w/15),
             pygame.Color(90,180,90), Text(f"+35% Health : ${self.heal_cost}",(255,255,255),45),
-            heal
+            heal,
+            4
         )
 
         # card buttons

@@ -23,10 +23,10 @@ class UI_Root(Entity):
         self.fill_col = fill_col
         self.col = (self.fill_col, self.outline_col)
 
-    def add_element(self, elem, priority="UI"):
+    def add_element(self, elem, priority=6):
         self.elements.append(elem)
         id = elem.__class__.__name__
-        game.curr_scene.add_entity(elem,id, priority)
+        game.curr_scene.add_entity(elem, id, priority)
 
     def update(self, dt):
         pass
@@ -174,12 +174,12 @@ class Menu(Entity):
         self.bgCol = col_obj[0]
         self.outline_col = col_obj[1]
 
-    def create_centered_button(self, center, wh, bttnCol, txtObj, func):
+    def create_centered_button(self, center, wh, bttnCol, txtObj, func, layer=6):
         # params( (x, y), (w, h), Text(), onAction )
         rect = Rect((0,0),(wh))
         rect.center = center
         btn = Button(self.UIRoot, rect, bttnCol, txtObj, func)
-        self.UIRoot.add_element(btn)
+        self.UIRoot.add_element(btn, layer)
         return btn
 
     def add_elements(self):

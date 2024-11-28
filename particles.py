@@ -19,7 +19,7 @@ def spawn_fire(x, y):
         part = Particle(Rect((x-size/2, y-size/2), (size, size)), vel, random.uniform(0.5,1.9), lerpColors)
         part.color = startingColor
         part.gravity = -20
-        game.curr_scene.add_entity(part, "particle_fire", "bottom")
+        game.curr_scene.add_entity(part, "particle_fire", 2)
 
 def spawn_acid_particle(x, y):
     numOfParticles = 3
@@ -37,7 +37,7 @@ def spawn_acid_particle(x, y):
         part = Particle(Rect((x-size/2, y-size/2), (size, size)), vel, random.uniform(0.5,1.9), lerpColors)
         part.color = startingColor
         part.gravity = -10
-        game.curr_scene.add_entity(part, "particle_fire", "bottom")
+        game.curr_scene.add_entity(part, "particle_fire", 2)
 
 def spawn_weakness_particle(x, y):
     numOfParticles = 3
@@ -55,7 +55,7 @@ def spawn_weakness_particle(x, y):
         part = Particle(Rect((x-size/2, y-size/2), (size, size)), vel, random.uniform(0.5,1.9), lerpColors)
         part.color = startingColor
         part.gravity = -10
-        game.curr_scene.add_entity(part, "particle_fire", "bottom")
+        game.curr_scene.add_entity(part, "particle_fire", 2)
 
 # TODO redo this cause it wont work???
 def blood_explosion(x, y, amnt, init_theta=None):
@@ -78,7 +78,7 @@ def blood_explosion(x, y, amnt, init_theta=None):
         part.gravity = 0
 
         parts = game.get_entities_by_id("particle")
-        game.curr_scene.add_entity(part, "particle_blood", "bottom")
+        game.curr_scene.add_entity(part, "particle_blood", 2)
 
 class Particle(Entity):
     def __init__(self, rect, vel, lifetime, colorLerp = False): # col = (R, G, B, A)

@@ -648,7 +648,7 @@ class MotherFly(Enemy):
         self.atkTimer = 0
         self.lastAttack = 0
         self.dmg = 10
-        self.atkRate = 5
+        self.atkRate = 0
         self.atkThresh = game.W
         self.col = pygame.Color("black")
 
@@ -701,6 +701,7 @@ class MotherFly(Enemy):
         if (p_pos - s_pos).length() < self.atkThresh:
             self.atkTimer -= dt
             if abs(self.lastAttack - self.atkTimer) > self.atkRate:
+                self.atkRate = 6
                 self.lastAttack = self.atkTimer
                 for i in range(random.randint(4,8)):
                     self.shoot()

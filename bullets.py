@@ -13,7 +13,7 @@ class Web(Entity):
         entities = game.get_entities_by_id("enemy")
         entities.append(game.get_entity_by_id("player"))
 
-        time_to_slow = 0.75
+        time_to_slow = 1.25
         for ent in entities:
             if (ent.rect.center - self.center).length() <= self.r and not isinstance(ent, EnemyBullet):
                 if ent in self.entities_on_me:
@@ -23,7 +23,8 @@ class Web(Entity):
                         self.entities_on_me[ent] = time_to_slow
                 else:
                     self.entities_on_me[ent] = time_to_slow
-                    ent.add_status_effect(Slow)
+                    if ent.get_stacks_of_status_effects(Slow) <= 0:
+                        ent.add_status_effect(Slow)
             elif ent in self.entities_on_me:
                 del self.entities_on_me[ent]
     
@@ -42,7 +43,7 @@ class Web(Entity):
         drawCircle(window, (self.center, self.drawR), (255,255,255))
 
 def spawn_web(pos, radius, lifetime):
-    game.curr_scene.add_entity(Web(pos, radius, lifetime), "creep") # def not stealing name from isaac
+    game.curr_scene.add_entity(Web(pos, radius, lifetime), "creep", 1) # def not stealing name from isaac
 
 class Bullet(Entity):
     def __init__(self, center, vel):

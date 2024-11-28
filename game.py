@@ -46,66 +46,26 @@ class Scene:
         sorted_list.sort()
         return sorted_list
     
-    def get_bottom_draw_priority(self):
-        limst = self.get_sorted_draw_indices()
-        if len(limst) == 0:
-            return 0
-        return limst[1] # returns second element because the first is the background
-
-    def get_top_draw_priority(self):
-        limst = self.get_sorted_draw_indices()
-        if len(limst) == 0:
-            return 0
-        return limst[len(limst) - 1]
-    
-    def add_entity(self, entity, id, drawPriority = None):
+    def add_entity(self, entity, id, drawPriority = 3):
         # queues the entity to be added next update call
         self.toAdd.append((entity, id, drawPriority))
 
-    def init_entity(self, entity, ent_id, drawPriority = None):
+    def init_entity(self, entity, ent_id, drawPriority = 3):
         return self.actually_add_entity(entity, ent_id, drawPriority)
 
-    def get_min_draw_priority(self):
-        sorted_dps = self.get_sorted_draw_indices()
-        last_dp = None
-        for i in sorted_dps:
-            if last_dp is not None:
-                if abs(i - last_dp) > 1 and last_dp + 1 > 0:
-                    return last_dp + 1
-            last_dp = i
-
-        if self.get_top_draw_priority() < 0:
-            return 0
-
-        return self.get_top_draw_priority()+1
-
-    def actually_add_entity(self, entity, ent_id, drawPriority = None):
-        # idk this seems a lil stupid but drawPriority dictates WHEN the
-        # entity is drawn ie entity with 0 is drawn before 1 etc
-        # PASS IN "UI" for ui elements that are not the root node
+    def actually_add_entity(self, entity, ent_id, drawPriority = 3):
         id = ent_id
         while id in self.entities:
             id += str(random.randint(0,9))
+
         entity.set_id(id)
         self.entities[id] = entity
 
-        if drawPriority == "bottom":
-            dp = self.get_bottom_draw_priority() - 1
-            self.drawPriorityLookup[dp] = id
+        # create drawPriority if needed
+        if drawPriority in self.drawPriorityLookup:
+            self.drawPriorityLookup[drawPriority].append(id)
             return
-
-        if drawPriority is not None:
-            dp = drawPriority
-            if drawPriority == "UI":
-                dp = self.get_top_draw_priority() + 1
-                # so root node of UI will always be like 1000 or whatever so 
-                # for leaves just make it so its drawn on top
-
-            self.drawPriorityLookup[dp] = id
-            return
-
-        # if no drawPriority provided just draw next smallest one
-        self.drawPriorityLookup[self.get_min_draw_priority()] = id
+        self.drawPriorityLookup[drawPriority] = [id]
 
     def remove_entity(self, entity):
         self.toRm.append(entity.id)
@@ -116,14 +76,17 @@ class Scene:
         self.toAdd = []
 
     def get_draw_priority_from_id(self, id):
-        id_to_priority = {v: k for k, v in self.drawPriorityLookup.items()}
-        return id_to_priority[id]
+        for draw_layer in self.drawPriorityLookup:
+            if id in self.drawPriorityLookup[draw_layer]:
+                return draw_layer
+
+        return None
     
     def handle_removing(self):
         for id in self.toRm:
             try:
                 del self.entities[id]
-                del self.drawPriorityLookup[self.get_draw_priority_from_id(id)]
+                self.drawPriorityLookup[self.get_draw_priority_from_id(id)].remove(id)
             except KeyError:
                 print(id + " doesnt exist")
         self.toRm = []
@@ -154,13 +117,9 @@ class Scene:
     def draw(self, window):
         top_layer = []
         for priority in self.get_sorted_draw_indices():
-            ent = self.entities[self.drawPriorityLookup[priority]]
-            if ent.draw_on_top:
-                top_layer.append(ent)
-                continue
-            ent.draw(window)
-        for ent in top_layer:
-            ent.draw(window)
+            ent_ids = self.drawPriorityLookup[priority]
+            for id in ent_ids:
+                self.entities[id].draw(window)
 
     def cleanup(self):
         if self.reset_on_switch:

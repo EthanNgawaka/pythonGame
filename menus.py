@@ -9,7 +9,7 @@ if DEBUG:
 class MainMenu(Menu):
     def __init__(self):
         super().__init__(
-            "mainmenu", "UI",
+            "mainmenu", 6,
             (pygame.Color("#503197"), pygame.Color("#18215d")),
             True
         )
@@ -38,7 +38,7 @@ class MainMenu(Menu):
 class PauseMenu(Menu):
     def __init__(self):
         super().__init__(
-            "pausemenu", "UI",
+            "pausemenu", 6,
             (pygame.Color("#503197"), pygame.Color("#18215d"))
         )
         self.close_on_esc = True
@@ -106,7 +106,7 @@ class PauseMenu(Menu):
 class SettingsMenu(Menu):
     def __init__(self):
         super().__init__(
-            "settingsmenu", "UI",
+            "settingsmenu", 6,
             (pygame.Color("#503197"), pygame.Color("#18215d"))
         )
         self.close_on_esc = True
@@ -132,7 +132,7 @@ class SettingsMenu(Menu):
 class DebugMenu(Menu):
     def __init__(self):
         super().__init__(
-            "debugmenu", "UI",
+            "debugmenu", 6,
             (pygame.Color("#503197"), pygame.Color("#18215d"))
         )
         self.change_rect_dimensions(200,100)

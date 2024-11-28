@@ -19,6 +19,18 @@ class Background(Entity):
     def draw(self, window):
         drawRect(window, self.rect, (125,125,125), 0, True)
 
+"""
+draw layer looks like:
+
+    0 - bg
+    1 - creep/bg decals
+    2 - particles
+    3 - main (enemies player basically everything else)
+    4 - shop ui
+    5 - player ui
+    6 - ui
+"""
+
 def create_main_scene():
     mainScene = Scene()
     bg = Background()
@@ -26,18 +38,18 @@ def create_main_scene():
     playerUi = PlayerUI(player)
     shop = Shop()
     wave = Wave()
-    mainScene.init_entity(bg, "bg", -100000)
+    mainScene.init_entity(bg, "bg", 0)
     mainScene.init_entity(player, "player")
-    mainScene.init_entity(playerUi, "playerUI", 10000)
+    mainScene.init_entity(playerUi, "playerUI", 5)
     playerUi.draw_on_top = True
     mainScene.init_entity(wave, "wave")
 
     # so currently u have to init all menus idk it works but its kinda scuffed but
     # also sometimes scuffed is ok
-    mainScene.init_entity(shop, "shop")
-    mainScene.init_entity(PauseMenu(), "pausemenu")
-    mainScene.init_entity(DebugMenu(), "debugmenu")
-    mainScene.init_entity(SettingsMenu(), "settingsmenu")
+    mainScene.init_entity(shop, "shop", 4)
+    mainScene.init_entity(PauseMenu(), "pausemenu", 6)
+    mainScene.init_entity(DebugMenu(), "debugmenu", 6)
+    mainScene.init_entity(SettingsMenu(), "settingsmenu", 6)
     return mainScene
 
 def create_menu_scene():
