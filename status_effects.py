@@ -1,6 +1,35 @@
 from game import *
 from particles import *
 
+class Slow(Entity):
+    def __init__(self, entity):
+        self.ent = entity
+        self.timer = 5
+
+        self.stat_change =  self.ent.change_stat_temporarily("speed", -self.ent.speed*0.3, 0)
+
+        all_other_effects = self.ent.get_list_of_status_effects_of_type(self.__class__)
+        for i in range(len(all_other_effects)):
+            all_other_effects[i].timer = self.timer*(i+2)
+
+    def update(self, dt):
+        if self.timer > 0 and self.ent in game.curr_scene.entities.values():
+            ls = self.ent.get_list_of_status_effects_of_type(self.__class__)
+            self.timer -= dt
+
+        else:
+            self.stat_change.remove_self()
+            self.remove_self()
+
+    def draw(self, window):
+        ls = self.ent.get_list_of_status_effects_of_type(self.__class__)
+        if ls[0] == self:
+            drawText(
+                window, f"SLOW: {len(ls)}", (0,128,0),
+                self.ent.rect.center+pygame.Vector2(0,self.ent.rect.h),
+                45, True
+            )
+
 class Acid(Entity):
     def __init__(self, entity):
         self.ent = entity

@@ -99,9 +99,9 @@ class Player(Entity):
 
     def init(self):
         super().init()
-        print(self.atkRate)
-        self.deck.add_card(Repulse())
-        self.add_status_effect(Acid, 10)
+        self.deck.add_card(Webbed())
+        #self.add_status_effect(Slow, 1)
+        #spawn_web(pygame.Vector2(game.W/2, 100), 150, 15)
 
     def get_list_of_status_effects_of_type(self, status_type):
         all_statuses = game.get_entities_by_type(status_type)

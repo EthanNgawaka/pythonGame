@@ -707,7 +707,5 @@ def drawRect(window, in_rect, col_obj, outline_thickness=0, ignore_camera=False)
 
 def drawCircle(window, in_circle, col, width=0): # circle = (center, radius)
     circle = in_circle
-    circle[0][0] -= camera.pos.x
-    circle[0][1] -= camera.pos.y
-    pygame.draw.circle(window, col, circle[0], circle[1], width)
+    pygame.draw.circle(window, col, circle[0]-camera.pos, circle[1], width)
 

@@ -1,6 +1,49 @@
 from game import *
 from status_effects import *
 
+class Web(Entity):
+    def __init__(self, pos, radius, lifetime):
+        self.r = radius
+        self.center = pos
+        self.timer = lifetime
+        self.drawR = 0
+        self.entities_on_me = {} # ent: timer
+
+    def collis(self, dt):
+        entities = game.get_entities_by_id("enemy")
+        entities.append(game.get_entity_by_id("player"))
+
+        time_to_slow = 0.75
+        for ent in entities:
+            if (ent.rect.center - self.center).length() <= self.r and not isinstance(ent, EnemyBullet):
+                if ent in self.entities_on_me:
+                    self.entities_on_me[ent] -= dt
+                    if self.entities_on_me[ent] <= 0 and ent.get_stacks_of_status_effects(Slow) < 5:
+                        ent.add_status_effect(Slow)
+                        self.entities_on_me[ent] = time_to_slow
+                else:
+                    self.entities_on_me[ent] = time_to_slow
+                    ent.add_status_effect(Slow)
+            elif ent in self.entities_on_me:
+                del self.entities_on_me[ent]
+    
+    def update(self, dt):
+        self.timer -= dt
+        self.collis(dt)
+
+        if self.timer <= 0:
+            self.drawR = lerp(self.drawR, 0, 0.1)
+            if self.timer <= -0.5:
+                self.remove_self()
+        else:
+            self.drawR = lerp(self.drawR, self.r, 0.1)
+
+    def draw(self, window):
+        drawCircle(window, (self.center, self.drawR), (255,255,255))
+
+def spawn_web(pos, radius, lifetime):
+    game.curr_scene.add_entity(Web(pos, radius, lifetime), "creep") # def not stealing name from isaac
+
 class Bullet(Entity):
     def __init__(self, center, vel):
         player = game.get_entity_by_id("player")
