@@ -198,7 +198,7 @@ class Game:
         sys.exit()
 
     def init_window(self, caption):
-        self.W, self.H, self.window = init(caption)
+        self.W, self.H, self.window = init_pygame(caption)
 
     def change_resolution(self, new_w, new_h):
         # not really working yet

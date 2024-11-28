@@ -63,7 +63,6 @@ class Bullet(Entity):
 
     def update(self, dt):
         player = game.get_entity_by_id("player")
-        print(self.bouncy)
 
         if self.homing:
             self.do_homing(dt)
@@ -93,6 +92,7 @@ class Bullet(Entity):
 
 class EnemyBullet(Entity):
     def __init__(self, center, vel, dmg):
+        super().__init__()
         self.r = self.get_size(2)
         self.rect = Rect((0,0), (self.r*2, self.r*2))
 
@@ -128,3 +128,40 @@ class EnemyBullet(Entity):
 
     def draw(self, window):
         drawCircle(window, (self.rect.center, self.r*2), (255,0,0))
+
+# idk where to put this so its goin here because enemies and player import bullets.py soooo
+class TemporaryStatChange(Entity):
+    """
+    to add a temporary state change to an enemy
+    just add a new TemporaryStatChange to curr_entities
+    so it can update itself independently,
+    constructor takes ref to entity it affects, name of the stat, amount it changes, length of effect
+
+    pass in no time if you want to reset the stat change on a func call instead
+    """
+    def __init__(self, entity, stat_name, change, time=0):
+        self.stat_name = stat_name
+        self.stat_change = change
+        self.timer = time if time > 0 else None
+        self.entity = entity
+
+        self.add_to_attr(self.stat_change)
+
+    def add_to_attr(self, change):
+        curr_stat = getattr(self.entity, self.stat_name)
+        setattr(self.entity, self.stat_name, curr_stat + change)
+
+    def remove_self(self):
+        self.add_to_attr(-self.stat_change)
+        super().remove_self()
+
+    def update(self, dt):
+        if self.timer is None:
+            return
+
+        self.timer -= dt
+        if self.timer <= 0:
+            self.remove_self()
+
+    def draw(self, window):
+        pass

@@ -7,6 +7,9 @@ class Acid(Entity):
         self.fire_spawn_rate = random.uniform(0.01,0.05)
         self.timer = 5
         self.last_fire_spawn = self.timer
+
+        self.stat_change =  self.ent.change_stat_temporarily("atkRate", self.ent.atkRate*0.2, 0)
+
         # this gobbledy gook just makes it so
         # all the stacks timers are reset when a new one is added and
         # each stack fades gradually and not all at once
@@ -18,14 +21,9 @@ class Acid(Entity):
         if self.timer > 0 and self.ent in game.curr_scene.entities.values():
             ls = self.ent.get_list_of_status_effects_of_type(self.__class__)
             self.timer -= dt
-            self.ent.atkRate = self.ent.baseAtkRate*2
 
-            # particles
-            if abs(self.timer-self.last_fire_spawn) > self.fire_spawn_rate and ls[0] == self:
-                self.last_fire_spawn = self.timer
-                spawn_acid_particle(*self.ent.rect.center)
         else:
-            self.ent.atkRate = self.ent.baseAtkRate
+            self.stat_change.remove_self()
             self.remove_self()
 
     def draw(self, window):
@@ -36,6 +34,11 @@ class Acid(Entity):
                 self.ent.rect.center+pygame.Vector2(0,self.ent.rect.h),
                 45, True
             )
+
+            # particles
+            if abs(self.timer-self.last_fire_spawn) > self.fire_spawn_rate:
+                self.last_fire_spawn = self.timer
+                spawn_acid_particle(*self.ent.rect.center)
 
 class Weakness(Entity):
     def __init__(self, entity):
@@ -50,18 +53,14 @@ class Weakness(Entity):
         for i in range(len(all_other_effects)):
             all_other_effects[i].timer = self.timer*(i+2)
 
+        self.stat_change =  self.ent.change_stat_temporarily("dmg", -self.ent.dmg*0.3, 0)
+
     def update(self, dt):
         if self.timer > 0 and self.ent in game.curr_scene.entities.values():
-            ls = self.ent.get_list_of_status_effects_of_type(self.__class__)
             self.timer -= dt
-            self.ent.dmg = self.ent.baseDmg/2
 
-            # particles
-            if abs(self.timer-self.last_fire_spawn) > self.fire_spawn_rate and ls[0] == self:
-                self.last_fire_spawn = self.timer
-                spawn_weakness_particle(*self.ent.rect.center)
         else:
-            self.ent.dmg = self.ent.baseDmg
+            self.stat_change.remove_self()
             self.remove_self()
 
     def draw(self, window):
@@ -72,6 +71,11 @@ class Weakness(Entity):
                 self.ent.rect.center+pygame.Vector2(0,self.ent.rect.h),
                 45, True
             )
+
+            # particles
+            if abs(self.timer-self.last_fire_spawn) > self.fire_spawn_rate:
+                self.last_fire_spawn = self.timer
+                spawn_weakness_particle(*self.ent.rect.center)
 
 class Fire(Entity):
     def __init__(self, entity):

@@ -59,7 +59,7 @@ def spawn_weakness_particle(x, y):
 
 # TODO redo this cause it wont work???
 def blood_explosion(x, y, amnt, init_theta=None):
-    numOfParticles = max(amnt, 5)
+    numOfParticles = round(max(amnt, 5))
     for i in range(numOfParticles):
         theta = random.uniform(-math.pi, math.pi)
         # improve this i want it to be normall distrubted with

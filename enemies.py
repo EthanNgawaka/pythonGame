@@ -20,13 +20,17 @@ class Enemy(Entity):
         self.speed = 1000
         self.health  = 10
         self.maxHealth = self.health
-        self.baseDmg = self.dmg
         self.inflictFire = False
         self.atkRate = 0
         self.dmg_taken_multiplier = 1
 
         self.hit_timer = 0
         self.flash_max = 0.2
+
+    def change_stat_temporarily(self, stat, change, length):
+        stat_change = TemporaryStatChange(self, stat, change, length)
+        game.curr_scene.add_entity(stat_change, "temporary "+stat+" change")
+        return stat_change
 
     def take_dmg(self, amnt):
         self.health -= amnt * self.dmg_taken_multiplier
@@ -176,7 +180,6 @@ class Fly(Enemy):
         self.health = 10
         self.value = 8
         self.dmg = 10
-        self.baseDmg = self.dmg
         self.maxHealth = self.health
 
     def movement(self):
@@ -192,7 +195,6 @@ class BabyFly(Fly):
         self.maxHealth = self.health
         self.value = 1
         self.dmg = 5
-        self.baseDmg = self.dmg
 
 class CockroachSwarm:
     def __init__(self, pos):
@@ -208,7 +210,6 @@ class Cockroach(Enemy):
         self.speedRange = [1000,2200]
         self.drag = 0.9
         self.dmg = 10
-        self.baseDmg = self.dmg
         self.value = 10
         self.health = 12
         self.maxHealth = self.health
@@ -270,7 +271,6 @@ class BabyCockroach(Cockroach):
         self.health = 2
         self.value = 2
         self.dmg = 4
-        self.baseDmg = self.dmg
         self.speedRange = [1500,2600]
         self.maxHealth = self.health
     
@@ -304,9 +304,7 @@ class Mosquito(Enemy):
         self.atkTimer = 0
         self.lastAttack = 0
         self.dmg = 10
-        self.baseDmg = self.dmg
         self.atkRate = 2.25
-        self.baseAtkRate = self.atkRate
         self.atkThresh = 750
         self.col = pygame.Color("black")
         self.maxHealth = self.health
@@ -367,7 +365,6 @@ class Ant(Enemy):
         self.value = 2
         self.col = pygame.Color(127,90,90)
         self.dmg = 5
-        self.baseDmg = self.dmg
         self.dir = 1
         self.maxHealth = self.health
 
@@ -415,7 +412,6 @@ class FireAnt(Ant):
     def __init__(self, pos):
         super().__init__(pos)
         self.atkRate = 4.35 + random.uniform(-0.5,1.5)
-        self.baseAtkRate = self.atkRate
         self.last_shot = 0
         self.col = (255,50,50)
         self.fire_immunity = True
@@ -461,7 +457,6 @@ class Termite(Enemy):
         self.value = 2
         self.col = pygame.Color(255,120,120)
         self.dmg = 5
-        self.baseDmg = self.dmg
         self.health = 4
         self.maxHealth = self.health
 
@@ -540,7 +535,6 @@ class Snail(Enemy):
         self.health = 10
         self.value = 8
         self.dmg = 10
-        self.baseDmg = self.dmg
         self.timer = 0
         self.maxHealth = self.health
 
@@ -654,9 +648,7 @@ class MotherFly(Enemy):
         self.atkTimer = 0
         self.lastAttack = 0
         self.dmg = 10
-        self.baseDmg = self.dmg
         self.atkRate = 5
-        self.baseAtkRate = self.atkRate
         self.atkThresh = game.W
         self.col = pygame.Color("black")
 

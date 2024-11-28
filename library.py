@@ -6,9 +6,12 @@ import math
 import time
 import cProfile, pstats, io
 import sys
+import os
 
-W = 1920 # default but not needed
+W = 1920
 H = 1080
+
+os.environ["PYGAME_DISPLAY"] = "0" # opens windows on main display
 
 clock = pygame.time.Clock()
 maxFPS = 60
@@ -537,25 +540,23 @@ class Spritesheet:
         return self.get_sprite(self.currFrame*self.spriteW, state[1]*self.spriteH)
 
 # init funcs
-def init(caption):
+def init_pygame(caption):
     pygame.init()
-    pygame.joystick.init()
+    windowW = 1920
+    windowH = 1080
+
+    window = pygame.display.set_mode((windowW,windowH), flags=pygame.SCALED | pygame.HIDDEN)
     display_info = pygame.display.Info()
 
-    W = display_info.current_w
-    H = display_info.current_h
-
-    window = pygame.display.set_mode((W,H), pygame.DOUBLEBUF)#, flags=pygame.SCALED | pygame.HIDDEN)
-
-    #SCALE = (display_info.current_w/windowW, display_info.current_h/windowH)
-    #nativeWindow = pg_sdl2.Window.from_display_module()
-    #nativeWindow.size = (windowW * SCALE[0], windowH * SCALE[1])
-    #nativeWindow.position = pg_sdl2.WINDOWPOS_CENTERED
-    #nativeWindow.show()
+    SCALE = (display_info.current_w/windowW, display_info.current_h/windowH)
+    nativeWindow = pg_sdl2.Window.from_display_module()
+    nativeWindow.size = (windowW * SCALE[0], windowH * SCALE[1])
+    nativeWindow.position = pg_sdl2.WINDOWPOS_CENTERED
+    nativeWindow.show()
 
     pygame.display.toggle_fullscreen()
     pygame.display.set_caption(caption)
-    return (W,H,window)
+    return windowW, windowH, window
 
 # misc math funcs
 def vec_angle_to(A, B):

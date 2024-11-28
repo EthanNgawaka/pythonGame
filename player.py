@@ -4,124 +4,6 @@ from particles import *
 from bullets import *
 from status_effects import *
 
-class PlayerUI(Entity):
-    def __init__(self, player):
-        self.player = player
-        self.rect = Rect((100,100),(player.maxHealth*3,30))
-        self.isUI = True
-        self.greenBarW = self.rect.w
-        self.orangeBarW = self.rect.w
-        self.oldHpTimer = 0
-        self.orangeBarDelay = 1
-
-        self.flash_timer = 0
-        self.flash_limit = 0.2
-        self.last_flash = 0
-        self.static_index = 0
-        self.static_colors = [pygame.Color("#2092be"), pygame.Color("#53d0ff")]
-
-    def draw_hp_bar(self, window):
-        diffFromMaxHealth = self.player.maxHealth - self.player.health
-
-        greenRect = self.rect.copy()
-        greenRect.w = self.greenBarW
-        self.greenBarW = lerp(self.greenBarW, self.player.health*3, 0.02)
-
-        orangeRect = self.rect.copy()
-        orangeRect.w = self.orangeBarW
-        if self.oldHpTimer <= 0:
-            self.orangeBarW = lerp(self.orangeBarW , self.player.health*3, 0.1)
-
-        drawRect(window, self.rect, (255,0,0))
-        drawRect(window, orangeRect, (255,140,0))
-        drawRect(window, greenRect, (0,255,0))
-
-
-    def draw_copper(self, window):
-        drawText(window, f"Copper: {self.player.copper}", (255, 153, 51), (100,150), 40)
-
-    def draw_stats(self, window):
-        i = 0
-        for stat_name, stat_val in self.player.get_stats().items():
-            drawText(window, f"{stat_name}: {stat_val}", (0,0,0), (50,250+40*i), 20)
-            i+=1
-
-    def draw_static_discharge(self, window):
-        if self.player.static_discharge > 0:
-            static_discharge_rect = Rect((0,0),(self.player.rect.w*2.5, self.player.rect.h*0.3))
-            static_discharge_rect.center = self.player.rect.center - pygame.Vector2(0,self.player.rect.h)
-            drawRect(window, static_discharge_rect, pygame.Color("grey"))
-            charge_rect = static_discharge_rect.copy()
-            t = min(1,self.player.static_discharge_timer/self.player.static_discharge_max)
-            drawRect(window, charge_rect.scale(t,1), self.static_colors[self.static_index])
-            if t == 1:
-                if abs(self.flash_timer - self.last_flash) >= self.flash_limit:
-                    self.last_flash = self.flash_timer
-                    self.static_index = 1 if self.static_index == 0 else 0
-            else:
-                self.static_index = 0
-
-    def draw(self, window):
-        self.draw_hp_bar(window)
-        self.draw_copper(window)
-        #if DEBUG:
-        #    self.draw_stats(window)
-
-        self.draw_static_discharge(window)
-
-    def update(self, dt):
-        self.flash_timer += dt
-        self.oldHpTimer -= dt
-        if self.player.invincibilityTimer > 0:
-            self.oldHpTimer = self.orangeBarDelay
-
-class AOEBlast(Entity):
-    def __init__(self, r, center, dmg):
-        self.max_r = r
-        self.r = self.max_r/4
-        self.rect = Rect((0,0), (r*2, r*2))
-        self.rect.center = center
-        self.player = game.get_entity_by_id("player")
-        self.dmg = dmg
-
-        self.timer = 0
-        self.lifetime = 0.7
-
-        self.shrink = False
-        game.time_speed = 0.2
-
-        for e in game.get_entities_by_id("enemy"):
-            if AABBCollision(self.rect, e.rect):
-                if isinstance(e, EnemyBullet):
-                    e.remove_self()
-                    continue
-                e.hit(self.dmg, (self.rect.center-e.rect.center).normalize()*25)
-
-    def ease_out_elastic(self, t):
-        if t == 0:
-            return 0
-        if t == 1:
-            return 1
-        c4 = 2*math.pi/3
-        return math.pow(2,-10*t)*math.sin((t*10-0.75)*c4)+1
-
-    def update(self, dt):
-        t = self.timer/self.lifetime
-        if t >= 0.54:
-            self.shrink = True
-
-        if self.shrink:
-            self.timer -= dt*2
-            self.r = lerp(self.r, 0, 0.5)
-            if self.timer <= 0:
-                self.remove_self()
-        else:
-            self.r = max(self.ease_out_elastic(t)*self.max_r, self.max_r/4)
-            self.timer += dt
-
-    def draw(self, window):
-        drawCircle(window,(self.rect.center,self.r),pygame.Color("#53d0ff"))
-
 class Player(Entity):
     def __init__(self, x, y):
         w, h = 40, 40
@@ -165,10 +47,8 @@ class Player(Entity):
         self.kb = 500
         self.dmgMultiplier = 1
         self.dmg = 5
-        self.baseDmg = 5
         self.atkRateMultiplier = 1
         self.atkRate= 0.35
-        self.baseAtkRate = self.atkRate
         self.dmg_taken_multiplier = 1
 
         self.bulletCount = 1
@@ -219,7 +99,9 @@ class Player(Entity):
 
     def init(self):
         super().init()
+        print(self.atkRate)
         self.deck.add_card(Repulse())
+        self.add_status_effect(Acid, 10)
 
     def get_list_of_status_effects_of_type(self, status_type):
         all_statuses = game.get_entities_by_type(status_type)
@@ -442,12 +324,19 @@ class Player(Entity):
             # super cool i dont have to implement this myself
             self.vel += movementDir * self.speed
 
+    def change_stat_temporarily(self, stat, change, length):
+        stat_change = TemporaryStatChange(self, stat, change, length)
+        game.curr_scene.add_entity(stat_change, "temporary "+stat+" change")
+        return stat_change
+
     def game_over(self):
         if self.phoenix:
             self.phoenix = False
             self.health = self.maxHealth
-            self.atkRate /= 2
-            self.dmg *= 2
+
+            self.change_stat_temporarily("atkRate", -self.atkRate/2, 10)
+            self.change_stat_temporarily("dmg", self.dmg, 10)
+
             self.invincibilityTimer = 10
             self.phoenix_timer = 10
             # this makes it so no enemies drop coins because
@@ -513,3 +402,121 @@ class Player(Entity):
 
         #drawCircle(window, (self.get_pos_of_tip_of_gun(), 10), (255,0,0))
         #-------------------------------------------#
+
+class PlayerUI(Entity):
+    def __init__(self, player):
+        self.player = player
+        self.rect = Rect((100,100),(player.maxHealth*3,30))
+        self.isUI = True
+        self.greenBarW = self.rect.w
+        self.orangeBarW = self.rect.w
+        self.oldHpTimer = 0
+        self.orangeBarDelay = 1
+
+        self.flash_timer = 0
+        self.flash_limit = 0.2
+        self.last_flash = 0
+        self.static_index = 0
+        self.static_colors = [pygame.Color("#2092be"), pygame.Color("#53d0ff")]
+
+    def draw_hp_bar(self, window):
+        diffFromMaxHealth = self.player.maxHealth - self.player.health
+
+        greenRect = self.rect.copy()
+        greenRect.w = self.greenBarW
+        self.greenBarW = lerp(self.greenBarW, self.player.health*3, 0.02)
+
+        orangeRect = self.rect.copy()
+        orangeRect.w = self.orangeBarW
+        if self.oldHpTimer <= 0:
+            self.orangeBarW = lerp(self.orangeBarW , self.player.health*3, 0.1)
+
+        drawRect(window, self.rect, (255,0,0))
+        drawRect(window, orangeRect, (255,140,0))
+        drawRect(window, greenRect, (0,255,0))
+
+
+    def draw_copper(self, window):
+        drawText(window, f"Copper: {self.player.copper}", (255, 153, 51), (100,150), 40)
+
+    def draw_stats(self, window):
+        i = 0
+        for stat_name, stat_val in self.player.get_stats().items():
+            drawText(window, f"{stat_name}: {stat_val}", (0,0,0), (50,250+40*i), 20)
+            i+=1
+
+    def draw_static_discharge(self, window):
+        if self.player.static_discharge > 0:
+            static_discharge_rect = Rect((0,0),(self.player.rect.w*2.5, self.player.rect.h*0.3))
+            static_discharge_rect.center = self.player.rect.center - pygame.Vector2(0,self.player.rect.h)
+            drawRect(window, static_discharge_rect, pygame.Color("grey"))
+            charge_rect = static_discharge_rect.copy()
+            t = min(1,self.player.static_discharge_timer/self.player.static_discharge_max)
+            drawRect(window, charge_rect.scale(t,1), self.static_colors[self.static_index])
+            if t == 1:
+                if abs(self.flash_timer - self.last_flash) >= self.flash_limit:
+                    self.last_flash = self.flash_timer
+                    self.static_index = 1 if self.static_index == 0 else 0
+            else:
+                self.static_index = 0
+
+    def draw(self, window):
+        self.draw_hp_bar(window)
+        self.draw_copper(window)
+        if DEBUG:
+            self.draw_stats(window)
+
+        self.draw_static_discharge(window)
+
+    def update(self, dt):
+        self.flash_timer += dt
+        self.oldHpTimer -= dt
+        if self.player.invincibilityTimer > 0:
+            self.oldHpTimer = self.orangeBarDelay
+
+class AOEBlast(Entity):
+    def __init__(self, r, center, dmg):
+        self.max_r = r
+        self.r = self.max_r/4
+        self.rect = Rect((0,0), (r*2, r*2))
+        self.rect.center = center
+        self.player = game.get_entity_by_id("player")
+        self.dmg = dmg
+
+        self.timer = 0
+        self.lifetime = 0.7
+
+        self.shrink = False
+        game.time_speed = 0.2
+
+        for e in game.get_entities_by_id("enemy"):
+            if AABBCollision(self.rect, e.rect):
+                if isinstance(e, EnemyBullet):
+                    e.remove_self()
+                    continue
+                e.hit(self.dmg, (self.rect.center-e.rect.center).normalize()*25)
+
+    def ease_out_elastic(self, t):
+        if t == 0:
+            return 0
+        if t == 1:
+            return 1
+        c4 = 2*math.pi/3
+        return math.pow(2,-10*t)*math.sin((t*10-0.75)*c4)+1
+
+    def update(self, dt):
+        t = self.timer/self.lifetime
+        if t >= 0.54:
+            self.shrink = True
+
+        if self.shrink:
+            self.timer -= dt*2
+            self.r = lerp(self.r, 0, 0.5)
+            if self.timer <= 0:
+                self.remove_self()
+        else:
+            self.r = max(self.ease_out_elastic(t)*self.max_r, self.max_r/4)
+            self.timer += dt
+
+    def draw(self, window):
+        drawCircle(window,(self.rect.center,self.r),pygame.Color("#53d0ff"))
