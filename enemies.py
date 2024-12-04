@@ -287,12 +287,34 @@ class MotherCockroach(Cockroach):
         self.maxSpeed = 1200
         self.maxHealth = self.health
 
+        self.sprite = Spritesheet(self.rect, "./assets/mother_cockroach.png", (64,64), 0.5)
+        self.sprite.addState("normal", 0, 2)
+        self.sprite.setState("normal")
+
+    def update(self, dt):
+        super().update(dt)
+        self.movementTimer+=dt
+        if self.movementThresh <= self.movementTimer:
+            self.movementThresh += random.uniform(0.25,1.25)
+            self.movementRotTarg *= -1
+            self.speed = random.uniform(*self.speedRange)
+
+        self.scatterTimer -= dt
+        self.sprite.update(dt)
+        theta = math.atan2(self.vel.y, self.vel.x)
+        self.sprite.rotate((theta * -57.298) - 90 + random.randint(-20,20))
+
     def on_death(self):
         for i in range(random.randint(15,35)):
             spawn_pos = pygame.Vector2(self.rect.topleft)
             spawn_pos.x += random.uniform(0, self.rect.w)
             spawn_pos.y += random.uniform(0, self.rect.h)
             game.curr_scene.add_entity(BabyCockroach(spawn_pos),"enemy")
+
+    def draw(self, window):
+        surf, rect = self.sprite.draw(self.rect.scale(4,4), window)
+        if self.stun > 0:
+            window.blit(create_white_surf(surf, 200), rect.topleft)
 
 class Mosquito(Enemy):
     def __init__(self, pos):
