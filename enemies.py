@@ -287,13 +287,13 @@ class MotherCockroach(Cockroach):
     def __init__(self, pos):
         super().__init__(pos)
         self.rect = Rect(pos, (50,50))
-        self.speedRange = [500,1000]
+        self.speedRange = [300,700]
         self.health = 30
         self.value = 10
         self.maxSpeed = 1200
         self.maxHealth = self.health
 
-        self.sprite = Spritesheet(self.rect, "./assets/mother_cockroach.png", (64,64), 0.5)
+        self.sprite = Spritesheet(self.rect, "./assets/mother_cockroach.png", (64,64), 0.5, False, (255,128,128))
         self.sprite.addState("normal", 0, 2)
         self.sprite.setState("normal")
 
@@ -308,7 +308,7 @@ class MotherCockroach(Cockroach):
         self.scatterTimer -= dt
         self.sprite.update(dt)
         theta = math.atan2(self.vel.y, self.vel.x)
-        self.sprite.rotate((theta * -57.298) - 90 + random.randint(-20,20))
+        self.sprite.rotate((theta * -57.298) - 90 + random.randint(-10,10))
 
     def on_death(self):
         for i in range(random.randint(15,35)):

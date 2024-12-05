@@ -10,7 +10,7 @@ class Wave(Entity):
             "miniboss":[MotherCockroach, MotherFly],
         }
         # testing only one enemy:
-        self.override_enemy_type = None
+        self.override_enemy_type = MotherCockroach
         self.timer = 0
         self.num = 1
 
