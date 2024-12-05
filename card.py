@@ -54,18 +54,19 @@ class ActiveCard(Card):
     def draw(self, window):
         drawRect(window, self.rect, (255,255,255))
 
-        string = pygame.key.name(self.activation_key).upper()
-        drawText(window, string, (0,0,0), self.rect.topleft+pygame.Vector2(10,10), 35)
-
         string = self.name.upper()
-        drawText(window, string, (0,0,0), self.rect.center, 35, True)
+        rec = self.rect.center
+        rec.x = self.rect.x + 35/2
+        rec.y -= 35/2
+        drawText(window, string, (0,0,0), rec, 35, False)
 
         string = f"{max(0,self.timer):.2f}s"
         if self.timer <= 0:
             string = "READY"
         rect = self.rect.center.copy()
-        rect.x += self.rect.w * 0.37
-        drawText(window, string, (0,0,0), rect, 35, True)
+        rect.x += 4*35/2
+        rect.y -= 35/2
+        drawText(window, string, (0,0,0), rect, 35)
 
         if self.timer/self.cooldown > 0:
             over_rect = self.rect.copy()

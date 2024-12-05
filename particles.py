@@ -7,7 +7,7 @@ def spawn_fire(x, y):
     numOfParticles = 2
     for i in range(numOfParticles):
         theta = random.uniform(0, 1)*-math.pi
-        vel = pygame.Vector2(math.cos(theta)*random.uniform(50,200), math.sin(theta)*random.uniform(50,300))
+        vel = Vec2(math.cos(theta)*random.uniform(50,200), math.sin(theta)*random.uniform(50,300))
         size = random.randint(4,15)
 
         randomMax = 255
@@ -25,7 +25,7 @@ def spawn_acid_particle(x, y):
     numOfParticles = 3
     for i in range(numOfParticles):
         theta = random.uniform(-1, 1)*-math.pi
-        vel = pygame.Vector2(math.cos(theta)*random.uniform(50,200), math.sin(theta)*random.uniform(50,300))
+        vel = Vec2(math.cos(theta)*random.uniform(50,200), math.sin(theta)*random.uniform(50,300))
         size = random.randint(4,15)
 
         randomMax = 255
@@ -43,7 +43,7 @@ def spawn_weakness_particle(x, y):
     numOfParticles = 3
     for i in range(numOfParticles):
         theta = random.uniform(-1, 1)*-math.pi
-        vel = pygame.Vector2(math.cos(theta)*random.uniform(50,200), math.sin(theta)*random.uniform(50,300))
+        vel = Vec2(math.cos(theta)*random.uniform(50,200), math.sin(theta)*random.uniform(50,300))
         size = random.randint(4,15)
 
         randomMax = 255
@@ -68,7 +68,7 @@ def blood_explosion(x, y, amnt, init_theta=None):
             theta /= 4
             theta += init_theta
         mag = random.uniform(0,1000)
-        vel = pygame.Vector2(math.cos(theta)*mag, math.sin(theta)*mag)
+        vel = Vec2(math.cos(theta)*mag, math.sin(theta)*mag)
         size = max(3,random.uniform(numOfParticles/2, numOfParticles))
 
         startingColor = (random.randint(128, 255),0,0,255) # white -> yellow -> orange -> red -> smoke
@@ -85,7 +85,7 @@ class Particle(Entity):
         self.rect = rect
         self.color = (255,255,255)
         self.vel = vel
-        self.drag = 0.9
+        self.drag = 8
         self.gravity = 10
 
         self.startingLifetime = lifetime
@@ -133,9 +133,9 @@ class Particle(Entity):
         self.rect.x += self.vel[0]*dt
         self.rect.y += self.vel[1]*dt
 
-        if game.time_speed >= 1:
-            self.vel.y += self.gravity
-            self.vel *= self.drag
+        self.vel.y += self.gravity*dt
+
+        self.vel -= self.vel*dt*self.drag
 
         self.lifetime -= dt
         if self.lifetime <= 0:

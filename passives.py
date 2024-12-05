@@ -71,6 +71,17 @@ class Shield(Card):
         self.player.shield += 1
         self.player.curr_shield = self.player.shield
 
+class Scope(Card):
+    name = "Sniper Scope"
+    basePrice = 200
+    desc = "Accuracy Up and a little assitance"
+    def on_pickup(self):
+        self.player.scope = True
+        # accuracy up part
+        self.player.inaccuracy *= 0.66
+        if self.player.inaccuracy < 0:
+            self.player.inaccuracy = 0
+
 class Firewall(Card):
     name = "Firewall"
     basePrice = 300
@@ -204,6 +215,7 @@ PASSIVE_CARDS = {
         Shotgun, Piercing, LifeStealUp,
         Panic, HotShot, Shield,
         StaticDischarge, Firewall, RubberBullets,
+        Scope, 
     ],
     "legendary":[
         DoubleShot, Minigun, Resistance,

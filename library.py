@@ -1,4 +1,5 @@
 import pygame
+from pygame import Vector2 as Vec2
 import copy
 import pygame._sdl2 as pg_sdl2
 import random
@@ -7,9 +8,12 @@ import time
 import cProfile, pstats, io
 import sys
 import os
+import moderngl
+from array import array
 
 W = 1920
 H = 1080
+CURVATURE = 0.05
 
 os.environ["PYGAME_DISPLAY"] = "0" # opens windows on main display
 
@@ -17,6 +21,22 @@ clock = pygame.time.Clock()
 maxFPS = 60
 
 DEBUG = True
+
+class Outliner:
+    def __init__(self):
+        self.thickness = (3, 1)
+        self.convolution_mask = pygame.mask.Mask((self.thickness[0],self.thickness[0]), fill=True) # 3x3 around each pixel, change for larger W
+
+    def get_outline(self, surf, color=(0,0,0)):
+        mask = pygame.mask.from_surface(surf)
+        surf_outline = mask.convolve(self.convolution_mask).to_surface(setcolor=color, unsetcolor=surf.get_colorkey()).convert()
+        surf_outline.set_colorkey(surf.get_colorkey())
+
+        surf_outline.blit(surf, (self.thickness[1],self.thickness[1]))
+
+        return surf_outline
+
+outliner = Outliner()
 
 def create_white_surf(surf, alpha):
     mask = pygame.mask.from_surface(surf)
@@ -61,8 +81,8 @@ def line_intersection_with_rect():
 
 class Rect:
     def __init__(self, pos, dim):
-        self.topleft = pygame.Vector2(pos)
-        self.dimensions = pygame.Vector2(dim)
+        self.topleft = Vec2(pos)
+        self.dimensions = Vec2(dim)
 
     def __getitem__(self, item):
         return [*self.topleft, *self.dimensions][item]
@@ -73,8 +93,8 @@ class Rect:
         t_vec = -r.center
         vertices = [
             r.topleft + t_vec,
-            r.topleft+pygame.Vector2(r.w,0) + t_vec,
-            r.topleft+pygame.Vector2(0,r.h) + t_vec,
+            r.topleft+Vec2(r.w,0) + t_vec,
+            r.topleft+Vec2(0,r.h) + t_vec,
             r.topleft+r.dimensions + t_vec,
         ]
 
@@ -154,20 +174,37 @@ class Mouse:
     def __init__(self):
         self.pressed = [False,False]
         self.down = [False,False]
-        self.pos = pygame.Vector2()
-        self.rect = pygame.Rect(0,0,0,0)
+        self.pos = Vec2()
+        self.rect = Rect((0,0),(0,0))
 
         self.moved_this_frame = False
-        self.old_pos = pygame.Vector2()
+        self.old_pos = Vec2()
     
     def update(self):
-        self.old_pos = pygame.Vector2(self.pos)
+        self.old_pos = Vec2(self.pos)
 
         self.pressed = [False,False]
-        mousePos = pygame.mouse.get_pos()
-        self.pos.x = mousePos[0]
-        self.pos.y = mousePos[1]
-        self.rect = pygame.Rect(self.pos.x,self.pos.y,0,0)
+        mousePos = Vec2(pygame.mouse.get_pos())
+
+        # due to the shaders we want the relative position of the mouse AFTER the screen distortion
+        # UV (0 - 1)
+        # View Space (-1 to 1)
+        # mouse pos in UV space
+        mPosUV = Vec2(mousePos.x/W, mousePos.y/H) # 0 to 1
+        # mouse pos in view space
+        mPosVS = Vec2((2*mousePos.x/W) - 1, (2*mousePos.y/H) - 1) # -1 to 1
+        r = mPosVS.length()
+
+        mPosUV.x += mPosVS.x * CURVATURE * r
+        mPosUV.y -= mPosVS.y * CURVATURE * r/10
+
+        mPosUV.x = min(max(mPosUV.x, 0), 1)
+        mPosUV.y = min(max(mPosUV.y, 0), 1)
+
+        self.pos.x = mPosUV.x * W
+        self.pos.y = mPosUV.y * H
+        self.rect.x = self.pos.x
+        self.rect.y = self.pos.y
         pressed = pygame.mouse.get_pressed(num_buttons=3)
         if pressed[0]:
             if self.down[0]:
@@ -194,8 +231,8 @@ class Mouse:
 # TODO( integrate with game class )
 class Camera:
     def __init__(self, trackingEasing=0.1):
-        self.pos = pygame.Vector2(0,0)
-        self.target = pygame.Vector2(0,0)
+        self.pos = Vec2(0,0)
+        self.target = Vec2(0,0)
         self.shakeTimer = 0
         self.shakeIntensity = 0
         self.trackingEasing = trackingEasing
@@ -218,7 +255,7 @@ class Camera:
 
         if self.shakeTimer > 0:
             self.shakeTimer -= dt
-            shakeVec = pygame.Vector2()
+            shakeVec = Vec2()
             shakeVec.x = random.uniform(-1,1)*self.shakeIntensity
             shakeVec.y = random.uniform(-0.25,0.25)*self.shakeIntensity
             self.pos = self.pos.lerp(self.pos+shakeVec, self.shakeEasing)
@@ -230,8 +267,8 @@ camera = Camera()
 class Controller:
     def __init__(self):
         self.joysticks = []
-        self.LSTICK = pygame.Vector2()
-        self.RSTICK = pygame.Vector2()
+        self.LSTICK = Vec2()
+        self.RSTICK = Vec2()
         self.RTRIGGER = 0
         self.A = 0
         self.B = 0
@@ -362,8 +399,8 @@ class Controller:
         self.RSTICK = [round(joy.get_axis(2), 1), round(joy.get_axis(3), 1)]
         """
         self.prev_LSTICK = self.LSTICK.copy()
-        self.LSTICK = pygame.Vector2(joy.get_axis(0),joy.get_axis(1))
-        self.RSTICK = pygame.Vector2(joy.get_axis(2),joy.get_axis(3))
+        self.LSTICK = Vec2(joy.get_axis(0),joy.get_axis(1))
+        self.RSTICK = Vec2(joy.get_axis(2),joy.get_axis(3))
         self.RTRIGGER = 1 if joy.get_axis(4) > -0.5 else 0 # just gets rid of the range cause i dont think thats very useful for this game
         if abs(self.LSTICK.x) < self.deadzone_range:
             self.LSTICK.x = 0
@@ -406,13 +443,16 @@ class Controller:
 
 
 class Image:
-    def __init__(self, src, x, y, w, h):
+    def __init__(self, src, x, y, w, h, outline=False):
         self.rect = Rect((x,y),(w,h))
         self.img = pygame.image.load(src).convert()
         self.img.set_colorkey((0,255,0))
-        self.sprite = pygame.Surface((self.img.get_width(),self.img.get_height()))
-        self.sprite.blit(self.img, (0,0))
         self.rot = 0
+
+        self.outline = outline
+
+        if self.outline:
+            self.img = outliner.get_outline(self.img, self.outline)
 
     def __deepcopy__(self, memo):
         # so you cant "pickle" (serialize) pygame surfaces and self.img is a pygame surface so just override here and it just shallow copies
@@ -426,7 +466,7 @@ class Image:
     def set_rotation(self, rot):
         self.rot = rot
 
-    def draw_rotated_and_flipped(self, window, rect, horiz=False,vert=False, rot_around = pygame.Vector2()):
+    def draw_rotated_and_flipped(self, window, rect, horiz=False,vert=False, rot_around = Vec2()):
         self.rect = rect
         self.rect.topleft -= camera.pos
         scaledImage = pygame.transform.flip(pygame.transform.scale(self.img, tuple(self.rect.dimensions)),horiz,vert) # flip on this step
@@ -436,6 +476,7 @@ class Image:
         if rot_around[0] != 0 or rot_around[1] != 0:
             centerPos = (rot_around[0], rot_around[1])
         newRect = scaledAndRotatedImage.get_rect(center=centerPos)
+
         window.blit(scaledAndRotatedImage, newRect.topleft)
 
     def draw_flipped(self, window, rect, horiz=False,vert=False):
@@ -448,7 +489,7 @@ class Image:
         self.rect.topleft -= camera.pos
         window.blit(pygame.transform.scale(self.img, (self.rect.w, self.rect.h)), (self.rect.x, self.rect.y))
     
-    def draw_rotated(self, window, rect, rot_around = pygame.Vector2()):
+    def draw_rotated(self, window, rect, rot_around = Vec2()):
         self.rect = rect
         self.rect.topleft -= camera.pos
         scaledImage = pygame.transform.scale(self.img, tuple(self.rect.dimensions))
@@ -458,11 +499,13 @@ class Image:
         if rot_around[0] != 0 or rot_around[1] != 0:
             centerPos = (rot_around[0], rot_around[1])
         newRect = scaledAndRotatedImage.get_rect(center=centerPos)
+
         window.blit(scaledAndRotatedImage, newRect.topleft)
+
         return (scaledAndRotatedImage, newRect)
 
 class Spritesheet:
-    def __init__(self, rect, src, spriteSize, secsBetweenFrames, bounce=False): # ([x,y,w,h], filename, [spriteW, spriteH], fps)
+    def __init__(self, rect, src, spriteSize, secsBetweenFrames, bounce=False, outline=False): # ([x,y,w,h], filename, [spriteW, spriteH], fps)
         self.src = src
         self.rect = rect
         self.sprite_sheet = pygame.image.load(src)
@@ -478,6 +521,9 @@ class Spritesheet:
         self.state = ""
         self.states = {} #{"state_name":[frames, correspondingLine]}
         self.rotation = 0
+        self.outline = outline
+
+        self.memo = {}
 
     def rotate(self, rotation):
         self.rotation = rotation
@@ -530,9 +576,17 @@ class Spritesheet:
                     self.currFrame = 0
 
     def get_sprite(self, x, y):
+        if (x,y) in self.memo:
+            return self.memo[(x,y)]
+
         sprite = pygame.Surface((self.spriteW, self.spriteH))
         sprite.set_colorkey((0,255,0))
         sprite.blit(self.sprite_sheet, (0, 0), (x, y, self.spriteW, self.spriteH))
+
+        if self.outline:
+            sprite = outliner.get_outline(sprite, self.outline)
+        self.memo[(x,y)] = sprite
+
         return sprite
 
     def get_curr_sprite(self):
@@ -545,18 +599,23 @@ def init_pygame(caption):
     windowW = 1920
     windowH = 1080
 
-    window = pygame.display.set_mode((windowW,windowH), flags=pygame.SCALED | pygame.HIDDEN)
+    #FLAGS = pygame.SCALED | pygame.HIDDEN | pygame.OPENGL | pygame.DOUBLEBUF
+    FLAGS =  pygame.OPENGL | pygame.DOUBLEBUF
+    window = pygame.display.set_mode((windowW,windowH), flags=FLAGS)
+    screen = pygame.Surface((windowW,windowH))
     display_info = pygame.display.Info()
 
+    """ TODO: fix scaling with opengl (segmentation fault idk why)
     SCALE = (display_info.current_w/windowW, display_info.current_h/windowH)
     nativeWindow = pg_sdl2.Window.from_display_module()
     nativeWindow.size = (windowW * SCALE[0], windowH * SCALE[1])
     nativeWindow.position = pg_sdl2.WINDOWPOS_CENTERED
     nativeWindow.show()
+    """
 
     pygame.display.toggle_fullscreen()
     pygame.display.set_caption(caption)
-    return windowW, windowH, window
+    return windowW, windowH, screen, window
 
 # misc math funcs
 def vec_angle_to(A, B):
@@ -602,7 +661,7 @@ def drawWrappedText(window, string, col, size, rect, pad = [0,0,0], center=False
     # in this case, if drawAtCenter, each line will be centered
     # (think of centering a line in word doc)
     # but it will still be inside of the rect
-    font = pygame.font.SysFont("Arial",size)
+    font = pygame.font.Font("./assets/Gameplay.ttf",size)
     wrap = rect
     w_pad = pad[0]
     h_pad = pad[1]
@@ -647,7 +706,7 @@ def drawText(window, string, col, in_pos, size, drawAtCenter=False):
     if (string, col, size) in cached_fonts:
         img = cached_fonts[(string, col, size)]
     else:
-        font = pygame.font.SysFont("Arial",size)
+        font = pygame.font.Font("./assets/Gameplay.ttf",size)
         img = font.render(string, True, col)
         cached_fonts[(string, col, size)] = img
 
@@ -709,3 +768,5 @@ def drawCircle(window, in_circle, col, width=0): # circle = (center, radius)
     circle = in_circle
     pygame.draw.circle(window, col, circle[0]-camera.pos, circle[1], width)
 
+def drawLine(window, p1, p2, col=(0,0,0), width=1):
+    pygame.draw.line(window, col, p1, p2, width)

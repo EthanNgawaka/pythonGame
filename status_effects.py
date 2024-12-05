@@ -26,7 +26,7 @@ class Slow(Entity):
         if ls[0] == self:
             drawText(
                 window, f"SLOW: {len(ls)}", (0,128,0),
-                self.ent.rect.center+pygame.Vector2(0,self.ent.rect.h),
+                self.ent.rect.center+Vec2(0,self.ent.rect.h),
                 45, True
             )
 
@@ -60,7 +60,7 @@ class Acid(Entity):
         if ls[0] == self:
             drawText(
                 window, f"ACID: {len(ls)}", (0,128,0),
-                self.ent.rect.center+pygame.Vector2(0,self.ent.rect.h),
+                self.ent.rect.center+Vec2(0,self.ent.rect.h),
                 45, True
             )
 
@@ -97,7 +97,7 @@ class Weakness(Entity):
         if ls[0] == self:
             drawText(
                 window, f"WEAKNESS: {len(ls)}", (255,0,0),
-                self.ent.rect.center+pygame.Vector2(0,self.ent.rect.h),
+                self.ent.rect.center+Vec2(0,self.ent.rect.h),
                 45, True
             )
 
@@ -147,7 +147,7 @@ class Fire(Entity):
         if ls[0] == self:
             drawText(
                 window, f"FIRE: {len(ls)}", (255,0,0),
-                self.ent.rect.center+pygame.Vector2(0,self.ent.rect.h),
+                self.ent.rect.center+Vec2(0,self.ent.rect.h),
                 45, True
             )
 

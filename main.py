@@ -9,15 +9,17 @@ from menus import *
 from status_effects import *
 
 def drawFPS(dt, window):
-    drawText(window, f"fps: {1/max(dt,0.0001):.2f}", (0,0,0), (game.W-100,100), 40, True)
+    drawText(window, f"fps: {1/max(dt,0.0001):.2f}", (0,0,0), (game.W-400,100), 40, True)
 
 class Background(Entity):
     def __init__(self):
         self.rect = pygame.Rect(0,0,game.W,game.H)
+        self.image = Image("./assets/bg.png", *self.rect)
     def update(self, dt):
         pass
     def draw(self, window):
-        drawRect(window, self.rect, (125,125,125), 0, True)
+        #drawRect(window, self.rect, (125,125,125), 0, True)
+        self.image.draw(window, self.rect.copy())
 
 """
 draw layer looks like:
@@ -42,7 +44,7 @@ def create_main_scene():
     mainScene.init_entity(player, "player")
     mainScene.init_entity(playerUi, "playerUI", 5)
     playerUi.draw_on_top = True
-    mainScene.init_entity(wave, "wave")
+    mainScene.init_entity(wave, "wave", 6)
 
     # so currently u have to init all menus idk it works but its kinda scuffed but
     # also sometimes scuffed is ok
@@ -56,8 +58,8 @@ def create_menu_scene():
     scene = Scene()
     bg = Background()
     menu = MainMenu()
-    scene.init_entity(bg, "bg", -100000)
-    scene.init_entity(menu, "menu", "UI")
+    scene.init_entity(bg, "bg", 0)
+    scene.init_entity(menu, "menu", 6)
 
     return scene
 
@@ -77,51 +79,38 @@ def main():
     game.switch_to_scene("main", False) # skips menu and transition
     #game.get_entity_by_id("wave").timer = 60 # skip straight to shop
     # ----------------------------------------------------------------- #
-    """
-    K - kinda done
-    X - fully done
-    Notes to self:
-        so far so good, enemies need tweaking and honestly just need more variation
-        heres a list of things you need to do:
-            - Add more passives
-            - Add more enemies
-            X Rework menu support for controllers
-            - Add key mapping
-            - Make active cards function
-            X Add a button to buy 20% health for 100 copper in shop
-            X Make copper auto attract at end of round (maybe make it a setting somewhere its getting tedious)
-            X Rework particle system
-            X Camera system for camera shake
-            X Rewrite menu system to use new Rect class
-    """
 
     time_slow_timer = 0
+
+
+    t = 0
     while running:
         real_dt = clock.tick(maxFPS) / 1000.0
         dt = game.time_speed * real_dt
 
-        if game.key_pressed(pygame.K_j):
-            game.time_speed += 0.1
-        if game.key_pressed(pygame.K_k):
-            game.time_speed -= 0.1
-
-        if game.time_speed < 1:
-            time_slow_timer += real_dt
-            game.time_speed = min(1, math.pow(time_slow_timer, 5))
-            if game.time_speed >= 1:
-                game.time_speed = 1
-                time_slow_timer = 0
-
-        game.update(dt)
+        game.update(dt, real_dt)
         game.draw(game.window)
 
         drawFPS(dt, game.window)
 
-        pygame.display.flip()
+        # opengl stuff #
+        frame_tex = game.surf_to_tex(game.window)
+        frame_tex.use(0)
+        game.program['tex'] = 0
+        game.program['pixelSize'] = game.pixelSize
+        game.program['curvature'] = CURVATURE
+        game.program['rgbOffset'] = game.rgbOffset
+        game.program['t'] = t
+        t += dt*2
+
+        game.render_obj.render(mode=moderngl.TRIANGLE_STRIP)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
+        pygame.display.flip()
+        frame_tex.release()
 
     print("Done")
 

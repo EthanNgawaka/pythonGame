@@ -53,7 +53,7 @@ class Bullet(Entity):
         # so the bullet rect is actually WAY bigger than the drawn bullet
         # cause aiming feels so tedious without it unless u got bigboy damage
 
-        w = max(self.r*1.5, 35)
+        w = max(self.r*1.5, 35)/1.5
         self.rect = Rect((0,0), (w,w))
         self.rect.center = center
 
@@ -69,6 +69,8 @@ class Bullet(Entity):
         self.homing = False
         self.homing_thresh = 350
         self.targeting_enemy = None
+
+        self.img = Image("./assets/player_bullet.png", *self.rect, (255,255,255))
 
     def has_not_pierced(self, enemy):
         for e in self.piercedEnemies:
@@ -132,12 +134,12 @@ class Bullet(Entity):
         self.timer += dt
 
     def draw(self, window):
-        drawCircle(window, (self.rect.center, self.r), (255,255,0))
+        self.img.draw(window, self.rect.copy())
 
 class EnemyBullet(Entity):
     def __init__(self, center, vel, dmg):
         super().__init__()
-        self.r = self.get_size(2)
+        self.r = self.get_size(6)
         self.rect = Rect((0,0), (self.r*2, self.r*2))
 
         self.rect.center = center
@@ -148,6 +150,8 @@ class EnemyBullet(Entity):
         self.fire_spawn_rate = 0.1
         self.timer = 0
         self.last_fire_spawn = self.timer
+
+        self.img = Image("./assets/enemy_bullet.png", *self.rect, (255, 64, 64))
 
     def get_size(self,x):
         return max(x*1.6, 4)
@@ -171,7 +175,7 @@ class EnemyBullet(Entity):
                 spawn_fire(*self.rect.center)
 
     def draw(self, window):
-        drawCircle(window, (self.rect.center, self.r*2), (255,0,0))
+        self.img.draw(window, self.rect.copy())
 
 # idk where to put this so its goin here because enemies and player import bullets.py soooo
 class TemporaryStatChange(Entity):

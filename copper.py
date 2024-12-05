@@ -3,7 +3,7 @@ from game import *
 def spawn_copper(pos, qty):
     for i in range(qty):
         theta = random.uniform(-math.pi,math.pi)
-        vel = pygame.Vector2(math.cos(theta), math.sin(theta)) * random.randint(0,800)
+        vel = Vec2(math.cos(theta), math.sin(theta)) * random.randint(0,800)
         game.curr_scene.add_entity(Copper(pos, vel), "coin")
 
 class Copper(Entity):
@@ -11,8 +11,8 @@ class Copper(Entity):
         self.rect = Rect(pos, (12,12))
         self.vel = vel
         self.distThreshold = 250
-        self.forces = pygame.Vector2()
-        self.sprite = Spritesheet(self.rect.scale(2,2), "./assets/coin.png", (32,32), 0.05)
+        self.forces = Vec2()
+        self.sprite = Spritesheet(self.rect.scale(2,2), "./assets/coin.png", (32,32), 0.05, False, (255,255,255))
         self.sprite.addState("normal", 0, 10)
         self.sprite.addState("glitched", 1, 7)
         self.sprite.setState("normal")
@@ -23,7 +23,7 @@ class Copper(Entity):
         player = game.get_entity_by_id("player")
 
         attractionSpeed = 60
-        distVec = pygame.Vector2(player.rect.x-self.rect.x, player.rect.y-self.rect.y)
+        distVec = Vec2(player.rect.x-self.rect.x, player.rect.y-self.rect.y)
         wave = game.get_entity_by_id("wave")
         end_of_round = len(game.get_entities_by_id('enemy')) <= 0 and wave.timer >= wave.length
         if distVec.length() < self.distThreshold or end_of_round:
@@ -47,7 +47,7 @@ class Copper(Entity):
                     self.vel.x = 0
                 if col[1] != 0:
                     self.vel.y = 0
-                self.move(-pygame.Vector2(col))
+                self.move(-Vec2(col))
 
     def collision(self, player):
         if AABBCollision(self.rect, player.rect):
@@ -58,7 +58,7 @@ class Copper(Entity):
         accel = self.forces
         self.vel += accel*dt
         self.move(self.vel*dt)
-        self.vel*=0.95
+        self.vel -= self.vel*dt*5
 
     def update(self, dt):
         self.attract()

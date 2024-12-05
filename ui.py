@@ -11,7 +11,7 @@ class UI_Element(Entity):
 
     def get_relative_rect(self):
         root_rel_rect = self.root.get_relative_rect()
-        return self.rect.translate(pygame.Vector2(root_rel_rect.x, root_rel_rect.y))
+        return self.rect.translate(Vec2(root_rel_rect.x, root_rel_rect.y))
 
 class UI_Root(Entity):
     def __init__(self, root_entity, relative_rect, fill_col, outline_col):
@@ -33,7 +33,7 @@ class UI_Root(Entity):
 
     def get_relative_rect(self):
         root_rel_rect = self.root.rect
-        return self.rect.translate(pygame.Vector2(root_rel_rect.x, root_rel_rect.y))
+        return self.rect.translate(Vec2(root_rel_rect.x, root_rel_rect.y))
     
     def remove_self(self): # delete all leaves and branches as well
         if self.alive:
@@ -43,7 +43,7 @@ class UI_Root(Entity):
                 el.remove_self()
 
     def draw(self, window):
-        drawRect(window, self.rect.translate(pygame.Vector2(self.root.rect.x, self.root.rect.y)), self.col, 10)
+        drawRect(window, self.rect.translate(Vec2(self.root.rect.x, self.root.rect.y)), self.col, 10)
 
 class Text:
     def __init__(self, string, col, size):
@@ -82,7 +82,7 @@ class Button(UI_Element):
         self.hovered = False
         self.baseHighlightCol = pygame.Vector3(255,255,255)
         self.highlightCol = self.baseHighlightCol
-        self.drawingInflation = pygame.Vector2()
+        self.drawingInflation = Vec2()
         self.uiTag = self.root.uiTag
         self.outlined = False
         self.highlight = True
@@ -93,7 +93,7 @@ class Button(UI_Element):
         self.disabled = False;
 
         self.shakeTimer = 0
-        self.shake = pygame.Vector2()
+        self.shake = Vec2()
         self.shakeIntensity = 10
 
         self.drawingRect = None
@@ -105,7 +105,7 @@ class Button(UI_Element):
         self.hovered = AABBCollision(self.get_relative_rect(), game.mouse.rect) if game.input_mode == "keyboard" else game.controller.get_selected_btn() == self
 
         self.highlightCol = self.highlightCol.lerp(self.baseHighlightCol, 0.1)
-        self.drawingInflation = self.drawingInflation.lerp(pygame.Vector2(), 0.1)
+        self.drawingInflation = self.drawingInflation.lerp(Vec2(), 0.1)
 
         clicked = game.mouse.pressed[0] if game.input_mode == "keyboard" else game.controller.get_pressed("a")
 
@@ -115,7 +115,7 @@ class Button(UI_Element):
             if clicked:
                 self.onActionTimer = self.onActionDelay
                 self.highlightCol = pygame.Vector3(120,120,120)
-                self.drawingInflation = pygame.Vector2(-10,-10)
+                self.drawingInflation = Vec2(-10,-10)
         else:
             self.hovered = False
 
@@ -131,7 +131,7 @@ class Button(UI_Element):
             self.shake.x += random.randint(-self.shakeIntensity, self.shakeIntensity)
             self.shake.y += random.randint(-self.shakeIntensity, self.shakeIntensity)
 
-        self.shake = self.shake.lerp(pygame.Vector2(0,0), 0.1)
+        self.shake = self.shake.lerp(Vec2(0,0), 0.1)
 
     def draw_name(self, window):
         drawText(window, self.text.string, self.text.col, self.drawingRect.center, round(self.text.size+self.drawingInflation.x/2), True)
@@ -161,7 +161,7 @@ class Menu(Entity):
         w, h = game.W*0.6, game.H*0.7
         self.openRect = Rect(((W-w)/2,(H-h)/2),(w,h))
         self.closeRect = self.openRect.copy()
-        self.closeRect.y = game.H
+        self.closeRect.y = 1.1*game.H
         self.rect = self.closeRect.copy()
 
         self.isOpen = False
@@ -190,8 +190,8 @@ class Menu(Entity):
         game.curr_scene.UIPriority.remove(self.uiTag)
 
     def lerp(self, targ_rect, t):
-        vec1 = pygame.Vector2(self.rect.x, self.rect.y)
-        vec2 = pygame.Vector2(targ_rect.x, targ_rect.y)
+        vec1 = Vec2(self.rect.x, self.rect.y)
+        vec2 = Vec2(targ_rect.x, targ_rect.y)
         vec3 = vec1.lerp(vec2, t)
         self.rect.x = vec3.x
         self.rect.y = vec3.y

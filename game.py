@@ -137,11 +137,22 @@ class Game:
         self.input_mode = "keyboard"
 
         self.window = None
+        self.display = None
+        self.ctx = None
+        self.quad_buffer = None
         self.W = 0
         self.H = 0
         self.transition_timer = 0
         self.trans_time = 1
         self.time_speed = 1.0
+        self.slow_down_timer = 0
+        self.slow_down_targ = 1
+        self.pixelSize = 2 # idk if 2 looks good or shit
+        self.rgbOffsetBase = 0.0008
+        self.rgbOffset = self.rgbOffsetBase
+
+        self.abberate_targ = 0
+        self.abberate_timer = 0
         # init keys to avoid index error (pygame has 512 keycodes)
         # im sure theres a better way to do this
         # eg) if game.keyDown(pygame.KEY_a):
@@ -151,21 +162,129 @@ class Game:
         #         print("s pressed")
         #
         # dif being that pressed only returns true on the first frame the key is pressed
+        self.vert_shader = """
+            #version 330 core
+
+            in vec2 vert;
+            in vec2 texcoord;
+            out vec2 uvs;
+            out vec2 viewPos;
+
+            void main(){
+                uvs = texcoord;
+                viewPos = vert;
+                gl_Position = vec4(vert, 0.0, 1.0);
+            }
+        """
+        self.frag_shader = """
+            #version 330 core
+
+            uniform sampler2D tex;
+            uniform float pixelSize;
+            uniform float curvature;
+            uniform float rgbOffset; // (0 to 1)
+            uniform float t;
+
+            const float scanlineIntensity = 0.1;  // (0.0 to 1.0)
+            const float scanlineFrequency = 90;  // (lower = more lines)
+            const float FREQ = scanlineFrequency * 2.0 * 3.14159;
+
+            in vec2 uvs;
+            in vec2 viewPos;
+            out vec4 f_color;
+
+            vec2 apply_distortion(vec2 coord){
+                float x = viewPos.x;
+                float y = viewPos.y;
+                float r = sqrt(x*x + y*y);
+
+                coord.x += x * curvature * r;
+                coord.y += y * curvature * r/10;
+
+                return coord;
+            }
+
+            float createScanLines(vec2 coord){
+                float scanline = (1.0 - scanlineIntensity*(sin(FREQ * viewPos.y + 3.14159*t)*0.5 + 0.5));
+                return scanline;
+            }
+
+            vec4 applyRGBFringe(vec2 coord){
+                vec2 redCoord = coord + vec2(rgbOffset, 0.0);
+                vec2 greenCoord = coord;
+                vec2 blueCoord = coord - vec2(rgbOffset, 0.0);
+
+                vec4 red = texture(tex, redCoord);
+                vec4 green = texture(tex, greenCoord);
+                vec4 blue = texture(tex, blueCoord);
+
+                return vec4(red.r, green.g, blue.b, 1.0);
+            }
+
+            void main(){
+                vec2 scaled_coords = uvs * textureSize(tex, 0);
+                scaled_coords = floor(scaled_coords / pixelSize) * pixelSize;
+                scaled_coords = scaled_coords / textureSize(tex, 0);
+
+                scaled_coords = apply_distortion(scaled_coords);
+
+                if(scaled_coords.x < 0.0 || scaled_coords.x > 1.0){
+                    f_color = vec4(0,0,0, 1.0);
+                }else{
+                    vec3 rgb = applyRGBFringe(scaled_coords).rgb;
+                    float scanLineEff = createScanLines(viewPos);
+                    f_color = vec4(rgb * (scanLineEff), 1.0);
+                }
+            }
+        """
+
+    def slow_down_time(self, speed, length):
+        self.slow_down_timer = length
+        self.slow_down_targ = speed
+
+    def abberate(self, amnt, length):
+        self.abberate_targ = amnt
+        self.abberate_timer = length
 
     def close(self, btn):
         pygame.quit()
         sys.exit()
 
+    def surf_to_tex(self,surf):
+        tex = self.ctx.texture(surf.get_size(), 4)
+        tex.filter = (moderngl.NEAREST, moderngl.NEAREST)
+        tex.swizzle = "BGRA"
+        tex.write(surf.get_view('1'))
+
+        return tex
+
+    def convert_to_uv(self,pos):
+        return (2*pos[0]/W - 1, -(2*pos[1]/H - 1)) # negate y cause uv uses cart
+
     def init_window(self, caption):
-        self.W, self.H, self.window = init_pygame(caption)
+        self.W, self.H, self.window, self.display = init_pygame(caption)
+
+        # open gl stuff for shaders
+        self.ctx = moderngl.create_context()
+        self.quad_buffer = self.ctx.buffer(data=array('f', [
+            # pos.x, pos.y, uv.x, uv.y
+            -1.0, 1.0, 0.0, 0.0, # top left
+            1.0, 1.0, 1.0, 0.0, # top right
+            -1.0, -1.0, 0.0, 1.0, # bot left
+            1.0, -1.0, 1.0, 1.0, # bot right
+        ]))
+
+        self.program = self.ctx.program(vertex_shader=self.vert_shader, fragment_shader=self.frag_shader)
+        self.render_obj = self.ctx.vertex_array(self.program, [(self.quad_buffer, '2f 2f', 'vert', 'texcoord')])
 
     def change_resolution(self, new_w, new_h):
         # not really working yet
         # need to make it actually scale the screen but idk
         # what to use as a base resolution
-        self.window = pygame.display.set_mode((new_w,new_h))
-        self.W = new_w
-        self.H = new_h
+        #self.window = pygame.display.set_mode((new_w,new_h))
+        #self.W = new_w
+        #self.H = new_h
+        pass
     
     def get_entity_by_id(self, id):
         try:
@@ -207,7 +326,7 @@ class Game:
             out = (math.sqrt(1-math.pow(-2*x+2,2))+1)/2
         else:
             out = (1-math.sqrt(1-math.pow(2*x,2)))/2
-        return out*self.W
+        return out
 
     def remove_entity(self, entity):
         self.curr_scene.remove_entity(entity)
@@ -229,8 +348,23 @@ class Game:
             self.transition_timer += dt
             t = self.transition_timer/self.trans_time
             l = self.transition_lerp(t)
-            drawRect(game.window, [0,0,l,self.H], (0,0,0))
+            w = self.W
+            h = self.H * l/2
+            drawRect(game.window, Rect((0,0),(w,h*1.1)), (0,0,0))
+            drawRect(game.window, Rect((0,self.H-h*1.1),(w,h*1.1)), (0,0,0))
+            frame_tex = game.surf_to_tex(game.window)
+            frame_tex.use(0)
+            game.program['tex'] = 0
+            game.program['pixelSize'] = game.pixelSize
+            game.program['curvature'] = CURVATURE
+
+            game.render_obj.render(mode=moderngl.TRIANGLE_STRIP)
+
             pygame.display.flip()
+            frame_tex.release()
+
+            pygame.display.flip()
+
 
         if self.curr_scene is not None:
             reset = self.curr_scene.cleanup()
@@ -245,7 +379,19 @@ class Game:
         except Exception as e:
             print("Scene is not in scenes list! maybe you forgot to add it?")
 
-    def update(self, dt):
+    def update(self, dt, real_dt):
+        if self.slow_down_timer > 0:
+            self.time_speed = lerp(self.time_speed, self.slow_down_targ, 0.1)
+            self.slow_down_timer -= real_dt
+        else:
+            self.time_speed = lerp(self.time_speed, 1, 0.1)
+
+        if self.abberate_timer > 0:
+            self.rgbOffset = lerp(self.rgbOffset, self.abberate_targ, 0.1)
+            self.abberate_timer -= real_dt
+        else:
+            self.rgbOffset = lerp(self.rgbOffset, self.rgbOffsetBase, 0.1)
+
         try:
             self.curr_scene.update(dt)
         except Exception as e:
@@ -275,8 +421,11 @@ class Game:
 
         if self.transition_timer > 0:
             t = self.transition_timer/self.trans_time
-            drawRect(game.window, [0,0,self.transition_lerp(t),self.H], (0,0,0))
-
+            l = self.transition_lerp(t)
+            w = self.W
+            h = self.H * l/2
+            drawRect(self.window, Rect((0,0),(w,h*1.1)), (0,0,0))
+            drawRect(self.window, Rect((0,self.H-h*1.1),(w,h*1.1)), (0,0,0))
 
 # singleton game class for global access
 game = Game()

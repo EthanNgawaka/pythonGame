@@ -1,6 +1,26 @@
 from bullets import *
 from card import *
 
+class DebugMode(ActiveCard):
+    name="Debug Mode"
+    desc="Let's slow down things a lil"
+    basePrice=300
+    cooldown=60
+    def onAction(self):
+        game.slow_down_time(0.1, 10)
+        # idk if i keep this but it makes the player shoot and move way faster so it doesnt take away allll control
+        self.player.change_stat_temporarily("atkRate", -self.player.atkRate*0.75, 1)
+
+class Overclock(ActiveCard):
+    name="Overclock"
+    desc="TEMP ALL STATS UP"
+    basePrice=200
+    cooldown=45
+    def onAction(self):
+        self.player.change_stat_temporarily("dmg", self.player.dmg*0.75, 10)
+        self.player.change_stat_temporarily("atkRate", -self.player.atkRate*0.75, 10)
+        self.player.change_stat_temporarily("speed", self.player.speed*0.75, 10)
+
 class Blast(ActiveCard):
     name="Big Boom"
     desc="Boom boom (idk what to name this)"
@@ -73,7 +93,8 @@ ACTIVE_CARDS = {
         Patch, Webbed,
     ],
     "rare":[
-        Blast, EMP, Repulse,
+        Blast, EMP, Repulse, Overclock,
+        DebugMode, 
     ],
     "legendary":[
     ],

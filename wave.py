@@ -22,6 +22,12 @@ class Wave(Entity):
         self.swappedAlready = False
         self.miniboss_spawned = False
 
+        self.rect = Rect((game.W - game.H*0.25, game.H*0.05), (game.H*0.2, game.H*0.2))
+        self.timer_img = Spritesheet(self.rect, "./assets/timer.png", (64, 64), 0, False, (255,255,255))
+        for i in range(9):
+            self.timer_img.addState(f"{i}/8", i, 1)
+        self.timer_img.setState("0/8")
+
     def update(self, dt):
         if self.pause:
             return
@@ -76,7 +82,7 @@ class Wave(Entity):
             x = (-w if random.randint(0,1) > 0 else game.W+w)
             y = random.randint(-h,game.H+h)
         
-        enemy = EnemyType(pygame.Vector2(x,y))
+        enemy = EnemyType(Vec2(x,y))
         # if its not instance of enemy then its a swarm type
         if isinstance(enemy, Enemy):
             game.curr_scene.add_entity(
@@ -85,5 +91,8 @@ class Wave(Entity):
             )
 
     def draw(self, window):
-        drawText(window, f"Wave Timer: {round(self.timer)}s", (0,0,0), (game.W-200, 200), 40, True)
-        drawText(window, f"Wave #{round(self.num)}", (0,0,0), (game.W-200, 250), 40, True)
+        #drawText(window, f"Wave Timer: {round(self.timer)}s", (0,0,0), (game.W-200, 200), 40, True)
+        drawText(window, f"Wave #{round(self.num)}", (255,255,255), (self.rect.center.x, self.rect.center.y+self.rect.w*0.75), 40, True)
+        self.timer_img.draw(self.rect.copy(), window)
+        n = math.floor(self.timer/8)
+        self.timer_img.setState(f"{n}/8")

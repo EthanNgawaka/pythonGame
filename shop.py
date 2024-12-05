@@ -24,9 +24,9 @@ class ShopCardButton(Button):
         self.rect.y = self.restY
 
         self.suck = False
-        self.vel = pygame.Vector2()
+        self.vel = Vec2()
         self.init_dist = 0
-        self.accel = pygame.Vector2()
+        self.accel = Vec2()
         self.suck_timer = 0
         self.suck_max = 4
         self.start_rect = self.rect.copy()
@@ -72,10 +72,10 @@ class ShopCardButton(Button):
             return
 
         self.disabled = True
-        center_screen = pygame.Vector2(game.W/2, game.H/2)
+        center_screen = Vec2(game.W/2, game.H/2)
         t2 = self.suck_timer/self.suck_max
         t = self.ease_out_elastic(1-t2)
-        #self.rect.center = self.rect.center.lerp(pygame.Vector2(game.W/2, game.H/2), t)
+        #self.rect.center = self.rect.center.lerp(Vec2(game.W/2, game.H/2), t)
         self.rect.center = (1-t)*self.start_rect.center + t*center_screen
         self.suck_timer -= dt
         if self.suck_timer <= 0:

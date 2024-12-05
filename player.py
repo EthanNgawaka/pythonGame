@@ -8,7 +8,7 @@ class Player(Entity):
     def __init__(self, x, y):
         w, h = 40, 40
         self.rect = Rect((x, y), (w, h))
-        self.vel = pygame.Vector2() # [0,0]
+        self.vel = Vec2() # [0,0]
         self.curr_weapon = "gun"
         self.col = (127, 35, 219)
         self.controls = {
@@ -19,13 +19,14 @@ class Player(Entity):
         }
         
         # physics consts #
-        self.drag = 0.9
+        self.drag = 8
         # -------------- #
 
         # attributes #
         # (NOT implemented) #
 
         # (implemented) #
+        self.scope = False
         self.homing = 0
         self.blood_bullets = 0
         self.coin_gun = 0
@@ -90,8 +91,8 @@ class Player(Entity):
         self.deck = Deck(self)
 
         # sprite stuff
-        self.player_img = Image("./assets/player.png", *self.rect)
-        self.gun_img = Image("./assets/gun.png", *self.rect)
+        self.player_img = Image("./assets/player.png", *self.rect, (255,255,255))
+        self.gun_img = Image("./assets/gun.png", *self.rect, (255,255,255))
 
     def get_active_key(self, index):
         active_keys = [pygame.K_SPACE, pygame.K_q, pygame.K_e]
@@ -99,9 +100,9 @@ class Player(Entity):
 
     def init(self):
         super().init()
-        self.deck.add_card(Webbed())
+        self.deck.add_card(DebugMode())
         #self.add_status_effect(Slow, 1)
-        #spawn_web(pygame.Vector2(game.W/2, 100), 150, 15)
+        #spawn_web(Vec2(game.W/2, 100), 150, 15)
 
     def get_list_of_status_effects_of_type(self, status_type):
         all_statuses = game.get_entities_by_type(status_type)
@@ -176,10 +177,10 @@ class Player(Entity):
 
     def physics(self, dt):
         self.move(self.vel*dt)
-        self.vel *= self.drag if game.time_speed >= 1 else 1
+        self.vel -= self.vel*dt*self.drag
 
     def AOE_blast(self, radius, dmg):
-        game.curr_scene.add_entity(AOEBlast(radius,self.rect.center,dmg), "aoe player blast", "bottom")
+        game.curr_scene.add_entity(AOEBlast(radius,self.rect.center,dmg), "aoe player blast", 2)
         camera.shake(40,0.7)
 
     def take_dmg(self, amnt):
@@ -187,6 +188,7 @@ class Player(Entity):
 
     def hit(self, ent):
         if self.invincibilityTimer <= 0:
+            game.abberate(0.1, 0.05)
             camera.shake(40)
             # this is for hitstop idk it feels kinda bad on every single hit
             #game.time_speed = 0.001
@@ -215,15 +217,14 @@ class Player(Entity):
                 return
 
             theta = vec_angle_to(
-                pygame.Vector2(self.rect.center),
-                pygame.Vector2(ent.rect.center)
+                Vec2(self.rect.center),
+                Vec2(ent.rect.center)
             )
-            vec = pygame.Vector2(math.cos(theta), math.sin(theta))
+            vec = Vec2(math.cos(theta), math.sin(theta))
             self.vel -= vec * self.kb * 2
 
-    def input(self):
-        if game.time_speed >= 1:
-            self.movement()
+    def input(self, dt):
+        self.movement(dt)
         self.shooting()
 
     def new_wave(self):
@@ -235,7 +236,7 @@ class Player(Entity):
         off = 3
         if abs(self.fire_theta) > math.pi/2:
             off = 0
-        tip += pygame.Vector2(math.sin(theta+off), math.cos(theta+off))*10
+        tip += Vec2(math.sin(theta+off), math.cos(theta+off))*10
         return tip
 
     def spawn_bullet(self, pos, theta):
@@ -243,7 +244,7 @@ class Player(Entity):
         self.take_dmg(self.blood_bullets)
 
         speed = self.bulletSpeed*(1+random.uniform(-self.speedInaccuracy, self.speedInaccuracy))
-        vel = pygame.Vector2(math.cos(theta), math.sin(theta)) * (speed) * 60
+        vel = Vec2(math.cos(theta), math.sin(theta)) * (speed) * 60
         id = "bullet"
 
         if abs(self.fire_theta) > math.pi/2:
@@ -287,12 +288,12 @@ class Player(Entity):
                         #spawn_pos = (self.rect.center.x + math.sin(-theta + 1.6) * 55, self.rect.center.y + math.cos(-theta + 1.6) * 55)
                         spawn_pos = self.get_pos_of_tip_of_gun()
                         self.spawn_bullet(spawn_pos, theta + rand_angle)
-                        self.vel -= pygame.Vector2(math.cos(theta), math.sin(theta))*60
+                        self.vel -= Vec2(math.cos(theta), math.sin(theta))*60
 
                     self.bulletCooldown = self.atkRate / self.atkRateMultiplier
 
     def get_movement_dir_from_controller(self):
-        movementDir = pygame.Vector2()
+        movementDir = Vec2()
         # get move dir from controller
         movementDir.x = game.controller.LSTICK[0]
         movementDir.y = game.controller.LSTICK[1]
@@ -302,7 +303,7 @@ class Player(Entity):
         return movementDir
 
     def get_movement_dir_from_keyboard(self):
-        movementDir = pygame.Vector2()
+        movementDir = Vec2()
         # get move dir from keyboard
         if game.key_down(self.controls["up"]):
             movementDir.y -= 1
@@ -316,13 +317,13 @@ class Player(Entity):
             movementDir = movementDir.normalize()
         return movementDir
 
-    def movement(self):
+    def movement(self, dt):
         movementDir = self.get_movement_dir_from_keyboard() if game.input_mode == "keyboard" else self.get_movement_dir_from_controller()
         
         if movementDir.length() != 0:
-            # stuff like this works because of pygame.Vector2()
+            # stuff like this works because of Vec2()
             # super cool i dont have to implement this myself
-            self.vel += movementDir * self.speed
+            self.vel += movementDir * self.speed * dt * 75
 
     def change_stat_temporarily(self, stat, change, length):
         stat_change = TemporaryStatChange(self, stat, change, length)
@@ -351,7 +352,7 @@ class Player(Entity):
 
     # always keep update and draw at bottom
     def update(self, dt):
-        self.input()
+        self.input(dt)
         self.physics(dt)
         self.bound_to_screen()
 
@@ -366,6 +367,11 @@ class Player(Entity):
                 self.dmg = self.baseDmg
                 self.atkRate = self.baseAtkRate
 
+        dir = -1
+        if self.vel.x < 0:
+            dir = 1
+        self.player_img.rot += dt*dir*math.pi*self.vel.length()/2
+
         if self.health <= 0:
             self.game_over()
 
@@ -376,12 +382,9 @@ class Player(Entity):
         if self.invincibilityTimer > 0 and math.ceil(self.invincibilityTimer/self.flashFreq) % 2 == 0:
             window.blit(create_white_surf(player_surf, 200), surf_rect.topleft)
 
-        dir = -1
-        if self.vel.x < 0:
-            dir = 1
-        self.player_img.rot += dir*math.pi*self.vel.length()/100
-
-
+        if self.scope:
+            aimVec = Vec2(math.cos(self.fire_theta), math.sin(self.fire_theta))
+            drawLine(window, self.get_pos_of_tip_of_gun(), self.get_pos_of_tip_of_gun()+aimVec*game.W, (255,0,0), 2)
         #---------------# GUN DRAWING #---------------#
         # idk why theta needs to be multiplied by -1 but unless i do it goes weird
         theta = self.fire_theta * -1 + self.gun_jiggle
@@ -448,7 +451,7 @@ class PlayerUI(Entity):
     def draw_static_discharge(self, window):
         if self.player.static_discharge > 0:
             static_discharge_rect = Rect((0,0),(self.player.rect.w*2.5, self.player.rect.h*0.3))
-            static_discharge_rect.center = self.player.rect.center - pygame.Vector2(0,self.player.rect.h)
+            static_discharge_rect.center = self.player.rect.center - Vec2(0,self.player.rect.h)
             drawRect(window, static_discharge_rect, pygame.Color("grey"))
             charge_rect = static_discharge_rect.copy()
             t = min(1,self.player.static_discharge_timer/self.player.static_discharge_max)
@@ -463,8 +466,9 @@ class PlayerUI(Entity):
     def draw(self, window):
         self.draw_hp_bar(window)
         self.draw_copper(window)
-        if DEBUG:
-            self.draw_stats(window)
+
+        #if DEBUG:
+        #    self.draw_stats(window)
 
         self.draw_static_discharge(window)
 
