@@ -269,7 +269,7 @@ class Cockroach(Enemy):
 class BabyCockroach(Cockroach):
     def __init__(self, pos):
         super().__init__(pos)
-        self.rect = Rect(pos, (20,20))
+        self.rect = Rect(pos, (32,32))
         self.health = 2
         self.value = 2
         self.dmg = 4

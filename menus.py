@@ -156,12 +156,14 @@ class DebugMenu(Menu):
             self.close # onAction
         )
 
+        last_row_x = 0
+
         def spawn_enemies(btn):
             for i in range(10):
                 game.get_entity_by_id("wave").spawn_random_enemy()
 
         self.create_centered_button(
-            (self.rect.w-w*3, self.rect.h-h), # center
+            (last_row_x, self.rect.h-h), # center
             (w*3,h), # dimensions
             (255,0,0), Text("spawn 10 enemies",(255,255,255),25), # btnColor, TextObj
             spawn_enemies
@@ -170,7 +172,7 @@ class DebugMenu(Menu):
         def spawn_dummy(btn):
             game.curr_scene.add_entity(Dummy((W/2, H/2)),"dummy")
         self.create_centered_button(
-            (self.rect.w-w*3, self.rect.h-h*4), # center
+            (last_row_x, self.rect.h-h*4), # center
             (w*3,h), # dimensions
             (255,0,0), Text("Spawn dummy",(255,255,255),25), # btnColor, TextObj
             spawn_dummy
@@ -180,7 +182,7 @@ class DebugMenu(Menu):
             wave = game.get_entity_by_id("wave")
             wave.pause = not wave.pause
         self.create_centered_button(
-            (self.rect.w-w*3, self.rect.h-h*2.5), # center
+            (last_row_x, self.rect.h-h*2.5), # center
             (w*3,h), # dimensions
             (255,0,0), Text("pause wave",(255,255,255),25), # btnColor, TextObj
             pause_wave
@@ -189,7 +191,7 @@ class DebugMenu(Menu):
         def give_copper(btn):
             game.get_entity_by_id("player").copper += 1000
         self.create_centered_button(
-            (self.rect.w-w*3, self.rect.h-h*8.5), # center
+            (last_row_x, self.rect.h-h*8.5), # center
             (w*3,h), # dimensions
             (255,0,0), Text("give copper",(255,255,255),25), # btnColor, TextObj
             give_copper
@@ -198,7 +200,7 @@ class DebugMenu(Menu):
         def end_wave(btn):
             game.get_entity_by_id("wave").timer = 60
         self.create_centered_button(
-            (self.rect.w-w*3, self.rect.h-h*7), # center
+            (last_row_x, self.rect.h-h*7), # center
             (w*3,h), # dimensions
             (255,0,0), Text("end wave",(255,255,255),25), # btnColor, TextObj
             end_wave
@@ -207,7 +209,7 @@ class DebugMenu(Menu):
         def reset_cards(btn):
             game.get_entity_by_id("player").reset_stats()
         self.create_centered_button(
-            (self.rect.w-w*3, self.rect.h-h*5.5), # center
+            (last_row_x, self.rect.h-h*5.5), # center
             (w*3,h), # dimensions
             (255,0,0), Text("reset cards",(255,255,255),25), # btnColor, TextObj
             reset_cards
@@ -224,8 +226,8 @@ class DebugMenu(Menu):
             j = 0
             for card in self.cards[rarity]:
                 self.create_centered_button(
-                    (labelRect.center[0], labelRect.center[1]+50+j*100), # center
-                    (self.rect.w/7,self.rect.h/12), # dimensions
+                    (labelRect.center[0], labelRect.center[1]+50+1.1*j*self.rect.h/24), # center
+                    (self.rect.w/5,self.rect.h/24), # dimensions
                     (255,0,0), Text(card.name,(255,255,255),25), # btnColor, TextObj
                     lambda e, index=j, rar=rarity: player.deck.add_card(self.cards[rar][index]())
                 )
