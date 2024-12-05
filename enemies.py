@@ -293,7 +293,7 @@ class MotherCockroach(Cockroach):
         self.maxSpeed = 1200
         self.maxHealth = self.health
 
-        self.sprite = Spritesheet(self.rect, "./assets/mother_cockroach.png", (64,64), 0.5, False, (255,128,128))
+        self.sprite = Spritesheet(self.rect, "./assets/mother_cockroach.png", (64,64), 0.5, False, (255,64,64))
         self.sprite.addState("normal", 0, 2)
         self.sprite.setState("normal")
 
