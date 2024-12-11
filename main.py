@@ -19,7 +19,7 @@ class Background(Entity):
         pass
     def draw(self, window):
         #drawRect(window, self.rect, (125,125,125), 0, True)
-        self.image.draw(window, self.rect.copy())
+        self.image.draw_static(window)
 
 """
 draw layer looks like:
@@ -65,6 +65,7 @@ def create_menu_scene():
 
 def main():
     game.init_window("Untitled Roguelike")
+    game.init_sounds() # play a sound with game.sfx.SOUNDNAME.play()
     running = True
 
     # use init_entity when adding entities up first otherwise they wont

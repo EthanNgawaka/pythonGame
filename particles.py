@@ -57,7 +57,42 @@ def spawn_weakness_particle(x, y):
         part.gravity = -10
         game.curr_scene.add_entity(part, "particle_fire", 2)
 
-# TODO redo this cause it wont work???
+def gun_trail(x, y, amnt, col):
+    numOfParticles = amnt
+    for i in range(numOfParticles):
+        theta = random.uniform(0, 2*math.pi)
+        mag = random.uniform(0,200)
+        vel = Vec2(math.cos(theta)*mag, math.sin(theta)*mag)
+        size = random.randint(1, 5)
+
+        startingColor = col
+        
+        part = Particle(Rect((x-size/2, y-size/2), (size, size)), vel, random.uniform(0.05, 0.2))
+        part.color = startingColor
+        part.gravity = 0
+
+        parts = game.get_entities_by_id("particle")
+        game.curr_scene.add_entity(part, "particle_gun_trail", 2)
+
+def gun_sparks(x, y, amnt, init_theta, col):
+    numOfParticles = amnt
+    for i in range(numOfParticles):
+        theta = random.uniform(-math.pi, math.pi)
+        theta /= 4
+        theta += init_theta # pi/4 around provided theta
+        mag = random.uniform(500,1500)
+        vel = Vec2(math.cos(theta)*mag, math.sin(theta)*mag)
+        size = random.randint(1, 5)
+
+        startingColor = col
+        
+        part = Particle(Rect((x-size/2, y-size/2), (size, size)), vel, random.uniform(0.1, 0.5))
+        part.color = startingColor
+        part.gravity = 0
+
+        parts = game.get_entities_by_id("particle")
+        game.curr_scene.add_entity(part, "particle_gun_spark", 2)
+
 def blood_explosion(x, y, amnt, init_theta=None):
     numOfParticles = round(max(amnt, 5))
     for i in range(numOfParticles):
@@ -94,6 +129,8 @@ class Particle(Entity):
         self.fade = True
         self.colorLerp = colorLerp
 
+        self.stop_after_half_way = False
+        self.start_dir = self.vel.x/abs(self.vel.x)
 
         if self.colorLerp:
             self.currentColor = self.color
@@ -129,6 +166,13 @@ class Particle(Entity):
         if self.colorLerp:
             if self.subLerp > 0:
                 self.subLerp -= dt/self.colorThreshhold
+
+        if self.stop_after_half_way:
+            if self.lifetime < self.startingLifetime*0.9:
+                self.gravity = 0
+                self.vel.y = 0
+                self.vel.x = 200 * self.start_dir
+                self.stop_after_half_way = False
 
         self.rect.x += self.vel[0]*dt
         self.rect.y += self.vel[1]*dt

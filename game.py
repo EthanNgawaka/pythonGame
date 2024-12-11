@@ -133,6 +133,8 @@ class Game:
         self.mouse = Mouse()
         self.keys = [0] * 512
         self.controller = Controller()
+        self.sfx = SFX()
+
         self.oldKeys = self.keys
         self.input_mode = "keyboard"
 
@@ -260,6 +262,15 @@ class Game:
 
     def convert_to_uv(self,pos):
         return (2*pos[0]/W - 1, -(2*pos[1]/H - 1)) # negate y cause uv uses cart
+    
+    def init_sounds(self):
+        self.sfx.create_sound("hit", "./assets/audio/hit.wav")
+        self.sfx.create_sound("shot", "./assets/audio/shot.wav")
+        self.sfx.create_sound("bug_hit", "./assets/audio/bug_hit.wav")
+        self.sfx.create_sound("bug_die", "./assets/audio/bug_die.wav")
+
+        self.sfx.create_sound("click", "./assets/audio/click.wav")
+        self.sfx.create_sound("select", "./assets/audio/select.wav")
 
     def init_window(self, caption):
         self.W, self.H, self.window, self.display = init_pygame(caption)
@@ -410,6 +421,7 @@ class Game:
         if self.transition_timer > 0:
             self.transition_timer -= dt
 
+    #@profile
     def draw(self, window):
         if not pygame.get_init():
             print(pygame.get_init())

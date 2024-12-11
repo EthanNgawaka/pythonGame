@@ -24,7 +24,7 @@ DEBUG = True
 
 class Outliner:
     def __init__(self):
-        self.thickness = (3, 1)
+        self.thickness = (3, 1) # 5, 2 for thicker outlines and so on (3 + 2i, 1+i) i = outline thickness
         self.convolution_mask = pygame.mask.Mask((self.thickness[0],self.thickness[0]), fill=True) # 3x3 around each pixel, change for larger W
 
     def get_outline(self, surf, color=(0,0,0)):
@@ -451,6 +451,8 @@ class Image:
 
         self.outline = outline
 
+        self.static = False
+
         if self.outline:
             self.img = outliner.get_outline(self.img, self.outline)
 
@@ -488,6 +490,13 @@ class Image:
         self.rect = rect
         self.rect.topleft -= camera.pos
         window.blit(pygame.transform.scale(self.img, (self.rect.w, self.rect.h)), (self.rect.x, self.rect.y))
+
+    def draw_static(self, window):
+        if not self.static:
+            self.img = pygame.transform.scale(self.img, (self.rect.w, self.rect.h))
+            self.static = True
+
+        window.blit(self.img, (self.rect.x-camera.pos.x, self.rect.y-camera.pos.y))
     
     def draw_rotated(self, window, rect, rot_around = Vec2()):
         self.rect = rect
@@ -649,6 +658,152 @@ def AABBCollision(rect1, rect2): # rect = (x,y,w,h) returns min trans vec if tru
     mtv = (xtv,0) if abs(xtv) < abs(ytv) else (0,ytv)
     return mtv
 
+class TextBox:
+    def __init__(self, string, rect, size, pad=[0,0,0], center=False):
+        # pad = [x, y, line padding]
+        # if wrap is given its a rect defining the place the text will be drawn,
+        # in this case, if drawAtCenter, each line will be centered
+        # (think of centering a line in word doc)
+        # but it will still be inside of the rect
+        self.rect = rect
+        self.pad = pad
+        self.string = ""
+        self.size = size
+        self.center = center
+
+        self.lines = []
+
+        self.wiggle_timer = 0
+        self.textSpeed = 0
+
+        self.effect_matrix = {} # {(row, col): [eff1, eff2]} each eff MUST have [type, timer, ...]
+
+        self.adding_effect = False
+        self.effects_being_added = {} # "delimiter": func
+        self.add_to_string(self.string)
+    
+    def add_wave_to_char(self, row, col):
+        if (row, col) not in self.effect_matrix:
+            self.effect_matrix[(row, col)] = []
+        self.effect_matrix[(row,col)].append(["wave",(row+col)*math.pi/10])
+
+    def add_shake_to_char(self, row, col):
+        if (row, col) not in self.effect_matrix:
+            self.effect_matrix[(row, col)] = []
+        self.effect_matrix[(row,col)].append(["shake",0, [random.uniform(2,5), random.uniform(2,5)]])
+
+    def draw(self, window):
+        size = self.size
+        wrap = self.rect
+        font = pygame.font.Font("./assets/Gameplay.ttf",self.size)
+        w_pad = self.pad[0]
+        h_pad = self.pad[1]
+        line_pad = self.pad[2]
+        line_h = pygame.font.Font.size(font, "Tg")[1]
+        col = (255,255,255)
+        if self.center:
+            for i in range(len(self.lines)):
+                draw_pos = wrap.center.copy()
+                draw_pos.y = wrap.y
+                draw_pos.y += h_pad + (i) * (line_h + line_pad)
+                drawText(window, self.lines[i], col, draw_pos, size, True) 
+            return
+
+        for i in range(len(self.lines)):
+            draw_pos = wrap.topleft.copy()
+            draw_pos.x += w_pad/2
+            draw_pos.y += h_pad + (i) * (line_h + line_pad)
+            for j in range(len(self.lines[i])):
+                char = self.lines[i][j]
+                y_pad = 0
+                x_pad = 0
+                if i == len(self.lines)-1 and j == len(self.lines[i])-1:
+                    y_pad -= math.sin(self.wiggle_timer)*size/4
+
+                if (i, j) in self.effect_matrix.keys():
+                    effects = self.effect_matrix[(i, j)]
+                    for effect in effects:
+                        match effect[0]: # type, timer
+                            case "wave":
+                                y_pad += math.sin(effect[1]*math.pi*1.2)*size/4
+                            case "shake": # type, timer, [x_fact, y_fact]
+                                x_pad += math.cos(effect[1]*math.pi*effect[2][0])*size/12
+                                y_pad += math.cos(effect[1]*math.pi*effect[2][1])*size/12
+                                effect[2] = [random.uniform(2,5), random.uniform(2,5)]
+
+                drawText(window, self.lines[i][j], col, [draw_pos[0]+x_pad, draw_pos[1]+y_pad], size, False)
+                if char == " ":
+                    draw_pos.x += pygame.font.Font.size(font, char)[0]
+                    continue
+                draw_pos.x += pygame.font.Font.size(font, char)[0]
+        return
+
+    def update(self, dt):
+        if self.wiggle_timer < math.pi:
+            self.wiggle_timer += dt*math.pi/self.textSpeed
+            if self.wiggle_timer > math.pi:
+                self.wiggle_timer = math.pi
+
+        for [key, effects] in self.effect_matrix.items():
+            for effect in effects:
+                effect[1] += dt # inc effect timer
+
+    def empty_string(self):
+        self.string = ""
+        self.effect_matrix = {}
+        self.add_to_string("")
+
+    def check_effect_delim(self, func, string, delim):
+        if string == delim:
+            if delim in self.effects_being_added:
+                del self.effects_being_added[delim]
+                return True
+            self.effects_being_added[delim] = func
+            return True
+
+    def add_to_string(self, string):
+        # effect delimiters here #
+        wave = self.check_effect_delim(self.add_wave_to_char, string, "$")
+        shake = self.check_effect_delim(self.add_shake_to_char, string, "*")
+        if wave or shake:
+            return
+        # --------------------- #
+
+        if string != " ":
+            self.wiggle_timer = 0
+        self.string += string
+        font = pygame.font.Font("./assets/Gameplay.ttf",self.size)
+        wrap = self.rect
+        w_pad = self.pad[0]
+        h_pad = self.pad[1]
+        line_pad = self.pad[2]
+        line_h = pygame.font.Font.size(font, "Tg")[1]
+        max_w = wrap[2] - w_pad
+        words = self.string.split(" ")
+        lines = []
+        curr_line = []
+        for word in words:
+            curr_line.append(word)
+            font_dim = pygame.font.Font.size(font, " ".join(curr_line))
+            if font_dim[0] > max_w or word == "|":
+                overflow = curr_line[-1:]
+                curr_line = curr_line[:-1]
+                lines.append(" ".join(curr_line).strip())
+                if word == "|":
+                    curr_line = []
+                    continue
+                curr_line = overflow
+        lines.append(" ".join(curr_line).strip())
+
+        add_effects = len(self.effects_being_added) > 0
+        if add_effects:
+            # just add effect to last added char
+            row = len(lines)-1
+            col = len(lines[row])-1
+            for effect in self.effects_being_added.values():
+                effect(row, col)
+        self.lines = lines
+
 # so i didnt realise font drawing was SO FUCKING EXPENSIVE
 # create a new img to blit every frame is real bad but
 # improves by about 4x with caching
@@ -770,3 +925,8 @@ def drawCircle(window, in_circle, col, width=0): # circle = (center, radius)
 
 def drawLine(window, p1, p2, col=(0,0,0), width=1):
     pygame.draw.line(window, col, p1, p2, width)
+
+class SFX:
+    # i just like doing this because in my js framework i use sfx.NAME.play()
+    def create_sound(self, name, src):
+        setattr(self, name, pygame.mixer.Sound(src))

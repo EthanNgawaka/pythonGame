@@ -8,9 +8,10 @@ class Wave(Entity):
             "uncommon":[TermiteSwarm, CockroachSwarm, AntSwarm, Snail],
             "rare":[MagneticSnail, FireAntSwarm],
             "miniboss":[MotherCockroach, MotherFly],
+            "boss":[],
         }
         # testing only one enemy:
-        self.override_enemy_type = MotherCockroach
+        self.override_enemy_type = None
         self.timer = 0
         self.num = 1
 
@@ -95,4 +96,6 @@ class Wave(Entity):
         drawText(window, f"Wave #{round(self.num)}", (255,255,255), (self.rect.center.x, self.rect.center.y+self.rect.w*0.75), 40, True)
         self.timer_img.draw(self.rect.copy(), window)
         n = math.floor(self.timer/8)
+        if self.timer >= 59:
+            n = 8
         self.timer_img.setState(f"{n}/8")

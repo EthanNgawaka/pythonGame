@@ -100,7 +100,7 @@ class Player(Entity):
 
     def init(self):
         super().init()
-        self.deck.add_card(DebugMode())
+        #self.deck.add_card(DebugMode())
         #self.add_status_effect(Slow, 1)
         #spawn_web(Vec2(game.W/2, 100), 150, 15)
 
@@ -188,6 +188,7 @@ class Player(Entity):
 
     def hit(self, ent):
         if self.invincibilityTimer <= 0:
+            game.sfx.hit.play()
             game.abberate(0.1, 0.05)
             camera.shake(40)
             # this is for hitstop idk it feels kinda bad on every single hit
@@ -253,8 +254,8 @@ class Player(Entity):
         else:
             self.gun_jiggle += random.uniform(math.pi/8, 0)
 
-        if self.atkRateMultiplier > 2:
-            camera.shake(3)
+        camera.shake(2*self.atkRateMultiplier)
+
         blt = Bullet(pos, vel)
         blt.bouncy = self.bouncy_bullets
         blt.homing = True
@@ -287,6 +288,12 @@ class Player(Entity):
                         # this logic didnt quite work
                         #spawn_pos = (self.rect.center.x + math.sin(-theta + 1.6) * 55, self.rect.center.y + math.cos(-theta + 1.6) * 55)
                         spawn_pos = self.get_pos_of_tip_of_gun()
+
+                        amnt = random.randint(255-64, 255)
+                        startingColor = (amnt,amnt,0,255)
+                        gun_sparks(*spawn_pos, 5, theta, startingColor)
+                        game.sfx.shot.play()
+                        
                         self.spawn_bullet(spawn_pos, theta + rand_angle)
                         self.vel -= Vec2(math.cos(theta), math.sin(theta))*60
 

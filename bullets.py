@@ -1,5 +1,6 @@
 from game import *
 from status_effects import *
+from particles import *
 
 class Web(Entity):
     def __init__(self, pos, radius, lifetime):
@@ -110,6 +111,8 @@ class Bullet(Entity):
     def update(self, dt):
         player = game.get_entity_by_id("player")
 
+        gun_trail(*self.rect.center, 1, (random.randint(255-64,255),random.randint(255-64,255),0,1))
+
         if self.homing:
             self.do_homing(dt)
         self.move(self.vel*dt)
@@ -151,6 +154,10 @@ class EnemyBullet(Entity):
         self.timer = 0
         self.last_fire_spawn = self.timer
 
+        amnt = random.randint(255-64, 255)
+        startingColor = (amnt,0,0,255)
+        gun_sparks(*self.rect.center, 5, math.atan2(self.vel.y, self.vel.x), startingColor)
+
         self.img = Image("./assets/enemy_bullet.png", *self.rect, (255, 64, 64))
 
     def get_size(self,x):
@@ -160,6 +167,7 @@ class EnemyBullet(Entity):
         self.remove_self()
 
     def update(self, dt):
+        gun_trail(*self.rect.center, 1, (random.randint(255-64,255),0,0,1))
         self.timer += dt
         self.move(self.vel*dt)
         player = game.get_entity_by_id("player")

@@ -68,6 +68,89 @@ class Label(UI_Element):
         drawingRect = self.get_relative_rect()
         drawText(window, self.text.string, self.text.col, drawingRect.center, self.text.size, True)
 
+class Dialogue(Entity):
+    def __init__(self, textList):
+        self.isUI = True
+        w, h = game.W*0.8, game.H*0.25
+        self.rect = Rect(((W-w)/2,H - h*1.25),(w,h))
+
+        self.isOpen = False
+        self.UIRoot = None
+        self.uiTag = "dialogueBox"
+        self.priority = 6
+        self.close_on_esc = False
+
+        self.text = textList
+        self.listIndex = 0
+        self.textIndex = 0
+        self.displayText = ""
+
+        self.textTimer = 0
+        self.textSpeed = 0.02
+        self.waiting_for_input = False
+
+        size = 35
+        self.textBox = TextBox(self.displayText, self.rect, size, [size*2, size, 10])
+
+    def init(self):
+        super().init()
+        self.open()
+
+    def add_elements(self):
+        pass # this is the only thing u need to implement
+
+    def close(self, elem):
+        self.isOpen = False
+        game.curr_scene.UIPriority.remove(self.uiTag)
+    
+    def open(self):
+        if not self.isOpen:
+            game.curr_scene.UIPriority.append(self.uiTag)
+            self.isOpen = True
+            self.add_elements()
+
+    def update(self, dt):
+        queue = game.curr_scene.UIPriority
+        isTopOfQueue = queue[len(queue)-1] == self.uiTag if len(queue) > 0 else False
+        if not isTopOfQueue:
+            return
+        if not self.isOpen:
+            self.UIRoot.remove_self()
+            self.UIRoot = None
+
+        if game.key_pressed(pygame.K_SPACE):
+            if self.waiting_for_input :
+                self.textBox.empty_string()
+                self.textIndex = 0
+                self.listIndex += 1
+                self.waiting_for_input = False
+                if self.listIndex >= len(self.text):
+                    self.remove_self()
+                    return
+            else:
+                for char in self.text[self.listIndex][self.textIndex:]:
+                    self.textBox.add_to_string(char)
+                self.waiting_for_input = True
+
+        self.textTimer += dt
+        self.textBox.textSpeed = self.textSpeed
+        if self.textTimer > self.textSpeed and not self.waiting_for_input:
+            self.textTimer = 0
+            self.textBox.add_to_string(self.text[self.listIndex][self.textIndex])
+            self.textIndex+=1
+            if self.textIndex >= len(self.text[self.listIndex]):
+                self.waiting_for_input = True
+
+
+        self.textBox.update(dt)
+
+    def drawText(self, window):
+        size = 35
+        self.textBox.draw(window)
+    
+    def draw(self, window):
+        drawRect(window, self.rect, (128,0,128))
+        self.drawText(window)
 
 class Button(UI_Element):
     def __init__(self, root_entity, relative_rect, col, text, onAction):
@@ -86,6 +169,8 @@ class Button(UI_Element):
         self.uiTag = self.root.uiTag
         self.outlined = False
         self.highlight = True
+
+        self.prev_hovered = False
 
         self.onActionDelay = 0.1;
         self.onActionTimer = 0;
@@ -112,12 +197,17 @@ class Button(UI_Element):
         queue = game.curr_scene.UIPriority
         isTopOfQueue = queue[len(queue)-1] == self.uiTag if len(queue) > 0 else False
         if self.hovered and isTopOfQueue and not self.disabled:
+            if not self.prev_hovered:
+                game.sfx.select.play()
+                self.prev_hovered = True
             if clicked:
+                game.sfx.click.play()
                 self.onActionTimer = self.onActionDelay
                 self.highlightCol = pygame.Vector3(120,120,120)
                 self.drawingInflation = Vec2(-10,-10)
         else:
             self.hovered = False
+            self.prev_hovered = False
 
         if self.onActionTimer > 0:
             self.onActionTimer -= dt
@@ -143,7 +233,9 @@ class Button(UI_Element):
 
         self.drawingRect.center = (self.drawingRect.center[0]+self.shake.x, self.drawingRect.center[1]+self.shake.y)
         if self.hovered or self.outlined:
-            drawRect(window, self.drawingRect.inflate(10,10), self.highlightCol)
+            if self.onActionTimer <= 0:
+                self.drawingInflation = self.drawingInflation.lerp(Vec2(10,10), 0.1)
+            drawRect(window, self.drawingRect.inflate(*self.drawingInflation).inflate(10,10), self.highlightCol)
         drawRect(window, self.drawingRect, self.col)
         self.draw_name(window)
 

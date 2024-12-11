@@ -116,6 +116,7 @@ class Enemy(Entity):
         blood_explosion(*self.rect.center, self.maxHealth/4, math.atan2(vec.y, vec.x))
 
     def on_bullet_collision(self, bullet):
+        game.sfx.bug_hit.play()
         player = game.get_entity_by_id("player")
         dmg = player.dmg * player.dmgMultiplier
         if player.lifesteal > 0:
@@ -129,6 +130,7 @@ class Enemy(Entity):
         bullet.on_enemy_collision(self)
 
     def die(self, theta=None):
+        game.sfx.bug_die.play()
         blood_explosion(*self.rect.center, self.maxHealth, theta)
         self.on_death()
         self.remove_self()
@@ -733,3 +735,67 @@ class MotherFly(Enemy):
                 self.lastAttack = self.atkTimer
                 for i in range(random.randint(4,8)):
                     self.shoot()
+
+class MachinegunBug(Enemy):
+    def __init__(self, pos):
+        super().__init__(pos)
+        self.rect = Rect(pos, (30,30))
+        self.health = 12
+        self.speed = 200
+
+        self.atkTimer = 0
+        self.lastAttack = 0
+        self.dmg = 5
+        self.atkRate = 0.3
+        self.atkThresh = 750
+        self.reload = 0
+        self.col = pygame.Color("grey")
+        self.maxHealth = self.health
+        self.img = Image("./assets/baby_cock.png", *self.rect, (255,64,64))
+
+        self.mag_size = 20
+        self.baseAtkRate = 0.2
+        self.reloadTime = 6
+
+    def movement(self):
+        player = game.get_entity_by_id("player")
+        p_pos = Vec2(player.rect.center)
+        s_pos = Vec2(self.rect.center)
+        if (p_pos - s_pos).length() > self.atkThresh:
+            f_vec = self.get_unit_vec_to_entity(player)*self.speed
+            self.add_force(f_vec)
+
+        theta = random.uniform(math.pi, -math.pi)
+        self.vel += (Vec2(math.cos(theta), math.sin(theta))*random.randint(-30,30))
+
+    def shoot(self):
+        player = game.get_entity_by_id("player")
+        p_pos = Vec2(player.rect.center)
+        s_pos = Vec2(self.rect.center)
+        innac = 10000
+        theta = vec_angle_to(s_pos,p_pos) + random.uniform(math.pi/innac, -math.pi/innac)
+        vec = Vec2(math.cos(theta), math.sin(theta)) * 600
+        game.curr_scene.add_entity(EnemyBullet(self.rect.center, vec, self.dmg), "enemy bullet")
+        self.add_force(-vec*6)
+
+
+    def on_bullet_collision(self, blt):
+        super().on_bullet_collision(blt)
+        self.atkTimer = 0.1
+        self.lastAttack = 0
+
+    def update(self, dt):
+        super().update(dt)
+        player = game.get_entity_by_id("player")
+        p_pos = Vec2(player.rect.center)
+        s_pos = Vec2(self.rect.center)
+        if (p_pos - s_pos).length() < self.atkThresh or self.reload < self.mag_size:
+            self.atkTimer -= dt
+            if abs(self.lastAttack - self.atkTimer) > self.atkRate:
+                self.atkRate = self.baseAtkRate
+                self.shoot()
+                self.lastAttack = self.atkTimer
+                self.reload += 1
+                if self.reload > self.mag_size:
+                    self.atkRate = self.reloadTime
+                    self.reload = 0
