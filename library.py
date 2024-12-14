@@ -615,19 +615,17 @@ def init_pygame(caption):
     windowW = 1920
     windowH = 1080
 
-    #FLAGS = pygame.SCALED | pygame.HIDDEN | pygame.OPENGL | pygame.DOUBLEBUF
-    FLAGS =  pygame.OPENGL | pygame.DOUBLEBUF
+    FLAGS = pygame.SCALED | pygame.OPENGL | pygame.DOUBLEBUF
+    #FLAGS =  pygame.OPENGL | pygame.DOUBLEBUF
     window = pygame.display.set_mode((windowW,windowH), flags=FLAGS)
     screen = pygame.Surface((windowW,windowH))
     display_info = pygame.display.Info()
 
-    """ TODO: fix scaling with opengl (segmentation fault idk why)
     SCALE = (display_info.current_w/windowW, display_info.current_h/windowH)
     nativeWindow = pg_sdl2.Window.from_display_module()
     nativeWindow.size = (windowW * SCALE[0], windowH * SCALE[1])
     nativeWindow.position = pg_sdl2.WINDOWPOS_CENTERED
     nativeWindow.show()
-    """
 
     pygame.display.toggle_fullscreen()
     pygame.display.set_caption(caption)
