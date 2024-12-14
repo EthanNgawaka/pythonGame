@@ -66,7 +66,7 @@ class Label(UI_Element):
 
     def draw(self, window):
         drawingRect = self.get_relative_rect()
-        drawText(window, self.text.string, self.text.col, drawingRect.center, self.text.size, True)
+        drawText(window, self.text.string, self.text.col, drawingRect.center, self.text.size, True, True)
 
 class Dialogue(Entity):
     def __init__(self, textList):
@@ -201,7 +201,10 @@ class Slider(UI_Element):
         setattr(self.value_to_update[0], self.value_to_update[1], self.curr_value)
 
     def update(self, dt):
-        self.hovered = AABBCollision(self.get_relative_rect(), game.mouse.rect)
+        circle_pos = (self.get_relative_rect().center)+Vec2(-self.rect.w/2 + self.rect.w*(self.curr_value-self.min_value)/self.max_value, 0)
+        r = 20
+        self.hovered_over_circle = (game.mouse.pos - circle_pos).length() < r
+        self.hovered = AABBCollision(self.get_relative_rect(), game.mouse.rect) or self.hovered_over_circle
 
         self.highlightCol = self.highlightCol.lerp(self.baseHighlightCol, 0.1)
         self.drawingInflation = self.drawingInflation.lerp(Vec2(), 0.1)
@@ -210,12 +213,11 @@ class Slider(UI_Element):
 
         queue = game.curr_scene.UIPriority
         isTopOfQueue = queue[len(queue)-1] == self.uiTag if len(queue) > 0 else False
-        if ((self.hovered or (self.down and self.prev_clicked))) and isTopOfQueue and not self.disabled:
+        if (((self.hovered and not self.prev_clicked) or (self.down and self.prev_clicked))) and isTopOfQueue and not self.disabled:
             if not self.prev_hovered:
                 game.sfx.select.play()
                 self.prev_hovered = True
             if clicked:
-
                 if not self.prev_clicked:
                     game.sfx.click.play()
 

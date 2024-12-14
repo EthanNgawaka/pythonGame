@@ -138,6 +138,7 @@ class Game:
         self.oldKeys = self.keys
         self.input_mode = "keyboard"
 
+        self.fullscreen = False
         self.window = None
         self.display = None
         self.ctx = None
@@ -275,7 +276,10 @@ class Game:
         self.sfx.create_sound("slide", "./assets/audio/slide.wav")
 
     def init_window(self, caption):
+        self.caption = caption
         self.W, self.H, self.window, self.display = init_pygame(caption)
+        d_info = pygame.display.Info()
+        self.resolution = [d_info.current_w, d_info.current_h]
 
         # open gl stuff for shaders
         self.ctx = moderngl.create_context()
@@ -289,16 +293,39 @@ class Game:
 
         self.program = self.ctx.program(vertex_shader=self.vert_shader, fragment_shader=self.frag_shader)
         self.render_obj = self.ctx.vertex_array(self.program, [(self.quad_buffer, '2f 2f', 'vert', 'texcoord')])
+        self.fullscreen = True
 
     def change_resolution(self, new_w, new_h):
-        # not really working yet
-        # need to make it actually scale the screen but idk
-        # what to use as a base resolution
-        #self.window = pygame.display.set_mode((new_w,new_h))
-        #self.W = new_w
-        #self.H = new_h
-        pass
-    
+        if self.fullscreen:
+            return False
+        self.W, self.H, self.window, self.display = init_pygame(self.caption, [new_w, new_h])
+        pygame.display.toggle_fullscreen()
+        self.resolution = [new_w, new_h]
+
+    def toggle_fullscreen(self):
+        if not self.fullscreen:
+            disp = pygame.display.Info()
+            res = (disp.current_w, disp.current_h)
+            self.W, self.H, self.window, self.display = init_pygame(self.caption, res)
+            self.resolution = res
+        else:
+            pygame.display.toggle_fullscreen()
+
+        self.fullscreen = not self.fullscreen
+
+    def moderngl_render(self):
+        frame_tex = self.surf_to_tex(self.window)
+        frame_tex.use(0)
+        self.program['tex'] = 0
+        self.program['pixelSize'] = self.pixelSize
+        self.program['curvature'] = self.CURVATURE
+        self.program['rgbOffset'] = self.rgbOffset
+
+        self.render_obj.render(mode=moderngl.TRIANGLE_STRIP)
+
+        pygame.display.flip()
+        frame_tex.release()
+
     def get_entity_by_id(self, id):
         try:
             return self.curr_scene.entities[id]
@@ -365,19 +392,7 @@ class Game:
             h = self.H * l/2
             drawRect(self.window, Rect((0,0),(w,h*1.1)), (0,0,0))
             drawRect(self.window, Rect((0,self.H-h*1.1),(w,h*1.1)), (0,0,0))
-            frame_tex = self.surf_to_tex(self.window)
-            frame_tex.use(0)
-            self.program['tex'] = 0
-            self.program['pixelSize'] = self.pixelSize
-            self.program['curvature'] = self.CURVATURE
-
-            self.render_obj.render(mode=moderngl.TRIANGLE_STRIP)
-
-            pygame.display.flip()
-            frame_tex.release()
-
-            pygame.display.flip()
-
+            self.moderngl_render()
 
         if self.curr_scene is not None:
             reset = self.curr_scene.cleanup()

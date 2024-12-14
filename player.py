@@ -189,7 +189,7 @@ class Player(Entity):
     def hit(self, ent):
         if self.invincibilityTimer <= 0:
             game.sfx.hit.play()
-            game.abberate(0.1, 0.05)
+            game.abberate(game.rgbOffsetBase*2, 0.05)
             camera.shake(40)
             # this is for hitstop idk it feels kinda bad on every single hit
             #game.time_speed = 0.001

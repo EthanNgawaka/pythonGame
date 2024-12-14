@@ -52,6 +52,8 @@ def create_main_scene():
     mainScene.init_entity(PauseMenu(), "pausemenu", 6)
     mainScene.init_entity(DebugMenu(), "debugmenu", 6)
     mainScene.init_entity(SettingsMenu(), "settingsmenu", 6)
+    mainScene.init_entity(ShadersMenu(), "shadersmenu", 6)
+    mainScene.init_entity(VideoSettingsMenu(), "videosettingsmenu", 6)
     return mainScene
 
 def create_menu_scene():
@@ -92,26 +94,13 @@ def main():
         game.update(dt, real_dt)
         game.draw(game.window)
 
-        drawFPS(dt, game.window)
+        drawFPS(dt, game.window) # shd probably make this an entity
 
-        # opengl stuff #
-        frame_tex = game.surf_to_tex(game.window)
-        frame_tex.use(0)
-        game.program['tex'] = 0
-        game.program['pixelSize'] = game.pixelSize
-        game.program['curvature'] = game.CURVATURE
-        game.program['rgbOffset'] = game.rgbOffset
-        game.program['t'] = t
-        t += dt*2
-
-        game.render_obj.render(mode=moderngl.TRIANGLE_STRIP)
+        game.moderngl_render() # shaders and stuff
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-
-        pygame.display.flip()
-        frame_tex.release()
 
     print("Done")
 

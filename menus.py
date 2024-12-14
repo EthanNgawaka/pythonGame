@@ -121,38 +121,123 @@ class SettingsMenu(Menu):
             (125,125,125), Text("BACK",(255,255,255),45), # btnColor, TextObj
             self.close # onAction
         )
+        # video settings button
+        def open_video_settings(bttn):
+            game.get_entity_by_id("videosettingsmenu").open()
+
+        self.create_centered_button(
+            (self.rect.w/2, 1*self.rect.h/6), # center
+            (self.rect.w/2,self.rect.h/10), # dimensions
+            (80,80,80), Text("VIDEO SETTINGS",(255,255,255),45), # btnColor, TextObj
+            open_video_settings
+        )
+
+        # shaders button
+        def open_shaders(bttn):
+            game.get_entity_by_id("shadersmenu").open()
+
+        self.create_centered_button(
+            (self.rect.w/2, 2*self.rect.h/6), # center
+            (self.rect.w/2,self.rect.h/10), # dimensions
+            (80,80,80), Text("SCREEN EFFECTS",(255,255,255),45), # btnColor, TextObj
+            open_shaders
+        )
+
+class VideoSettingsMenu(Menu):
+    def __init__(self):
+        super().__init__(
+            "videosettingsmenu", 6,
+            (pygame.Color("#503197"), pygame.Color("#18215d"))
+        )
+        self.close_on_esc = True
+
+    def add_elements(self):
+        # back button
+        self.create_centered_button(
+            (self.rect.w/2, 5*self.rect.h/6), # center
+            (self.rect.w/5,self.rect.h/10), # dimensions
+            (125,125,125), Text("BACK",(255,255,255),45), # btnColor, TextObj
+            self.close # onAction
+        )
 
         # fullscreen button
         self.create_centered_button(
             (self.rect.w/2, 1*self.rect.h/6), # center
             (self.rect.w/2,self.rect.h/10), # dimensions
             (125,125,125), Text("TOGGLE FULLSCREEN",(255,255,255),45), # btnColor, TextObj
-            lambda e: pygame.display.toggle_fullscreen() # onAction
+            lambda e:  game.toggle_fullscreen()# onAction
+        )
+        
+        # resolution settings
+        labelRect = Rect((0,0),(self.rect.w/3, self.rect.h/20))
+        labelRect.center = Vec2(self.rect.w/2, 2*self.rect.h/6)
+        self.UIRoot.add_element(Label(self.UIRoot, labelRect, Text("RESOLUTION", "white", 40)))
+        # native res
+        labelRect = Rect((0,0),(self.rect.w/3, self.rect.h/20))
+        labelRect.center = Vec2(self.rect.w/4, 2.5*self.rect.h/6)
+        self.UIRoot.add_element(Label(self.UIRoot, labelRect, Text("NATIVE RESOLUTION :", "white", 20)))
+        res = RESOLUTION_OPTIONS[-1]
+        def res_func(btn, index=-1):
+            return game.change_resolution(*RESOLUTION_OPTIONS[index])
+        self.create_centered_button(
+            (self.rect.w/2, 2.5*self.rect.h/6), # center
+            (self.rect.w/4,self.rect.h/20), # dimensions
+            (125,125,125), Text(f"{res[0]}x{res[1]}",(255,255,255),25), # btnColor, TextObj
+            res_func
+        )
+
+        for row in range(len(RESOLUTION_OPTIONS)-1):
+            res = RESOLUTION_OPTIONS[row]
+            def res_func(btn, index=row):
+                return game.change_resolution(*RESOLUTION_OPTIONS[index])
+
+            self.create_centered_button(
+                (self.rect.w/2, 2.5*self.rect.h/6 + 1.25*(row+1)*self.rect.h/20), # center
+                (self.rect.w/4,self.rect.h/20), # dimensions
+                (125,125,125), Text(f"{res[0]}x{res[1]}",(255,255,255),25), # btnColor, TextObj
+                res_func
+            )
+
+        
+class ShadersMenu(Menu):
+    def __init__(self):
+        super().__init__(
+            "shadersmenu", 6,
+            (pygame.Color("#503197"), pygame.Color("#18215d"))
+        )
+        self.close_on_esc = True
+
+    def add_elements(self):
+        # back button
+        self.create_centered_button(
+            (self.rect.w/2, 5*self.rect.h/6), # center
+            (self.rect.w/5,self.rect.h/10), # dimensions
+            (125,125,125), Text("BACK",(255,255,255),45), # btnColor, TextObj
+            self.close # onAction
         )
 
         # shader sliders
         self.create_centered_slider(
-            (self.rect.w/2, 2*self.rect.h/6), # center
+            (self.rect.w/2, 1*self.rect.h/5), # center
             self.rect.w/2, # dimensions
             game.CURVATURE, (0, 1), # start val and bounds
             (game, "CURVATURE"), # uses set attr so set self.poop to whatever
         )
         self.create_centered_slider(
-            (self.rect.w/2, 3*self.rect.h/6), # center
+            (self.rect.w/2, 2*self.rect.h/5), # center
             self.rect.w/2, # dimensions
             game.pixelSize, (1, 10), # start val and bounds
             (game, "pixelSize"), # uses set attr so set self.poop to whatever
             True
         )
         self.create_centered_slider(
-            (self.rect.w/2, 4*self.rect.h/6), # center
+            (self.rect.w/2, 3*self.rect.h/5), # center
             self.rect.w/2, # dimensions
             game.rgbOffsetBase, (0, 0.0016), # start val and bounds
             (game, "rgbOffsetBase"), # uses set attr so set self.poop to whatever
             False,
             4
         )
-        
 
 
 class DebugMenu(Menu):

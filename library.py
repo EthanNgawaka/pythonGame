@@ -11,8 +11,23 @@ import os
 import moderngl
 from array import array
 
+pygame.init()
+
+
 W = 1920
 H = 1080
+
+NATIVE_RESOLUTION = (pygame.display.Info().current_w, pygame.display.Info().current_h)
+
+RESOLUTION_OPTIONS = [
+    (1920, 1080),
+    (1440, 900),
+    (1280, 720),
+    (1024, 768),
+]
+
+if NATIVE_RESOLUTION not in RESOLUTION_OPTIONS:
+    RESOLUTION_OPTIONS.append(NATIVE_RESOLUTION)
 
 os.environ["PYGAME_DISPLAY"] = "0" # opens windows on main display
 
@@ -197,9 +212,11 @@ class Mouse:
         # UV (0 - 1)
         # View Space (-1 to 1)
         # mouse pos in UV space
-        mPosUV = Vec2(mousePos.x/W, mousePos.y/H) # 0 to 1
+        resW, resH = game.resolution
+        # we also need to account for resolution scaling (this is becoming a mess)
+        mPosUV = Vec2(mousePos.x/resW, mousePos.y/resH) # 0 to 1
         # mouse pos in view space
-        mPosVS = Vec2((2*mousePos.x/W) - 1, (2*mousePos.y/H) - 1) # -1 to 1
+        mPosVS = Vec2((2*mousePos.x/resW) - 1, (2*mousePos.y/resH) - 1) # -1 to 1
         r = mPosVS.length()
 
         mPosUV.x += mPosVS.x * game.CURVATURE * r
@@ -208,8 +225,8 @@ class Mouse:
         mPosUV.x = min(max(mPosUV.x, 0), 1)
         mPosUV.y = min(max(mPosUV.y, 0), 1)
 
-        self.pos.x = mPosUV.x * W
-        self.pos.y = mPosUV.y * H
+        self.pos.x = mPosUV.x * game.W
+        self.pos.y = mPosUV.y * game.H
         self.rect.x = self.pos.x
         self.rect.y = self.pos.y
         pressed = pygame.mouse.get_pressed(num_buttons=3)
@@ -610,26 +627,22 @@ class Spritesheet:
         return self.get_sprite(self.currFrame*self.spriteW, state[1]*self.spriteH)
 
 # init funcs
-def init_pygame(caption):
-    pygame.init()
-    windowW = 1920
-    windowH = 1080
+def init_pygame(caption, res=None):
+    disp_info = pygame.display.Info()
+    windowW = disp_info.current_w
+    windowH = disp_info.current_h
+    if res is not None:
+        windowW = res[0]
+        windowH = res[1]
 
-    FLAGS = pygame.SCALED | pygame.OPENGL | pygame.DOUBLEBUF
-    #FLAGS =  pygame.OPENGL | pygame.DOUBLEBUF
+    #FLAGS = pygame.SCALED | pygame.OPENGL | pygame.DOUBLEBUF
+    FLAGS =  pygame.OPENGL | pygame.DOUBLEBUF
     window = pygame.display.set_mode((windowW,windowH), flags=FLAGS)
-    screen = pygame.Surface((windowW,windowH))
-    display_info = pygame.display.Info()
-
-    SCALE = (display_info.current_w/windowW, display_info.current_h/windowH)
-    nativeWindow = pg_sdl2.Window.from_display_module()
-    nativeWindow.size = (windowW * SCALE[0], windowH * SCALE[1])
-    nativeWindow.position = pg_sdl2.WINDOWPOS_CENTERED
-    nativeWindow.show()
+    screen = pygame.Surface((W,H))
 
     pygame.display.toggle_fullscreen()
     pygame.display.set_caption(caption)
-    return windowW, windowH, screen, window
+    return W, H, screen, window
 
 # misc math funcs
 def vec_angle_to(A, B):
