@@ -102,7 +102,7 @@ class Shop(Menu):
         self.closeRect.y += self.openRect.h
         self.rect = self.closeRect.copy()
 
-        self.heal_cost = 100
+        self.heal_cost = 50
 
         self.cards = []
 
@@ -125,20 +125,22 @@ class Shop(Menu):
         )
 
         # heal button
+        heal_percentage = 0.30
         def heal(btn):
             player = game.get_entity_by_id('player')
             if player.copper >= self.heal_cost and player.health < player.maxHealth:
                 player.copper -= self.heal_cost
-                player.heal(player.maxHealth*0.35)
+                player.heal(player.maxHealth*heal_percentage)
                 self.heal_cost *= 1.25
                 self.heal_cost = round(self.heal_cost/10)*10
-                btn.text.string = f"+35% Health : ${self.heal_cost}"
+                btn.text.string = f"+{round(heal_percentage*player.maxHealth)} Health : ${self.heal_cost}"
                 return True
             return False
+        player = game.get_entity_by_id('player')
         self.create_centered_button(
             (self.rect.w/2, self.rect.w/20),
             (self.rect.w/3,self.rect.w/15),
-            pygame.Color(90,180,90), Text(f"+35% Health : ${self.heal_cost}",(255,255,255),45),
+            pygame.Color(90,180,90), Text(f"+{round(heal_percentage*player.maxHealth)} Health : ${self.heal_cost}",(255,255,255),45),
             heal,
             4
         )

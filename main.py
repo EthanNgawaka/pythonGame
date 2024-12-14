@@ -99,7 +99,7 @@ def main():
         frame_tex.use(0)
         game.program['tex'] = 0
         game.program['pixelSize'] = game.pixelSize
-        game.program['curvature'] = CURVATURE
+        game.program['curvature'] = game.CURVATURE
         game.program['rgbOffset'] = game.rgbOffset
         game.program['t'] = t
         t += dt*2

@@ -71,7 +71,6 @@ def gun_trail(x, y, amnt, col):
         part.color = startingColor
         part.gravity = 0
 
-        parts = game.get_entities_by_id("particle")
         game.curr_scene.add_entity(part, "particle_gun_trail", 2)
 
 def gun_sparks(x, y, amnt, init_theta, col):
@@ -90,7 +89,6 @@ def gun_sparks(x, y, amnt, init_theta, col):
         part.color = startingColor
         part.gravity = 0
 
-        parts = game.get_entities_by_id("particle")
         game.curr_scene.add_entity(part, "particle_gun_spark", 2)
 
 def blood_explosion(x, y, amnt, init_theta=None):
@@ -112,8 +110,31 @@ def blood_explosion(x, y, amnt, init_theta=None):
         part.color = startingColor
         part.gravity = 0
 
-        parts = game.get_entities_by_id("particle")
         game.curr_scene.add_entity(part, "particle_blood", 2)
+
+def spawn_particles(x, y, amnt, init_theta):
+    numOfParticles = amnt
+    for i in range(numOfParticles):
+        # improve this i want it to be normall distrubted with
+        # mu = init_theta and std dev idk
+        theta = init_theta + random.uniform(-1, 1)*math.pi/12
+        mag = random.uniform(0,700)
+        vel = Vec2(math.cos(theta)*mag, math.sin(theta)*mag)
+        size = random.randint(2,15)
+
+        startingColor = (64,64,255,255) # white -> yellow -> orange -> red -> smoke
+        
+        spread = 50
+        part = Particle(Rect((
+            (x+random.uniform(-spread,spread)*math.cos(init_theta+math.pi/2))-size/2,
+            (y+random.uniform(-spread,spread)*math.sin(init_theta+math.pi/2))-size/2),
+            (size, size)), vel, random.uniform(2,3)
+        )
+        part.color = startingColor
+        part.gravity = 0
+        part.drag = 2
+
+        game.curr_scene.add_entity(part, "particle_spawn", 2)
 
 class Particle(Entity):
     def __init__(self, rect, vel, lifetime, colorLerp = False): # col = (R, G, B, A)

@@ -340,6 +340,19 @@ class Mosquito(Enemy):
         self.maxHealth = self.health
         self.img = Image("./assets/baby_cock.png", *self.rect, (255,64,64))
 
+    def bound_to_screen(self):
+        if self.rect.x < 0:
+            self.rect.x = lerp(self.rect.x, 0, 0.2)
+
+        if self.rect.x+self.rect.w > game.W:
+            self.rect.x = lerp(self.rect.x, game.W - self.rect.w, 0.2)
+
+        if self.rect.y < 0:
+            self.rect.y = lerp(self.rect.y, 0, 0.2)
+
+        if self.rect.y+self.rect.h > game.H:
+            self.rect.y = lerp(self.rect.y, game.H - self.rect.h, 0.2)
+
     def movement(self):
         player = game.get_entity_by_id("player")
         p_pos = Vec2(player.rect.center)
@@ -372,7 +385,7 @@ class Mosquito(Enemy):
         player = game.get_entity_by_id("player")
         p_pos = Vec2(player.rect.center)
         s_pos = Vec2(self.rect.center)
-        if (p_pos - s_pos).length() < self.atkThresh:
+        if (p_pos - s_pos).length() < self.atkThresh and AABBCollision(self.rect, [0,0,game.W,game.H]):
             self.atkTimer -= dt
             if abs(self.lastAttack - self.atkTimer) > self.atkRate:
                 self.lastAttack = self.atkTimer

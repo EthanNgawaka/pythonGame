@@ -149,9 +149,10 @@ class Game:
         self.time_speed = 1.0
         self.slow_down_timer = 0
         self.slow_down_targ = 1
-        self.pixelSize = 2 # idk if 2 looks good or shit
+        self.pixelSize = 1 # idk if 2 looks good or shit
         self.rgbOffsetBase = 0.0008
         self.rgbOffset = self.rgbOffsetBase
+        self.CURVATURE = 0.05
 
         self.abberate_targ = 0
         self.abberate_timer = 0
@@ -224,11 +225,10 @@ class Game:
             }
 
             void main(){
-                vec2 scaled_coords = uvs * textureSize(tex, 0);
+                vec2 scaled_coords = apply_distortion(uvs) * textureSize(tex, 0);
+
                 scaled_coords = floor(scaled_coords / pixelSize) * pixelSize;
                 scaled_coords = scaled_coords / textureSize(tex, 0);
-
-                scaled_coords = apply_distortion(scaled_coords);
 
                 if(scaled_coords.x < 0.0 || scaled_coords.x > 1.0){
                     f_color = vec4(0,0,0, 1.0);
@@ -268,9 +268,11 @@ class Game:
         self.sfx.create_sound("shot", "./assets/audio/shot.wav")
         self.sfx.create_sound("bug_hit", "./assets/audio/bug_hit.wav")
         self.sfx.create_sound("bug_die", "./assets/audio/bug_die.wav")
+        self.sfx.create_sound("frag_pickup", "./assets/audio/frag_pickup.wav")
 
         self.sfx.create_sound("click", "./assets/audio/click.wav")
         self.sfx.create_sound("select", "./assets/audio/select.wav")
+        self.sfx.create_sound("slide", "./assets/audio/slide.wav")
 
     def init_window(self, caption):
         self.W, self.H, self.window, self.display = init_pygame(caption)
@@ -361,15 +363,15 @@ class Game:
             l = self.transition_lerp(t)
             w = self.W
             h = self.H * l/2
-            drawRect(game.window, Rect((0,0),(w,h*1.1)), (0,0,0))
-            drawRect(game.window, Rect((0,self.H-h*1.1),(w,h*1.1)), (0,0,0))
-            frame_tex = game.surf_to_tex(game.window)
+            drawRect(self.window, Rect((0,0),(w,h*1.1)), (0,0,0))
+            drawRect(self.window, Rect((0,self.H-h*1.1),(w,h*1.1)), (0,0,0))
+            frame_tex = self.surf_to_tex(self.window)
             frame_tex.use(0)
-            game.program['tex'] = 0
-            game.program['pixelSize'] = game.pixelSize
-            game.program['curvature'] = CURVATURE
+            self.program['tex'] = 0
+            self.program['pixelSize'] = self.pixelSize
+            self.program['curvature'] = self.CURVATURE
 
-            game.render_obj.render(mode=moderngl.TRIANGLE_STRIP)
+            self.render_obj.render(mode=moderngl.TRIANGLE_STRIP)
 
             pygame.display.flip()
             frame_tex.release()
@@ -409,7 +411,7 @@ class Game:
             print(traceback.format_exc())
 
         # updating input stuff
-        self.mouse.update()
+        self.mouse.update(self)
         self.controller.update(self, dt)
         self.oldKeys = self.keys
         self.keys = pygame.key.get_pressed()

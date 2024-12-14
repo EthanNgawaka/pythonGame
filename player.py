@@ -241,6 +241,8 @@ class Player(Entity):
         return tip
 
     def spawn_bullet(self, pos, theta):
+        if self.copper < self.coin_gun*3:
+            return
         self.copper -= self.coin_gun*3 # 3 coins per level of coin gun
         self.take_dmg(self.blood_bullets)
 
@@ -254,7 +256,7 @@ class Player(Entity):
         else:
             self.gun_jiggle += random.uniform(math.pi/8, 0)
 
-        camera.shake(2*self.atkRateMultiplier)
+        camera.shake(3*self.atkRateMultiplier)
 
         blt = Bullet(pos, vel)
         blt.bouncy = self.bouncy_bullets
@@ -441,13 +443,13 @@ class PlayerUI(Entity):
         if self.oldHpTimer <= 0:
             self.orangeBarW = lerp(self.orangeBarW , self.player.health*3, 0.1)
 
-        drawRect(window, self.rect, (255,0,0))
+        drawRect(window, self.rect, (255,0,0), 0, False, True)
         drawRect(window, orangeRect, (255,140,0))
         drawRect(window, greenRect, (0,255,0))
 
 
     def draw_copper(self, window):
-        drawText(window, f"Copper: {self.player.copper}", (255, 153, 51), (100,150), 40)
+        drawText(window, f"Fragments: {self.player.copper}", (255,255,255), (100,150), 40, False, True)
 
     def draw_stats(self, window):
         i = 0

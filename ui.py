@@ -152,6 +152,119 @@ class Dialogue(Entity):
         drawRect(window, self.rect, (128,0,128))
         self.drawText(window)
 
+class Slider(UI_Element):
+    def __init__(self, root_entity, relative_rect, starting_value, bounds, rect_col, circle_col, value_to_update, round, sig_figs):
+        self.isUI = True
+        self.root = root_entity
+        self.uiTag = self.root.uiTag
+
+        self.rect = relative_rect
+
+        self.rect_col = rect_col
+        self.circle_col = circle_col
+
+        self.curr_value = starting_value
+        self.min_value = bounds[0]
+        self.max_value = bounds[1]
+        self.value_to_update = value_to_update
+        self.sig_figs = sig_figs
+
+        self.baseHighlightCol = pygame.Vector3(255,255,255)
+        self.highlightCol = self.baseHighlightCol
+        self.drawingInflation = Vec2()
+
+        self.outlined = False
+        self.highlight = True
+        self.disabled = False
+        self.hovered = False
+
+        self.shakeTimer = 0
+        self.shake = Vec2()
+        self.shakeIntensity = 10
+
+        self.drawingRect = None
+
+        self.prev_hovered = False
+        self.prev_clicked = False
+        self.down = False
+        self.round = round
+
+    def toggle(self):
+        self.disabled = not self.disabled
+
+    def update_value(self):
+        new_pos = game.mouse.pos.x - self.get_relative_rect().x
+        dist_along = max(self.min_value, min(self.rect.w, new_pos))
+        new_val = (self.max_value * dist_along/self.rect.w) + self.min_value
+        self.curr_value = round(new_val) if self.round else new_val
+
+        setattr(self.value_to_update[0], self.value_to_update[1], self.curr_value)
+
+    def update(self, dt):
+        self.hovered = AABBCollision(self.get_relative_rect(), game.mouse.rect)
+
+        self.highlightCol = self.highlightCol.lerp(self.baseHighlightCol, 0.1)
+        self.drawingInflation = self.drawingInflation.lerp(Vec2(), 0.1)
+
+        clicked = game.mouse.down[0]
+
+        queue = game.curr_scene.UIPriority
+        isTopOfQueue = queue[len(queue)-1] == self.uiTag if len(queue) > 0 else False
+        if ((self.hovered or (self.down and self.prev_clicked))) and isTopOfQueue and not self.disabled:
+            if not self.prev_hovered:
+                game.sfx.select.play()
+                self.prev_hovered = True
+            if clicked:
+
+                if not self.prev_clicked:
+                    game.sfx.click.play()
+
+                self.down = True
+                self.highlightCol = pygame.Vector3(120,120,120)
+        else:
+            self.hovered = False
+            self.prev_hovered = False
+        if not clicked:
+            self.down = False
+
+        self.prev_clicked = clicked
+
+        if self.down:
+            self.update_value()
+
+        if self.shakeTimer > 0:
+            self.shakeTimer -= dt
+            self.shake.x += random.randint(-self.shakeIntensity, self.shakeIntensity)
+            self.shake.y += random.randint(-self.shakeIntensity, self.shakeIntensity)
+
+        self.shake = self.shake.lerp(Vec2(0,0), 0.1)
+
+    def draw(self, window):
+        self.drawingRect = self.get_relative_rect()
+        if self.drawingInflation.length() > 0:
+            self.drawingRect = self.drawingRect.inflate(self.drawingInflation.x, self.drawingInflation.y)
+
+        self.drawingRect.center = (self.drawingRect.center[0]+self.shake.x, self.drawingRect.center[1]+self.shake.y)
+        drawRect(window, self.drawingRect.inflate(*self.drawingInflation).inflate(10,10), self.highlightCol)
+        drawRect(window, self.drawingRect, self.rect_col)
+
+        if (self.hovered or self.outlined or self.down) and self.highlight:
+            white_surf = create_colored_surf(rect_to_surf(self.drawingRect), 80, self.baseHighlightCol)
+            window.blit(white_surf, (self.drawingRect.topleft.x, self.drawingRect.topleft.y))
+
+        circle_pos = (self.get_relative_rect().center)+Vec2(-self.rect.w/2 + self.rect.w*(self.curr_value-self.min_value)/self.max_value, 0)
+        r = 20
+        if self.hovered:
+            r = 25
+        if self.down:
+            r = 15
+        drawCircle(window, (circle_pos, r), "white")
+        drawCircle(window, (circle_pos, r*3/5), self.circle_col)
+        drawText(window, str(round(self.curr_value, self.sig_figs)), "white", circle_pos + Vec2(0, 50), 25, True, True)
+
+        drawText(window, str(self.min_value), "white", self.get_relative_rect().topleft - Vec2(0, 25), 25, True, True)
+        drawText(window, str(self.max_value), "white", self.get_relative_rect().topright - Vec2(0, 25), 25, True, True)
+
 class Button(UI_Element):
     def __init__(self, root_entity, relative_rect, col, text, onAction):
         # text is an obj:
@@ -224,7 +337,7 @@ class Button(UI_Element):
         self.shake = self.shake.lerp(Vec2(0,0), 0.1)
 
     def draw_name(self, window):
-        drawText(window, self.text.string, self.text.col, self.drawingRect.center, round(self.text.size+self.drawingInflation.x/2), True)
+        drawText(window, self.text.string, self.text.col, self.drawingRect.center, round(self.text.size+self.drawingInflation.x/2), True, True)
 
     def draw(self, window):
         self.drawingRect = self.get_relative_rect()
@@ -265,6 +378,14 @@ class Menu(Entity):
 
         self.bgCol = col_obj[0]
         self.outline_col = col_obj[1]
+
+    def create_centered_slider(self, center, w, startingValue, maxValue, value_to_update, round=False, sig_figs=2, layer=6):
+        # params( (x, y), (w, h), Text(), (class ref, "name_of_var") )
+        rect = Rect((0,0),([w, 20]))
+        rect.center = center
+        slider = Slider(self.UIRoot, rect, startingValue, maxValue, (0,0,0), (0,0,0), value_to_update, round, sig_figs)
+        self.UIRoot.add_element(slider, layer)
+        return slider
 
     def create_centered_button(self, center, wh, bttnCol, txtObj, func, layer=6):
         # params( (x, y), (w, h), Text(), onAction )

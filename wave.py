@@ -12,6 +12,7 @@ class Wave(Entity):
         }
         # testing only one enemy:
         self.override_enemy_type = None
+
         self.timer = 0
         self.num = 1
 
@@ -20,10 +21,13 @@ class Wave(Entity):
         self.last_spawn = 0
         self.pause = False
 
+        self.enemy_flags = []
+        self.delayed_spawn_timer = 0
+
         self.swappedAlready = False
         self.miniboss_spawned = False
 
-        self.rect = Rect((game.W - game.H*0.25, game.H*0.05), (game.H*0.2, game.H*0.2))
+        self.rect = Rect((game.W - game.H*0.15, game.H*0.05), (game.H*0.1, game.H*0.1))
         self.timer_img = Spritesheet(self.rect, "./assets/timer.png", (64, 64), 0, False, (255,255,255))
         for i in range(9):
             self.timer_img.addState(f"{i}/8", i, 1)
@@ -32,6 +36,11 @@ class Wave(Entity):
     def update(self, dt):
         if self.pause:
             return
+
+        if self.delayed_spawn_timer > 0:
+            self.delayed_spawn_timer -= dt
+            if self.delayed_spawn_timer < 0:
+                self.actually_spawn_enemy(*self.enemy_flags)
         if self.timer < self.length:
             self.timer += dt
 
@@ -39,7 +48,7 @@ class Wave(Entity):
                 self.spawn_random_enemy()
                 self.last_spawn = self.timer
 
-            return
+            return 
         
         copper = game.get_entities_by_type(Copper)
         enemies = game.get_entities_by_type(Enemy)
@@ -57,6 +66,19 @@ class Wave(Entity):
         print('new round!')
         # reset player things here
         game.get_entity_by_id("player").new_wave()
+
+    def actually_spawn_enemy(self,x,y,EnemyType):
+        enemy = EnemyType(Vec2(x,y))
+        # if its not instance of enemy then its a swarm type
+        if isinstance(enemy, Enemy):
+            game.curr_scene.add_entity(
+                enemy,
+                "enemy" # need to change this later prob to actually use enemy type id
+            )
+
+    def delay_spawning_enemy(self, x, y, EnemyType, delay):
+        self.delayed_spawn_timer = delay
+        self.enemy_flags = [x, y, EnemyType]
 
     def spawn_random_enemy(self):
         choice = "common"
@@ -77,23 +99,27 @@ class Wave(Entity):
             EnemyType = self.override_enemy_type
         w, h = 40, 40
         if random.randint(0,1) > 0:
-            x = random.randint(-w,game.W+w)
+            x = random.randint(w,game.W-w)
             y = (-h if random.randint(0,1) > 0 else game.H+h)
         else:
             x = (-w if random.randint(0,1) > 0 else game.W+w)
-            y = random.randint(-h,game.H+h)
-        
-        enemy = EnemyType(Vec2(x,y))
-        # if its not instance of enemy then its a swarm type
-        if isinstance(enemy, Enemy):
-            game.curr_scene.add_entity(
-                enemy,
-                "enemy" # need to change this later prob to actually use enemy type id
-            )
+            y = random.randint(h,game.H-h)
 
+        dir = 0
+        if x >= game.W:
+            dir = math.pi
+        elif y <= 0:
+            dir = -math.pi/2
+        elif y >= game.H:
+            dir = math.pi/2
+
+        spawn_particles(x, y, 30, -dir)
+
+        self.delay_spawning_enemy(x, y, EnemyType, random.uniform(self.spawnRate/8, self.spawnRate*0.2))
+    
     def draw(self, window):
         #drawText(window, f"Wave Timer: {round(self.timer)}s", (0,0,0), (game.W-200, 200), 40, True)
-        drawText(window, f"Wave #{round(self.num)}", (255,255,255), (self.rect.center.x, self.rect.center.y+self.rect.w*0.75), 40, True)
+        drawText(window, f"Wave #{round(self.num)}", (255,255,255), (self.rect.center.x, self.rect.center.y+self.rect.w*0.75), 40, True, True)
         self.timer_img.draw(self.rect.copy(), window)
         n = math.floor(self.timer/8)
         if self.timer >= 59:

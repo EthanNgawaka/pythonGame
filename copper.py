@@ -53,6 +53,7 @@ class Copper(Entity):
         if AABBCollision(self.rect, player.rect):
             player.copper += 1
             self.remove_self()
+            game.sfx.frag_pickup.play()
 
     def physics(self, dt):
         accel = self.forces

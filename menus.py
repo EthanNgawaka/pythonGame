@@ -43,6 +43,8 @@ class PauseMenu(Menu):
         )
         self.close_on_esc = True
 
+        self.poop = 1
+
     def update(self, dt):
         close_input = game.key_pressed(pygame.K_ESCAPE) if game.input_mode == "keyboard" else game.controller.get_pressed("start")
         queue = game.curr_scene.UIPriority
@@ -64,7 +66,7 @@ class PauseMenu(Menu):
             (125,125,125), Text("RESUME",(255,255,255),45), # btnColor, TextObj
             self.close # onAction
         )
-        
+
         # settings button
         def open_settings(bttn):
             game.get_entity_by_id("settingsmenu").open()
@@ -114,7 +116,7 @@ class SettingsMenu(Menu):
     def add_elements(self):
         # back button
         self.create_centered_button(
-            (self.rect.w/2, 7*self.rect.h/8), # center
+            (self.rect.w/2, 5*self.rect.h/6), # center
             (self.rect.w/5,self.rect.h/10), # dimensions
             (125,125,125), Text("BACK",(255,255,255),45), # btnColor, TextObj
             self.close # onAction
@@ -122,11 +124,35 @@ class SettingsMenu(Menu):
 
         # fullscreen button
         self.create_centered_button(
-            (self.rect.w/2, 1*self.rect.h/8), # center
+            (self.rect.w/2, 1*self.rect.h/6), # center
             (self.rect.w/2,self.rect.h/10), # dimensions
             (125,125,125), Text("TOGGLE FULLSCREEN",(255,255,255),45), # btnColor, TextObj
             lambda e: pygame.display.toggle_fullscreen() # onAction
         )
+
+        # shader sliders
+        self.create_centered_slider(
+            (self.rect.w/2, 2*self.rect.h/6), # center
+            self.rect.w/2, # dimensions
+            game.CURVATURE, (0, 1), # start val and bounds
+            (game, "CURVATURE"), # uses set attr so set self.poop to whatever
+        )
+        self.create_centered_slider(
+            (self.rect.w/2, 3*self.rect.h/6), # center
+            self.rect.w/2, # dimensions
+            game.pixelSize, (1, 10), # start val and bounds
+            (game, "pixelSize"), # uses set attr so set self.poop to whatever
+            True
+        )
+        self.create_centered_slider(
+            (self.rect.w/2, 4*self.rect.h/6), # center
+            self.rect.w/2, # dimensions
+            game.rgbOffsetBase, (0, 0.0016), # start val and bounds
+            (game, "rgbOffsetBase"), # uses set attr so set self.poop to whatever
+            False,
+            4
+        )
+        
 
 
 class DebugMenu(Menu):

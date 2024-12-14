@@ -13,7 +13,6 @@ from array import array
 
 W = 1920
 H = 1080
-CURVATURE = 0.05
 
 os.environ["PYGAME_DISPLAY"] = "0" # opens windows on main display
 
@@ -113,6 +112,14 @@ class Rect:
         self.topleft = pos - self.dimensions/2
 
     @property
+    def topright(self):
+        return self.topleft + Vec2(self.dimensions[0], 0)
+    
+    @topright.setter
+    def topright(self, pos):
+        self.topleft = pos - Vec2(self.dimensions[0], 0)
+
+    @property
     def x(self):
         return self.topleft.x
 
@@ -180,7 +187,7 @@ class Mouse:
         self.moved_this_frame = False
         self.old_pos = Vec2()
     
-    def update(self):
+    def update(self, game):
         self.old_pos = Vec2(self.pos)
 
         self.pressed = [False,False]
@@ -195,8 +202,8 @@ class Mouse:
         mPosVS = Vec2((2*mousePos.x/W) - 1, (2*mousePos.y/H) - 1) # -1 to 1
         r = mPosVS.length()
 
-        mPosUV.x += mPosVS.x * CURVATURE * r
-        mPosUV.y -= mPosVS.y * CURVATURE * r/10
+        mPosUV.x += mPosVS.x * game.CURVATURE * r
+        mPosUV.y -= mPosVS.y * game.CURVATURE * r/10
 
         mPosUV.x = min(max(mPosUV.x, 0), 1)
         mPosUV.y = min(max(mPosUV.y, 0), 1)
@@ -856,7 +863,7 @@ def drawWrappedText(window, string, col, size, rect, pad = [0,0,0], center=False
     return
 
 # drawing funcs
-def drawText(window, string, col, in_pos, size, drawAtCenter=False):
+def drawText(window, string, col, in_pos, size, drawAtCenter=False, dropShadow=False):
     pos = in_pos - camera.pos
     if (string, col, size) in cached_fonts:
         img = cached_fonts[(string, col, size)]
@@ -866,15 +873,33 @@ def drawText(window, string, col, in_pos, size, drawAtCenter=False):
         cached_fonts[(string, col, size)] = img
 
     drawPos = pos
+    shadow_col = "black"
+    shadow_size = size*0.1
 
     if drawAtCenter:
         textRect = img.get_rect()
         textRect.center = drawPos
+        if dropShadow:
+            if (string, shadow_col, size) in cached_fonts:
+                shadow = cached_fonts[(string, shadow_col, size)]
+            else:
+                font = pygame.font.Font("./assets/Gameplay.ttf",size)
+                shadow = font.render(string, True, shadow_col)
+                cached_fonts[(string, shadow_col, size)] = shadow
+            window.blit(shadow, (textRect[0]-shadow_size, textRect[1]-shadow_size))
         window.blit(img, textRect)
     else:
+        if dropShadow:
+            if (string, shadow_col, size) in cached_fonts:
+                shadow = cached_fonts[(string, shadow_col, size)]
+            else:
+                font = pygame.font.Font("./assets/Gameplay.ttf",size)
+                shadow = font.render(string, True, shadow_col)
+                cached_fonts[(string, shadow_col, size)] = shadow
+            window.blit(shadow, drawPos-Vec2(shadow_size,shadow_size))
         window.blit(img, drawPos)
 
-def drawRect(window, in_rect, col_obj, outline_thickness=0, ignore_camera=False):
+def drawRect(window, in_rect, col_obj, outline_thickness=0, ignore_camera=False, drop_shadow=False):
     rect = in_rect
     # col = (R, G, B, [A])
     # col_obj = (fill_col, outline_col)
@@ -911,13 +936,18 @@ def drawRect(window, in_rect, col_obj, outline_thickness=0, ignore_camera=False)
             draw_rect[0] -= camera.pos.x
             draw_rect[1] -= camera.pos.y
     try:
+        if drop_shadow:
+            pygame.draw.rect(window, "black", (rect[0]-5, rect[1]-5, *rect[2:]))
         pygame.draw.rect(window, col, rect)
         if outline_thickness > 0:
             pygame.draw.rect(window, out_col, draw_rect, outline_thickness)
     except TypeError:
-        pygame.draw.rect(window, col, draw_rect.as_tuple())
+        draw_rect = draw_rect.as_tuple()
+        if drop_shadow:
+            pygame.draw.rect(window, "black", (draw_rect[0]-5, draw_rect[1]-5, *draw_rect[2:]))
+        pygame.draw.rect(window, col, draw_rect)
         if outline_thickness > 0:
-            pygame.draw.rect(window, out_col, draw_rect.as_tuple(), outline_thickness)
+            pygame.draw.rect(window, out_col, draw_rect, outline_thickness)
 
 def drawCircle(window, in_circle, col, width=0): # circle = (center, radius)
     circle = in_circle
