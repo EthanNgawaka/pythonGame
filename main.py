@@ -53,6 +53,7 @@ def create_main_scene():
     mainScene.init_entity(SettingsMenu(), "settingsmenu", 6)
     mainScene.init_entity(ShadersMenu(), "shadersmenu", 6)
     mainScene.init_entity(VideoSettingsMenu(), "videosettingsmenu", 6)
+    mainScene.init_entity(AudioSettingsMenu(), "audiomenu", 6)
     return mainScene
 
 def create_menu_scene():

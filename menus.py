@@ -143,6 +143,45 @@ class SettingsMenu(Menu):
             open_shaders
         )
 
+        # audio button
+        def open_shaders(bttn):
+            game.get_entity_by_id("audiomenu").open()
+
+        self.create_centered_button(
+            (self.rect.w/2, 3*self.rect.h/6), # center
+            (self.rect.w/2,self.rect.h/10), # dimensions
+            (80,80,80), Text("AUDIO SETTINGS",(255,255,255),45), # btnColor, TextObj
+            open_shaders
+        )
+
+class AudioSettingsMenu(Menu):
+    def __init__(self):
+        super().__init__(
+            "audiomenu", 6,
+            (pygame.Color("#503197"), pygame.Color("#18215d"))
+        )
+        self.close_on_esc = True
+
+    def add_elements(self):
+        # back button
+        self.create_centered_button(
+            (self.rect.w/2, 5*self.rect.h/6), # center
+            (self.rect.w/5,self.rect.h/10), # dimensions
+            (125,125,125), Text("BACK",(255,255,255),45), # btnColor, TextObj
+            self.close # onAction
+        )
+
+        # master vol
+        labelRect = Rect((0,0),(self.rect.w/3, self.rect.h/20))
+        labelRect.center = Vec2(self.rect.w/2, 0.5*self.rect.h/5)
+        self.UIRoot.add_element(Label(self.UIRoot, labelRect, Text("MASTER VOLUME", "white", 40)))
+        self.create_centered_slider(
+            (self.rect.w/2, 1*self.rect.h/5), # center
+            self.rect.w/2, # dimensions
+            game.master_vol, (0, 100), # start val and bounds
+            (game, "master_vol"), # uses set attr so set self.poop to whatever
+        )
+
 class VideoSettingsMenu(Menu):
     def __init__(self):
         super().__init__(
@@ -210,35 +249,43 @@ class ShadersMenu(Menu):
     def add_elements(self):
         # back button
         self.create_centered_button(
-            (self.rect.w/2, 5*self.rect.h/6), # center
+            (self.rect.w/2, 5.5*self.rect.h/6), # center
             (self.rect.w/5,self.rect.h/10), # dimensions
             (125,125,125), Text("BACK",(255,255,255),45), # btnColor, TextObj
             self.close # onAction
         )
 
         # shader sliders
+        labelRect = Rect((0,0),(self.rect.w/3, self.rect.h/20))
+        labelRect.center = Vec2(self.rect.w/2, 0.5*self.rect.h/5)
+        self.UIRoot.add_element(Label(self.UIRoot, labelRect, Text("CURVATURE", "white", 40)))
         self.create_centered_slider(
             (self.rect.w/2, 1*self.rect.h/5), # center
             self.rect.w/2, # dimensions
             game.CURVATURE, (0, 1), # start val and bounds
             (game, "CURVATURE"), # uses set attr so set self.poop to whatever
         )
+        labelRect = Rect((0,0),(self.rect.w/3, self.rect.h/20))
+        labelRect.center = Vec2(self.rect.w/2, 1.75*self.rect.h/5)
+        self.UIRoot.add_element(Label(self.UIRoot, labelRect, Text("pixelation", "white", 40)))
         self.create_centered_slider(
-            (self.rect.w/2, 2*self.rect.h/5), # center
+            (self.rect.w/2, 2.25*self.rect.h/5), # center
             self.rect.w/2, # dimensions
             game.pixelSize, (1, 10), # start val and bounds
             (game, "pixelSize"), # uses set attr so set self.poop to whatever
             True
         )
+        labelRect = Rect((0,0),(self.rect.w/3, self.rect.h/20))
+        labelRect.center = Vec2(self.rect.w/2, 3*self.rect.h/5)
+        self.UIRoot.add_element(Label(self.UIRoot, labelRect, Text("Chromatic Aberration", "white", 40)))
         self.create_centered_slider(
-            (self.rect.w/2, 3*self.rect.h/5), # center
+            (self.rect.w/2, 3.5*self.rect.h/5), # center
             self.rect.w/2, # dimensions
             game.rgbOffsetBase, (0, 0.0016), # start val and bounds
             (game, "rgbOffsetBase"), # uses set attr so set self.poop to whatever
             False,
             4
         )
-
 
 class DebugMenu(Menu):
     def __init__(self):
@@ -268,6 +315,7 @@ class DebugMenu(Menu):
         )
 
         last_row_x = 0
+
 
         def spawn_dummy(btn):
             game.curr_scene.add_entity(Dummy((W/2, H/2)),"dummy")

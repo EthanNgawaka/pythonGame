@@ -982,7 +982,15 @@ def drawLine(window, p1, p2, col=(0,0,0), width=1):
     pygame.draw.line(window, col, p1, p2, width)
 
 class SFX:
+    def __init__(self):
+        self.sounds = {} # ( sound_obj, base_vol )
+
+    def change_master_vol(self, vol):
+        for name in self.sounds:
+            self.sounds[name][0].set_volume(self.sounds[name][1]*vol)
+
     # i just like doing this because in my js framework i use sfx.NAME.play()
     def create_sound(self, name, src, base_vol=1):
         setattr(self, name, pygame.mixer.Sound("./assets/audio/"+src))
         getattr(self, name).set_volume(base_vol)
+        self.sounds[name] = (getattr(self, name), base_vol)

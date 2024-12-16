@@ -156,6 +156,8 @@ class Game:
         self.CURVATURE = 0.05
         self.scanlineT = 0
 
+        self.master_vol = 100
+
         self.abberate_targ = 0
         self.abberate_timer = 0
         # init keys to avoid index error (pygame has 512 keycodes)
@@ -441,6 +443,8 @@ class Game:
         self.oldKeys = self.keys
         self.keys = pygame.key.get_pressed()
         camera.update(dt)
+
+        self.sfx.change_master_vol(self.master_vol/100)
 
         if 1 in self.keys or self.mouse.moved_this_frame:
             self.input_mode = "keyboard"
