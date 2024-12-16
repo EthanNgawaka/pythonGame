@@ -12,8 +12,6 @@ import sys
 import os
 from array import array
 
-from pydub import AudioSegment
-
 os.environ["PYGAME_DISPLAY"] = "0" # opens windows on main display
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1" # hide pygame intro
 
