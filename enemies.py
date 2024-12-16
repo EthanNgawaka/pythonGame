@@ -28,6 +28,15 @@ class Enemy(Entity):
         self.hit_timer = 0
         self.flash_max = 0.2
 
+        dir = 0
+        if pos.x >= game.W:
+            dir = math.pi
+        elif pos.y <= 0:
+            dir = math.pi/2
+        elif pos.y >= game.H:
+            dir = -math.pi/2
+        self.vel = Vec2(math.cos(dir), math.sin(dir))*self.drag*150
+
     def change_stat_temporarily(self, stat, change, length):
         stat_change = TemporaryStatChange(self, stat, change, length)
         game.curr_scene.add_entity(stat_change, "temporary "+stat+" change")
@@ -113,7 +122,7 @@ class Enemy(Entity):
         self.vel = vec
         self.forces = Vec2()
         self.stun = 0.15
-        blood_explosion(*self.rect.center, self.maxHealth/4, math.atan2(vec.y, vec.x))
+        blood_explosion(*self.rect.center, self.maxHealth/4, math.atan2(vec.y, vec.x))        
 
     def on_bullet_collision(self, bullet):
         game.sfx.bug_hit.play()
@@ -160,9 +169,13 @@ class Enemy(Entity):
         if self.health <= 0 and self.alive:
             self.die()
         self.physics(dt)
+
         if self.stun > 0:
             self.stun -= dt
+            if game.get_entity_by_id("player").truehit:
+                self.collision()
             return
+
         self.collision()
         self.movement()
         self.bound_to_screen()
@@ -313,11 +326,15 @@ class MotherCockroach(Cockroach):
         self.sprite.rotate((theta * -57.298) - 90 + random.randint(-10,10))
 
     def on_death(self):
+        game.sfx.on_death_spawn.play()
         for i in range(random.randint(15,35)):
             spawn_pos = Vec2(self.rect.topleft)
             spawn_pos.x += random.uniform(0, self.rect.w)
             spawn_pos.y += random.uniform(0, self.rect.h)
-            game.curr_scene.add_entity(BabyCockroach(spawn_pos),"enemy")
+            en = BabyCockroach(spawn_pos)
+            theta = math.atan2(spawn_pos.y - self.rect.center.y, spawn_pos.x - self.rect.center.x)
+            en.vel = Vec2(math.cos(theta), math.sin(theta))*random.uniform(0, 1000)
+            game.curr_scene.add_entity(en,"enemy")
 
     def draw(self, window):
         surf, rect = self.sprite.draw(self.rect.scale(4,4), window)
@@ -389,6 +406,7 @@ class Mosquito(Enemy):
             self.atkTimer -= dt
             if abs(self.lastAttack - self.atkTimer) > self.atkRate:
                 self.lastAttack = self.atkTimer
+                game.sfx.shot.play()
                 for i in range(8):
                     self.shoot()
 
@@ -479,6 +497,7 @@ class FireAnt(Ant):
         s_pos = Vec2(self.rect.center)
         super().update(dt)
         if abs(self.timer - self.last_shot) >= self.atkRate and (p_pos-s_pos).length() <= self.thresh:
+            game.sfx.shot.play()
             self.last_shot = self.timer
             self.shoot()
 
@@ -603,6 +622,8 @@ class Snail(Enemy):
         if self.get_moving() > 0:
             super().on_bullet_collision(bullet)
             return
+
+        game.sfx.reflect.play()
         bullet.remove_self()
         player = game.get_entity_by_id("player")
         vec = player.rect.center - self.rect.center
@@ -698,6 +719,7 @@ class MotherFly(Enemy):
         self.atkTimer = 0
 
     def on_death(self):
+        game.sfx.on_death_spawn.play()
         for i in range(random.randint(5,20)):
             spawn_pos = Vec2(self.rect.topleft)
             spawn_pos.x += random.uniform(0, self.rect.w)
@@ -746,6 +768,7 @@ class MotherFly(Enemy):
             if abs(self.lastAttack - self.atkTimer) > self.atkRate:
                 self.atkRate = 6
                 self.lastAttack = self.atkTimer
+                game.sfx.shot.play()
                 for i in range(random.randint(4,8)):
                     self.shoot()
 
@@ -807,6 +830,7 @@ class MachinegunBug(Enemy):
             if abs(self.lastAttack - self.atkTimer) > self.atkRate:
                 self.atkRate = self.baseAtkRate
                 self.shoot()
+                game.sfx.shot.play()
                 self.lastAttack = self.atkTimer
                 self.reload += 1
                 if self.reload > self.mag_size:

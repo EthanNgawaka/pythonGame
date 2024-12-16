@@ -181,6 +181,6 @@ class Shop(Menu):
         if not self.isOpen:
             self.cards = []
             num = game.get_entity_by_id("wave").num
-            rarity = "legendary"  if num == 8 else ("rare" if num == 4 else "common")
+            rarity = "legendary"  if num == 9 else ("rare" if num % 3 == 0 else "common")
             self.gen_cards(rarity)
             super().open()

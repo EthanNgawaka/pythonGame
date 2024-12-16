@@ -1,4 +1,4 @@
-from library import *
+from game_lib import *
 import traceback
 
 class Entity: 
@@ -151,9 +151,10 @@ class Game:
         self.slow_down_timer = 0
         self.slow_down_targ = 1
         self.pixelSize = 1 # idk if 2 looks good or shit
-        self.rgbOffsetBase = 0.0008
+        self.rgbOffsetBase = 0.001
         self.rgbOffset = self.rgbOffsetBase
         self.CURVATURE = 0.05
+        self.scanlineT = 0
 
         self.abberate_targ = 0
         self.abberate_timer = 0
@@ -241,6 +242,10 @@ class Game:
             }
         """
 
+    def init(self): # for after pygame is inited
+        self.init_window("Untitled Roguelike")
+        self.init_sounds() # play a sound with game.sfx.SOUNDNAME.play()
+
     def slow_down_time(self, speed, length):
         self.slow_down_timer = length
         self.slow_down_targ = speed
@@ -265,15 +270,19 @@ class Game:
         return (2*pos[0]/W - 1, -(2*pos[1]/H - 1)) # negate y cause uv uses cart
     
     def init_sounds(self):
-        self.sfx.create_sound("hit", "./assets/audio/hit.wav")
-        self.sfx.create_sound("shot", "./assets/audio/shot.wav")
-        self.sfx.create_sound("bug_hit", "./assets/audio/bug_hit.wav")
-        self.sfx.create_sound("bug_die", "./assets/audio/bug_die.wav")
-        self.sfx.create_sound("frag_pickup", "./assets/audio/frag_pickup.wav")
+        pygame.mixer.set_num_channels(16)
+        self.sfx.create_sound("hit", "hit.wav")
+        self.sfx.create_sound("shot", "shot.wav", 0.35)
+        self.sfx.create_sound("bug_hit", "bug_hit.wav", 0.5)
+        self.sfx.create_sound("bug_die", "bug_die.wav", 0.5)
+        self.sfx.create_sound("frag_pickup", "frag_pickup.wav")
+        self.sfx.create_sound("spawn", "spawn.wav")
+        self.sfx.create_sound("spawn_windup", "spawn_windup.wav", 0.2)
+        self.sfx.create_sound("on_death_spawn", "on_death_spawn.wav", 0.2)
+        self.sfx.create_sound("reflect", "reflect.wav", 0.2)
 
-        self.sfx.create_sound("click", "./assets/audio/click.wav")
-        self.sfx.create_sound("select", "./assets/audio/select.wav")
-        self.sfx.create_sound("slide", "./assets/audio/slide.wav")
+        self.sfx.create_sound("click", "click.wav",0.4)
+        self.sfx.create_sound("select", "select.wav",0.4)
 
     def init_window(self, caption):
         self.caption = caption
@@ -320,6 +329,7 @@ class Game:
         self.program['pixelSize'] = self.pixelSize
         self.program['curvature'] = self.CURVATURE
         self.program['rgbOffset'] = self.rgbOffset
+        self.program['t'] = self.scanlineT
 
         self.render_obj.render(mode=moderngl.TRIANGLE_STRIP)
 
@@ -437,6 +447,9 @@ class Game:
 
         if self.transition_timer > 0:
             self.transition_timer -= dt
+
+        self.scanlineT += real_dt
+
 
     #@profile
     def draw(self, window):

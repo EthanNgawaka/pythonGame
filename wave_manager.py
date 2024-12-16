@@ -6,7 +6,7 @@ class Wave(Entity):
         self.enemyTypes = {
             "common":[Fly, Mosquito, Cockroach, Ant],
             "uncommon":[TermiteSwarm, CockroachSwarm, AntSwarm, Snail],
-            "rare":[MagneticSnail, FireAntSwarm],
+            "rare":[MagneticSnail, FireAntSwarm, MachinegunBug],
             "miniboss":[MotherCockroach, MotherFly],
             "boss":[],
         }
@@ -68,6 +68,7 @@ class Wave(Entity):
         game.get_entity_by_id("player").new_wave()
 
     def actually_spawn_enemy(self,x,y,EnemyType):
+        game.sfx.spawn.play()
         enemy = EnemyType(Vec2(x,y))
         # if its not instance of enemy then its a swarm type
         if isinstance(enemy, Enemy):
@@ -83,8 +84,8 @@ class Wave(Entity):
     def spawn_random_enemy(self):
         choice = "common"
         rand = random.uniform(0,1)
-        weight = self.timer/self.length
-        if rand > 0.85-0.25*weight:
+        weight = self.num * self.timer/self.length
+        if rand > 0.85-0.35*weight:
             choice = "uncommon"
             rand = random.uniform(0,1)
             if rand > 0.95-0.25*weight:
@@ -99,11 +100,11 @@ class Wave(Entity):
             EnemyType = self.override_enemy_type
         w, h = 40, 40
         if random.randint(0,1) > 0:
-            x = random.randint(w,game.W-w)
+            x = random.uniform(game.W*0.1,game.W*0.9)
             y = (-h if random.randint(0,1) > 0 else game.H+h)
         else:
             x = (-w if random.randint(0,1) > 0 else game.W+w)
-            y = random.randint(h,game.H-h)
+            y = random.uniform(game.W*0.1,game.H*0.9)
 
         dir = 0
         if x >= game.W:
@@ -114,6 +115,7 @@ class Wave(Entity):
             dir = math.pi/2
 
         spawn_particles(x, y, 30, -dir)
+        game.sfx.spawn_windup.play()
 
         self.delay_spawning_enemy(x, y, EnemyType, random.uniform(self.spawnRate/8, self.spawnRate*0.2))
     

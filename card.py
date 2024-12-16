@@ -36,6 +36,8 @@ class ActiveCard(Card):
 
         self.activation_key = self.player.get_active_key(i)
 
+        self.img = Image("./assets/active_icon.png", *self.rect)
+
         self.timer = 0
 
     def onAction(self):
@@ -52,21 +54,19 @@ class ActiveCard(Card):
             self.timer = self.cooldown
 
     def draw(self, window):
-        drawRect(window, self.rect, (255,255,255))
+        #drawRect(window, self.rect, (255,255,255))
+        self.img.draw(window,self.rect.copy())
 
-        string = self.name.upper()
-        rec = self.rect.center
-        rec.x = self.rect.x + 35/2
+        name = self.name.upper()
+        rec = self.rect.copy().center
+        rec.x = self.rect.x + 35*1.5
         rec.y -= 35/2
-        drawText(window, string, (0,0,0), rec, 35, False)
 
-        string = f"{max(0,self.timer):.2f}s"
+        time = f"{max(0,round(self.timer))}s"
         if self.timer <= 0:
-            string = "READY"
-        rect = self.rect.center.copy()
-        rect.x += 4*35/2
-        rect.y -= 35/2
-        drawText(window, string, (0,0,0), rect, 35)
+            time = "READY"
+
+        drawText(window, name+" | "+time, pygame.Color("#22ff00"), rec, 35, False)
 
         if self.timer/self.cooldown > 0:
             over_rect = self.rect.copy()

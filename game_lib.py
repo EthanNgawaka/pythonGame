@@ -1,23 +1,31 @@
 import pygame
 from pygame import Vector2 as Vec2
-import copy
 import pygame._sdl2 as pg_sdl2
+import moderngl
 import random
+
 import math
+import copy
 import time
 import cProfile, pstats, io
 import sys
 import os
-import moderngl
 from array import array
 
-pygame.init()
+from pydub import AudioSegment
 
+os.environ["PYGAME_DISPLAY"] = "0" # opens windows on main display
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1" # hide pygame intro
+
+pygame.mixer.pre_init()
+pygame.mixer.init()
+pygame.init()
 
 W = 1920
 H = 1080
 
 NATIVE_RESOLUTION = (pygame.display.Info().current_w, pygame.display.Info().current_h)
+FONT_PATH = "./assets/Gameplay.otf"
 
 RESOLUTION_OPTIONS = [
     (1920, 1080),
@@ -28,8 +36,6 @@ RESOLUTION_OPTIONS = [
 
 if NATIVE_RESOLUTION not in RESOLUTION_OPTIONS:
     RESOLUTION_OPTIONS.append(NATIVE_RESOLUTION)
-
-os.environ["PYGAME_DISPLAY"] = "0" # opens windows on main display
 
 clock = pygame.time.Clock()
 maxFPS = 60
@@ -713,7 +719,7 @@ class TextBox:
     def draw(self, window):
         size = self.size
         wrap = self.rect
-        font = pygame.font.Font("./assets/Gameplay.ttf",self.size)
+        font = pygame.font.Font(FONT_PATH,self.size)
         w_pad = self.pad[0]
         h_pad = self.pad[1]
         line_pad = self.pad[2]
@@ -790,7 +796,7 @@ class TextBox:
         if string != " ":
             self.wiggle_timer = 0
         self.string += string
-        font = pygame.font.Font("./assets/Gameplay.ttf",self.size)
+        font = pygame.font.Font(FONT_PATH,self.size)
         wrap = self.rect
         w_pad = self.pad[0]
         h_pad = self.pad[1]
@@ -834,7 +840,7 @@ def drawWrappedText(window, string, col, size, rect, pad = [0,0,0], center=False
     # in this case, if drawAtCenter, each line will be centered
     # (think of centering a line in word doc)
     # but it will still be inside of the rect
-    font = pygame.font.Font("./assets/Gameplay.ttf",size)
+    font = pygame.font.Font(FONT_PATH,size)
     wrap = rect
     w_pad = pad[0]
     h_pad = pad[1]
@@ -876,12 +882,22 @@ def drawWrappedText(window, string, col, size, rect, pad = [0,0,0], center=False
 # drawing funcs
 def drawText(window, string, col, in_pos, size, drawAtCenter=False, dropShadow=False):
     pos = in_pos - camera.pos
-    if (string, col, size) in cached_fonts:
-        img = cached_fonts[(string, col, size)]
-    else:
-        font = pygame.font.Font("./assets/Gameplay.ttf",size)
-        img = font.render(string, True, col)
-        cached_fonts[(string, col, size)] = img
+    try:
+        if (string, col, size) in cached_fonts:
+            img = cached_fonts[(string, col, size)]
+        else:
+            font = pygame.font.Font(FONT_PATH,size)
+            img = font.render(string, True, col)
+            cached_fonts[(string, col, size)] = img
+    except TypeError:
+        # pygame color obj passed in
+        col_tuple = (col.r, col.g, col.b)
+        if (string, col_tuple, size) in cached_fonts:
+            img = cached_fonts[(string, col_tuple, size)]
+        else:
+            font = pygame.font.Font(FONT_PATH,size)
+            img = font.render(string, True, col_tuple)
+            cached_fonts[(string, col_tuple, size)] = img
 
     drawPos = pos
     shadow_col = "black"
@@ -894,7 +910,7 @@ def drawText(window, string, col, in_pos, size, drawAtCenter=False, dropShadow=F
             if (string, shadow_col, size) in cached_fonts:
                 shadow = cached_fonts[(string, shadow_col, size)]
             else:
-                font = pygame.font.Font("./assets/Gameplay.ttf",size)
+                font = pygame.font.Font(FONT_PATH,size)
                 shadow = font.render(string, True, shadow_col)
                 cached_fonts[(string, shadow_col, size)] = shadow
             window.blit(shadow, (textRect[0]-shadow_size, textRect[1]-shadow_size))
@@ -904,7 +920,7 @@ def drawText(window, string, col, in_pos, size, drawAtCenter=False, dropShadow=F
             if (string, shadow_col, size) in cached_fonts:
                 shadow = cached_fonts[(string, shadow_col, size)]
             else:
-                font = pygame.font.Font("./assets/Gameplay.ttf",size)
+                font = pygame.font.Font(FONT_PATH,size)
                 shadow = font.render(string, True, shadow_col)
                 cached_fonts[(string, shadow_col, size)] = shadow
             window.blit(shadow, drawPos-Vec2(shadow_size,shadow_size))
@@ -969,5 +985,6 @@ def drawLine(window, p1, p2, col=(0,0,0), width=1):
 
 class SFX:
     # i just like doing this because in my js framework i use sfx.NAME.play()
-    def create_sound(self, name, src):
-        setattr(self, name, pygame.mixer.Sound(src))
+    def create_sound(self, name, src, base_vol=1):
+        setattr(self, name, pygame.mixer.Sound("./assets/audio/"+src))
+        getattr(self, name).set_volume(base_vol)

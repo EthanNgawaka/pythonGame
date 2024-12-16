@@ -26,6 +26,7 @@ class Player(Entity):
         # (NOT implemented) #
 
         # (implemented) #
+        self.truehit = False
         self.scope = False
         self.homing = 0
         self.blood_bullets = 0
@@ -100,7 +101,7 @@ class Player(Entity):
 
     def init(self):
         super().init()
-        #self.deck.add_card(DebugMode())
+        self.deck.add_card(DebugMode())
         #self.add_status_effect(Slow, 1)
         #spawn_web(Vec2(game.W/2, 100), 150, 15)
 
@@ -189,7 +190,7 @@ class Player(Entity):
     def hit(self, ent):
         if self.invincibilityTimer <= 0:
             game.sfx.hit.play()
-            game.abberate(game.rgbOffsetBase*2, 0.05)
+            game.abberate(game.rgbOffsetBase*100, 0.05)
             camera.shake(40)
             # this is for hitstop idk it feels kinda bad on every single hit
             #game.time_speed = 0.001
@@ -285,6 +286,7 @@ class Player(Entity):
             # focus on this for now once really solid base game add more weapons
             if self.bulletCooldown <= 0:
                 if firing:
+                    game.sfx.shot.play()
                     for i in range(self.bulletCount):
                         rand_angle = random.uniform(-self.inaccuracy, self.inaccuracy)
                         # this logic didnt quite work
@@ -294,7 +296,6 @@ class Player(Entity):
                         amnt = random.randint(255-64, 255)
                         startingColor = (amnt,amnt,0,255)
                         gun_sparks(*spawn_pos, 5, theta, startingColor)
-                        game.sfx.shot.play()
                         
                         self.spawn_bullet(spawn_pos, theta + rand_angle)
                         self.vel -= Vec2(math.cos(theta), math.sin(theta))*60

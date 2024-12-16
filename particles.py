@@ -182,6 +182,7 @@ class Particle(Entity):
 
         col = pygame.Color(self.color)
         drawRect(window, displayRect, col)
+        #pygame.draw.circle(window, col, displayRect.center, scalingFactor*self.rect.w/2)
 
     def update(self, dt):
         if self.colorLerp:

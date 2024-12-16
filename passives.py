@@ -20,7 +20,7 @@ class BulletSize(Card):
     basePrice = 50
     desc = "What do you think it does?"
     def on_pickup(self):
-        self.player.bulletSize *= 1.5
+        self.player.bulletSize *= 2
         
 class DamageUp(Card):
     name = "damage up"
@@ -63,6 +63,13 @@ class MaxHealthUp(Card):
         self.player.health += 20
 
 # Rare
+class TrueHit(Card):
+    name = "True Hit"
+    basePrice = 250
+    desc = "Remove all enemy IFrames"
+    def on_pickup(self):
+        self.player.truehit = True
+
 class Shield(Card):
     name = "Shield"
     basePrice = 100
@@ -129,8 +136,7 @@ class Shotgun(Card):
         self.player.baseDmg = self.player.dmg
         self.player.inaccuracy += 0.1
         self.player.speedInaccuracy += 0.1
-        self.player.atkRate += 0.1
-        self.player.baseAtkRate = self.player.baseAtkRate
+        self.player.atkRateMultiplier /= 3
 
 class Piercing(Card):
     name = "piercing up"
@@ -156,7 +162,7 @@ class Minigun(Card):
         self.player.dmgMultiplier = 0.5
         self.player.inaccuracy += 0.06
         self.player.speedInaccuracy += 0.3
-        self.player.atkRateMultiplier = 5
+        self.player.atkRateMultiplier *= 5
         self.player.bulletSpeed *= 1.5
 
 class DoubleShot(Card):
@@ -215,7 +221,7 @@ PASSIVE_CARDS = {
         Shotgun, Piercing, LifeStealUp,
         Panic, HotShot, Shield,
         StaticDischarge, Firewall, RubberBullets,
-        Scope, 
+        Scope, TrueHit
     ],
     "legendary":[
         DoubleShot, Minigun, Resistance,

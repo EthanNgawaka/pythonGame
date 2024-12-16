@@ -1,10 +1,9 @@
-from library import *
 from enemies import *
 from player import *
 from deck import *
 from ui import *
 from shop import *
-from wave import *
+from wave_manager import *
 from menus import *
 from status_effects import *
 
@@ -66,8 +65,7 @@ def create_menu_scene():
     return scene
 
 def main():
-    game.init_window("Untitled Roguelike")
-    game.init_sounds() # play a sound with game.sfx.SOUNDNAME.play()
+    game.init()
     running = True
 
     # use init_entity when adding entities up first otherwise they wont
@@ -85,8 +83,6 @@ def main():
 
     time_slow_timer = 0
 
-
-    t = 0
     while running:
         real_dt = clock.tick(maxFPS) / 1000.0
         dt = game.time_speed * real_dt

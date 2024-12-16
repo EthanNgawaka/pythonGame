@@ -80,7 +80,7 @@ class Bullet(Entity):
         return True
 
     def get_size(self,x):
-        return max(x, 3)
+        return max(x**1.5, 3)
     
     def on_enemy_collision(self, enemy):
         player = game.get_entity_by_id("player")

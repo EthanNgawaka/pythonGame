@@ -8,8 +8,10 @@ class DebugMode(ActiveCard):
     cooldown=60
     def onAction(self):
         game.slow_down_time(0.1, 10)
+        game.time_speed = 0.1
         # idk if i keep this but it makes the player shoot and move way faster so it doesnt take away allll control
-        self.player.change_stat_temporarily("atkRate", -self.player.atkRate*0.75, 1)
+        self.player.change_stat_temporarily("atkRate", -self.player.atkRate*0.9, 1)
+        self.player.change_stat_temporarily("speed", self.player.speed*5, 1)
 
 class Overclock(ActiveCard):
     name="Overclock"
@@ -41,7 +43,7 @@ class Patch(ActiveCard):
     name="Patch"
     desc="Hotfixes!"
     basePrice=100
-    cooldown = 120
+    cooldown = 35
     def onAction(self):
         self.player.heal(self.player.maxHealth*0.1)
 

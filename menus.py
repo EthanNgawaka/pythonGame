@@ -269,17 +269,6 @@ class DebugMenu(Menu):
 
         last_row_x = 0
 
-        def spawn_enemies(btn):
-            for i in range(10):
-                game.get_entity_by_id("wave").spawn_random_enemy()
-
-        self.create_centered_button(
-            (last_row_x, self.rect.h-h), # center
-            (w*3,h), # dimensions
-            (255,0,0), Text("spawn 10 enemies",(255,255,255),25), # btnColor, TextObj
-            spawn_enemies
-        )
-
         def spawn_dummy(btn):
             game.curr_scene.add_entity(Dummy((W/2, H/2)),"dummy")
         self.create_centered_button(
