@@ -85,7 +85,7 @@ class Scope(Card):
     def on_pickup(self):
         self.player.scope = True
         # accuracy up part
-        self.player.inaccuracy *= 0.66
+        self.player.inaccuracy *= 0.33
         if self.player.inaccuracy < 0:
             self.player.inaccuracy = 0
 

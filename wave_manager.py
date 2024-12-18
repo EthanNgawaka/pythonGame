@@ -33,19 +33,26 @@ class Wave(Entity):
             self.timer_img.addState(f"{i}/8", i, 1)
         self.timer_img.setState("0/8")
 
+        self.enemy_queue = [] # (enemy_args, timer)
+
     def update(self, dt):
         if self.pause:
             return
 
-        if self.delayed_spawn_timer > 0:
-            self.delayed_spawn_timer -= dt
-            if self.delayed_spawn_timer < 0:
-                self.actually_spawn_enemy(*self.enemy_flags)
+        for obj in self.enemy_queue:
+            if obj[1] > 0:
+                obj[1] -= dt
+                if obj[1] < 0:
+                    self.actually_spawn_enemy(*obj[0])
+                    self.enemy_queue.remove(obj)
+
         if self.timer < self.length:
             self.timer += dt
 
             if self.timer - self.last_spawn >= self.spawnRate:
-                self.spawn_random_enemy()
+                wave = game.get_entity_by_id("wave")
+                for i in range(random.randint(1,1+wave.num//3)):
+                    self.spawn_random_enemy()
                 self.last_spawn = self.timer
 
             return 
@@ -78,17 +85,16 @@ class Wave(Entity):
             )
 
     def delay_spawning_enemy(self, x, y, EnemyType, delay):
-        self.delayed_spawn_timer = delay
-        self.enemy_flags = [x, y, EnemyType]
+        self.enemy_queue.append([[x, y, EnemyType], delay])
 
     def spawn_random_enemy(self):
         choice = "common"
         rand = random.uniform(0,1)
-        weight = self.num * self.timer/self.length
-        if rand > 0.85-0.35*weight:
+        weight = (self.num * self.timer/self.length)/4
+        if rand > 0.85-0.2*weight:
             choice = "uncommon"
             rand = random.uniform(0,1)
-            if rand > 0.95-0.25*weight:
+            if rand > 0.95-0.2*weight:
                 choice = "rare"
 
         if self.timer > self.length * 0.75 and not self.miniboss_spawned:

@@ -88,7 +88,6 @@ class Player(Entity):
         # a func called on_pickup is called
         # (this is ur basic stat changes, ie on_pickup(): player.speed += 10)
         # there is a passive func too which is updated every frame
-        # TODO actives arent implemented yet but im going there next
         self.deck = Deck(self)
 
         # sprite stuff
@@ -101,7 +100,7 @@ class Player(Entity):
 
     def init(self):
         super().init()
-        self.deck.add_card(DebugMode())
+        self.deck.add_card(EMP())
         #self.add_status_effect(Slow, 1)
         #spawn_web(Vec2(game.W/2, 100), 150, 15)
 
@@ -123,8 +122,7 @@ class Player(Entity):
 
     def heal(self, amnt):
         self.health += amnt
-        if self.health > self.maxHealth:
-            self.health = self.maxHealth
+        self.health = min(self.health, self.maxHealth)
 
     def reset_stats(self):
         self.set_stats(self.base_stats)
@@ -450,7 +448,7 @@ class PlayerUI(Entity):
 
 
     def draw_copper(self, window):
-        drawText(window, f"Fragments: {self.player.copper}", (255,255,255), (100,150), 40, False, True)
+        drawText(window, f"FRAGMENTS: {self.player.copper}", (255,255,255), (100,150), 40, False, True)
 
     def draw_stats(self, window):
         i = 0

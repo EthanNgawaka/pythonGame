@@ -8,7 +8,7 @@ from menus import *
 from status_effects import *
 
 def drawFPS(dt, window):
-    drawText(window, f"fps: {1/max(dt,0.0001):.2f}", (0,0,0), (game.W-400,100), 40, True)
+    drawText(window, f"FPS: {round(1/max(dt,0.0001))}", (255,255,255), (200,300), 40, True, True)
 
 class Background(Entity):
     def __init__(self):

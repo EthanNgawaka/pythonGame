@@ -121,7 +121,7 @@ class Enemy(Entity):
         self.take_dmg(dmg)
         self.vel = vec
         self.forces = Vec2()
-        self.stun = 0.15
+        self.stun += 0.15
         blood_explosion(*self.rect.center, self.maxHealth/4, math.atan2(vec.y, vec.x))        
 
     def on_bullet_collision(self, bullet):
@@ -172,7 +172,7 @@ class Enemy(Entity):
 
         if self.stun > 0:
             self.stun -= dt
-            if game.get_entity_by_id("player").truehit:
+            if game.get_entity_by_id("player").truehit or self.stun > 0.15:
                 self.collision()
             return
 
@@ -352,7 +352,7 @@ class Mosquito(Enemy):
         self.lastAttack = 0
         self.dmg = 10
         self.atkRate = 2.25
-        self.atkThresh = 750
+        self.atkThresh = 1000
         self.col = pygame.Color("black")
         self.maxHealth = self.health
         self.img = Image("./assets/baby_cock.png", *self.rect, (255,64,64))
@@ -473,11 +473,11 @@ class FireAntSwarm:
 class FireAnt(Ant):
     def __init__(self, pos):
         super().__init__(pos)
-        self.atkRate = 4.35 + random.uniform(-0.5,1.5)
+        self.atkRate = 3.35 + random.uniform(-0.5,1.5)
         self.last_shot = 0
         self.col = (255,50,50)
         self.fire_immunity = True
-        self.thresh = 500
+        self.thresh = 650
         self.maxHealth = self.health
 
     def shoot(self):
@@ -513,7 +513,7 @@ class Termite(Enemy):
     def __init__(self, pos):
         super().__init__(pos)
         self.rect.dimensions = Vec2(15,15)
-        self.speed = 2500
+        self.speed = 9000
         self.atkThresh = 200
         self.timer = 0
         self.value = 2
@@ -537,9 +537,9 @@ class Termite(Enemy):
         centering_factor = 0.01
         matching_factor = 0.01
         avoidfactor = 0.01
-        turnfactor = 10
-        minSpeed = 280
-        maxSpeed = 400
+        turnfactor = 0
+        minSpeed = 400
+        maxSpeed = 900
 
         close_dp = Vec2()
         avg_pos = Vec2()

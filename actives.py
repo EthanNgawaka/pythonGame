@@ -19,8 +19,8 @@ class Overclock(ActiveCard):
     basePrice=200
     cooldown=45
     def onAction(self):
-        self.player.change_stat_temporarily("dmg", self.player.dmg*0.75, 10)
-        self.player.change_stat_temporarily("atkRate", -self.player.atkRate*0.75, 10)
+        self.player.change_stat_temporarily("dmg", self.player.dmg*0.3, 10)
+        self.player.change_stat_temporarily("atkRate", -self.player.atkRate*0.5, 10)
         self.player.change_stat_temporarily("speed", self.player.speed*0.75, 10)
 
 class Blast(ActiveCard):
@@ -34,7 +34,7 @@ class Blast(ActiveCard):
 class Webbed(ActiveCard):
     name="Webbed"
     desc="Create a slowing web that slows enemies AND you"
-    basePrice=100
+    basePrice=50
     cooldown = 15
     def onAction(self):
         spawn_web(self.player.rect.center, 200, 20)

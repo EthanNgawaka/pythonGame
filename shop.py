@@ -3,11 +3,6 @@ from game import *
 from ui import *
 from passives import *
 
-merged_cards = PASSIVE_CARDS
-for c in merged_cards:
-    for c_2 in ACTIVE_CARDS[c]:
-        merged_cards[c].append(c_2)
-
 class ShopCardButton(Button):
     def __init__(self, root_entity, relative_rect, col, text, onAction, card):
         super().__init__(root_entity, relative_rect, col, text, onAction)
@@ -42,6 +37,16 @@ class ShopCardButton(Button):
         drawRect(window, drawingRect, pygame.Color("#4b0090"))
         drawText(window, self.text.string, self.text.col, vec, round(self.text.size+self.drawingInflation.x/2), True)
 
+        try: # if the card is an active
+            if (self.card.cooldown):
+                drawingRect.y += drawingRect.h
+                vec.y += drawingRect.h*0.99
+                drawRect(window, drawingRect, pygame.Color("#250047"))
+                drawText(window, str(self.card.cooldown)+"s cooldown", self.text.col, vec, round(self.text.size+self.drawingInflation.x/2), True)
+                drawingRect.y -= drawingRect.h
+        except:
+            pass # not an active
+
         drawingRect.h /= 0.1
         drawingRect.y += drawingRect.h * 0.6
         drawingRect.h *= 0.4
@@ -51,7 +56,7 @@ class ShopCardButton(Button):
         text_rect.y += text_rect.h * 0.6
         text_rect.h *= 0.4
         drawWrappedText(window, 
-            self.card.desc,
+            self.card.desc.upper(),
             self.text.col, round(self.text.size),
             text_rect, [100,50,5]
         )
@@ -169,8 +174,21 @@ class Shop(Menu):
             )
 
     def gen_cards(self, rarity):
+        wave = game.get_entity_by_id("wave")
         for i in range(3):
-            rand_card = merged_cards[rarity][random.randint(0,len(merged_cards[rarity])-1)]
+            #rand_card = merged_cards[rarity][random.randint(0,len(merged_cards[rarity])-1)]
+            card_type = "PASSIVE"
+            print(wave.num)
+            if wave.num > 1:
+                print("AH")
+                if random.uniform(0,1) >= 0.8:
+                    card_type = "ACTIVE"
+                elif wave.num % 3 == 0:
+                    if random.uniform(0,1) >= 0.9: # 20% + 10% == 30% chance to be active on rare shops
+                        card_type = "ACTIVE"
+
+            card_type = ACTIVE_CARDS if card_type == "ACTIVE" else PASSIVE_CARDS
+            rand_card = card_type[rarity][random.randint(0, len(card_type[rarity])-1)]
             self.cards.append(rand_card)
 
     def close(self, elem):

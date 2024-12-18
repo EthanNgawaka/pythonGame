@@ -276,6 +276,7 @@ class Button(UI_Element):
         self.root = root_entity
         self.col = col
         self.text = text
+        self.text.string = self.text.string.upper()
         self.onAction = onAction
         self.hovered = False
         self.baseHighlightCol = pygame.Vector3(255,255,255)
